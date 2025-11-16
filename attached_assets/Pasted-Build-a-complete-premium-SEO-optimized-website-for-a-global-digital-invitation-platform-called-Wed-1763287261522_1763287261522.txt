@@ -1,0 +1,345 @@
+Build a complete, premium, SEO-optimized website for a global digital invitation platform called WeddingInvite.ai.
+The website must be high-quality, visually cinematic, culturally inclusive, mobile-first, and video-focused.
+Below are the exact specifications. Follow them precisely.
+
+🎯 BRAND OVERVIEW
+
+Website Name: WeddingInvite.ai
+Tagline: “Cinematic Video Invitations. Instantly. Culturally Accurate.”
+Brand Tone: Premium, elegant, modern, cultural-friendly, high-trust.
+
+🧩 WHAT THE PLATFORM DOES
+
+WeddingInvite.ai lets users create AI-powered, fully customizable video invitations for global weddings and events.
+
+AI editor: auto script, voiceover, themes
+
+Hundreds of templates (wedding, engagement, baby, corporate)
+
+Cultural templates (Punjabi, Tamil, Arabic, Nigerian, etc.)
+
+4K cinematic quality
+
+Instant export for WhatsApp, Instagram Reels, TikTok
+
+Premium custom studio option
+
+🧭 PAGES REQUIRED (Build all)
+1. Home Page
+
+Sections:
+
+Hero: Cinematic video background + “Create Invitation” CTA
+
+Why Choose Us (AI customization, instant exports, cultural accuracy)
+
+Popular Categories
+
+Featured Templates Grid
+
+Testimonials
+
+Global cultures section
+
+Footer CTA: “Start Creating Now”
+
+2. Templates Hub Page – /templates
+
+Filters: Event Type, Culture, Style, Duration, Orientation, Video/Static
+
+Template preview cards with call-to-action
+
+Categories shown visually
+
+3. Template Detail Page – /template/{slug}
+
+Video autoplay preview
+
+Template title + description
+
+Editing features
+
+What you can customize (text, photos, music, voiceover, colors)
+
+CTA: “Use Template”
+
+4. Categories (Create all pages)
+
+/categories/wedding-video-invitations
+
+/categories/premium-luxury
+
+/categories/engagement-invites
+
+/categories/save-the-date
+
+/categories/baby-announcements
+
+/categories/birthday-anniversary
+
+/categories/corporate-invites
+
+Each page must include:
+
+Hero section with cultural/event design
+
+SEO intro
+
+Featured templates grid
+
+5. Culture Pages (Create ALL pages)
+
+Parent: /culture
+
+Create the following full pages:
+
+/culture/indian-wedding-video-invitation
+
+/culture/indian-wedding-video-invitation/punjabi
+
+/culture/indian-wedding-video-invitation/tamil
+
+/culture/indian-wedding-video-invitation/telugu
+
+/culture/indian-wedding-video-invitation/gujarati
+
+/culture/indian-wedding-video-invitation/bengali
+
+/culture/indian-wedding-video-invitation/muslim-nikah
+
+/culture/indian-wedding-video-invitation/christian
+
+/culture/arabic-wedding-video-uae-saudi
+
+/culture/nigerian-traditional-wedding-video
+
+/culture/quinceanera-video-invitation
+
+/culture/chinese-tea-ceremony-video
+
+/culture/korean-pyebaek-video
+
+/culture/filipino-debut-video
+
+/culture/jewish-bar-bat-mitzvah-video-invitation
+
+Each culture page must include:
+
+Hero section with cultural imagery
+
+SEO-rich intro
+
+Symbols, visuals, relevant traditions
+
+Template grid
+
+CTA: “Create Your Invitation”
+
+6. Country Pages (Create ALL pages)
+
+Parent: /countries
+Pages required:
+
+/countries/india
+
+/countries/usa
+
+/countries/uae
+
+/countries/uk
+
+/countries/nigeria
+
+/countries/mexico
+
+/countries/canada
+
+/countries/china
+
+Each page should include:
+
+Regional design styles
+
+Popular country-specific templates
+
+SEO content
+
+CTA
+
+7. Pricing Page – /pricing
+
+Sections:
+
+Free Plan
+
+Personal Plan (per video)
+
+Pro Creator Subscription
+
+Premium Studio (custom cinematic creation)
+
+Add-ons
+
+FAQs
+
+8. How It Works Page – /how-it-works
+
+Steps:
+
+Choose a Template
+
+Customize with AI (text, photos, music, voiceover)
+
+Export & Share (WhatsApp, Instagram, TikTok)
+
+Include visuals + flow diagram.
+
+9. Examples Page – /examples
+
+Showcase real customer videos
+
+Before/after
+
+Testimonials
+
+10. Blog
+
+Blog home page
+
+Blog article template
+
+Articles about: wedding trends, culture guides, tips
+
+11. Enterprise Page – /enterprise
+
+Solutions for event planners
+
+White-label
+
+Bulk pricing
+
+API integrations
+
+12. About Page – /about
+
+Mission
+
+Vision
+
+Story
+
+Brand promise
+
+13. Contact Page – /contact
+
+Contact form
+
+Email
+
+Support details
+
+14. FAQ Page – /faq
+
+Frequently asked questions:
+
+File formats
+
+Delivery times
+
+Refund policy
+
+Revisions
+
+AI features
+
+🎨 DESIGN REQUIREMENTS
+
+Cinematic
+
+Animated hero elements
+
+Use gold, cream, maroon, navy, pastel accents
+
+Modern typography
+
+Smooth animations
+
+Beautiful card layouts
+
+Video-previews built in
+
+Soft shadows and elegant curves
+
+🔥 FUNCTIONAL REQUIREMENTS
+
+Template preview grid
+
+AI editor integration placeholder
+
+WhatsApp-friendly layout
+
+Mobile-first layout
+
+SEO-optimized headings (H1/H2/H3)
+
+Metadata + OG tags
+
+Fast load time
+
+Sticky menu
+
+🌍 SEO REQUIREMENTS
+
+Automatic schema for:
+
+VideoObject
+
+Breadcrumbs
+
+Article
+
+SEO-friendly URLs
+
+Culture-focused keywords
+
+Country-focused keywords
+
+Fast performance
+
+Internal linking between categories & cultures
+
+🚀 CTAs to Use Across Website
+
+“Create Invite”
+
+“Use Template”
+
+“Customize Now”
+
+“Explore Templates”
+
+“Get Started Free”
+
+“Request Custom Video”
+
+📦 FINAL OUTPUT
+
+The AI website builder must generate:
+
+Full website
+
+All pages listed
+
+All sections fully populated
+
+Beautiful visuals
+
+SEO metadata
+
+Mobile-responsive layouts
+
+Clean navigation
+
+Working links for all pages
+
+This website should look like a premium cinematic wedding-tech platform with AI at its core.
