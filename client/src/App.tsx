@@ -41,6 +41,7 @@ function Router() {
       <Route path="/categories/corporate-invites" component={CategoryPage} />
       
       <Route path="/culture" component={Cultures} />
+      {/* Indian Wedding Cultures */}
       <Route path="/culture/indian-wedding-video-invitation" component={CulturePage} />
       <Route path="/culture/indian-wedding-video-invitation/punjabi" component={CulturePage} />
       <Route path="/culture/indian-wedding-video-invitation/tamil" component={CulturePage} />
@@ -48,23 +49,13 @@ function Router() {
       <Route path="/culture/indian-wedding-video-invitation/gujarati" component={CulturePage} />
       <Route path="/culture/indian-wedding-video-invitation/bengali" component={CulturePage} />
       <Route path="/culture/indian-wedding-video-invitation/muslim-nikah" component={CulturePage} />
-      <Route path="/culture/indian-wedding-video-invitation/christian" component={CulturePage} />
+      {/* Arabic Wedding Cultures */}
       <Route path="/culture/arabic-wedding-video-uae-saudi" component={CulturePage} />
-      <Route path="/culture/nigerian-traditional-wedding-video" component={CulturePage} />
-      <Route path="/culture/quinceanera-video-invitation" component={CulturePage} />
-      <Route path="/culture/chinese-tea-ceremony-video" component={CulturePage} />
-      <Route path="/culture/korean-pyebaek-video" component={CulturePage} />
-      <Route path="/culture/filipino-debut-video" component={CulturePage} />
-      <Route path="/culture/jewish-bar-bat-mitzvah-video-invitation" component={CulturePage} />
       
+      {/* Focus Markets: India + UAE/Arabic Countries */}
       <Route path="/countries/india" component={CountryPage} />
-      <Route path="/countries/usa" component={CountryPage} />
       <Route path="/countries/uae" component={CountryPage} />
-      <Route path="/countries/uk" component={CountryPage} />
-      <Route path="/countries/nigeria" component={CountryPage} />
-      <Route path="/countries/mexico" component={CountryPage} />
-      <Route path="/countries/canada" component={CountryPage} />
-      <Route path="/countries/china" component={CountryPage} />
+      <Route path="/countries/saudi-arabia" component={CountryPage} />
       
       {/* TODO: Re-enable after MVP - Monthly subscription pricing */}
       {/* <Route path="/pricing" component={Pricing} /> */}

@@ -23,16 +23,13 @@ export function Footer() {
   const cultureLinks = [
     { label: "Indian Weddings", href: "/culture/indian-wedding-video-invitation" },
     { label: "Arabic Weddings", href: "/culture/arabic-wedding-video-uae-saudi" },
-    { label: "Nigerian Weddings", href: "/culture/nigerian-traditional-wedding-video" },
     { label: "All Cultures", href: "/culture" },
   ];
 
   const countryLinks = [
     { label: "India", href: "/countries/india" },
-    { label: "USA", href: "/countries/usa" },
     { label: "UAE", href: "/countries/uae" },
-    { label: "UK", href: "/countries/uk" },
-    { label: "All Countries", href: "/countries" },
+    { label: "Saudi Arabia", href: "/countries/saudi-arabia" },
   ];
 
   return (
