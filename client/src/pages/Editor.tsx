@@ -667,31 +667,31 @@ export default function Editor() {
   };
 
   const handlePreview = () => {
-    // Save first, then start preview generation
-    saveCustomizationMutation.mutate(undefined, {
-      onSuccess: () => {
-        // Start preview generation
-        setShowPreviewLoading(true);
-        setPreviewProgress(0);
+    // For now, skip saving and go directly to preview (frontend testing mode)
+    // In production, this would save first, then trigger video generation
+    
+    // Start preview generation immediately
+    setShowPreviewLoading(true);
+    setPreviewProgress(0);
 
-        // Simulate progress (in production, this would track actual video generation)
-        const progressInterval = setInterval(() => {
-          setPreviewProgress(prev => {
-            if (prev >= 100) {
-              clearInterval(progressInterval);
-              // Show preview modal when complete
-              setTimeout(() => {
-                setShowPreviewLoading(false);
-                setPreviewUrl(currentPage.thumbnailUrl); // Mock preview URL
-                setShowPreviewModal(true);
-              }, 500);
-              return 100;
-            }
-            return prev + 10;
-          });
-        }, 300);
-      }
-    });
+    // Simulate progress (in production, this would track actual video generation)
+    const progressInterval = setInterval(() => {
+      setPreviewProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          // Show preview modal when complete
+          setTimeout(() => {
+            setShowPreviewLoading(false);
+            setPreviewUrl(currentPage.thumbnailUrl); // Mock preview URL
+            setShowPreviewModal(true);
+            // Enable download button once preview is generated
+            setDownloadEnabled(true);
+          }, 500);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 300);
   };
 
   const handleDownload = () => {
