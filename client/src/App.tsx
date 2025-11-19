@@ -9,6 +9,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Templates from "@/pages/Templates";
 import TemplateDetail from "@/pages/TemplateDetail";
+import Editor from "@/pages/Editor";
 import CategoryPage from "@/pages/CategoryPage";
 import Cultures from "@/pages/Cultures";
 import CulturePage from "@/pages/CulturePage";
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:slug" component={TemplateDetail} />
+      <Route path="/editor/:id" component={Editor} />
       
       <Route path="/categories/wedding-video-invitations" component={CategoryPage} />
       <Route path="/categories/premium-luxury" component={CategoryPage} />
