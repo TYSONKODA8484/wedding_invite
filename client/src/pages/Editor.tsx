@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import type { Template, TemplatePage } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X, Save, Eye, ArrowLeft, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut } from "lucide-react";
+import { Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
+import { AuthModal } from "@/components/AuthModal";
 
 interface EditableField {
   id: string;
@@ -46,39 +47,31 @@ function computeCropBox(
   aspectRatio: string,
   zoomPercent: number
 ): CropBox {
-  // Clamp zoom to ≥ 100% (zoom-in only for MVP)
   const zoomFactor = Math.max(1, zoomPercent / 100);
 
-  // Determine target aspect ratio
   let targetAspect = 1;
   if (aspectRatio === '16:9') targetAspect = 16 / 9;
   else if (aspectRatio === '9:16') targetAspect = 9 / 16;
   else if (aspectRatio === '1:1') targetAspect = 1;
-  else targetAspect = imgWidth / imgHeight; // free
+  else targetAspect = imgWidth / imgHeight;
 
-  // Canvas dimensions (fixed width for output)
   const canvasWidth = 800;
   const canvasHeight = Math.round(canvasWidth / targetAspect);
 
-  // Calculate base source crop region (aspect-correct, centered)
   const imgAspect = imgWidth / imgHeight;
   let baseSrcWidth, baseSrcHeight;
 
   if (imgAspect > targetAspect) {
-    // Image wider - crop width
     baseSrcHeight = imgHeight;
     baseSrcWidth = baseSrcHeight * targetAspect;
   } else {
-    // Image taller - crop height
     baseSrcWidth = imgWidth;
     baseSrcHeight = baseSrcWidth / targetAspect;
   }
 
-  // Apply zoom by shrinking source region (zoom in = show less of image = enlarged view)
   const srcWidth = baseSrcWidth / zoomFactor;
   const srcHeight = baseSrcHeight / zoomFactor;
 
-  // Center the zoomed crop box
   const srcX = (imgWidth - baseSrcWidth) / 2 + (baseSrcWidth - srcWidth) / 2;
   const srcY = (imgHeight - baseSrcHeight) / 2 + (baseSrcHeight - srcHeight) / 2;
 
@@ -92,12 +85,11 @@ interface CropModalProps {
 }
 
 function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
-  const [zoom, setZoom] = useState([100]); // 100-200% (zoom-in only)
+  const [zoom, setZoom] = useState([100]);
   const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1' | 'free'>('16:9');
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Update preview whenever zoom or aspect ratio changes
   const updatePreview = () => {
     const canvas = previewCanvasRef.current;
     if (!canvas) return;
@@ -124,14 +116,11 @@ function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
     img.src = imageUrl;
   };
 
-  // Update preview when zoom or aspect ratio changes
   useEffect(() => {
     updatePreview();
   }, [zoom, aspectRatio, imageUrl]);
 
   const handleConfirm = () => {
-    // Reuse the preview canvas which already has the correct crop applied
-    // This prevents race conditions from async Image loading
     if (previewUrl) {
       onConfirm(previewUrl);
     }
@@ -148,10 +137,8 @@ function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Canvas for preview rendering (hidden) */}
           <canvas ref={previewCanvasRef} className="hidden" />
           
-          {/* Image Preview - shows actual crop */}
           <div className="relative bg-muted rounded-md overflow-hidden flex items-center justify-center min-h-[300px]">
             {previewUrl ? (
               <img 
@@ -164,7 +151,6 @@ function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
             )}
           </div>
 
-          {/* Zoom Control */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="flex items-center gap-2">
@@ -184,7 +170,6 @@ function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
             />
           </div>
 
-          {/* Aspect Ratio Selector */}
           <div className="space-y-2">
             <Label>Aspect Ratio</Label>
             <div className="flex gap-2">
@@ -233,7 +218,6 @@ function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploa
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      // Create temporary URL for crop modal
       const reader = new FileReader();
       reader.onloadend = () => {
         setTempImageUrl(reader.result as string);
@@ -245,7 +229,6 @@ function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploa
   };
 
   const handleCropConfirm = (croppedDataUrl: string) => {
-    // Convert cropped data URL back to File for storage
     fetch(croppedDataUrl)
       .then(res => res.blob())
       .then(blob => {
@@ -342,6 +325,161 @@ function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploa
   );
 }
 
+interface PreviewLoadingScreenProps {
+  progress: number;
+  onClose: () => void;
+}
+
+function PreviewLoadingScreen({ progress, onClose }: PreviewLoadingScreenProps) {
+  return (
+    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl p-8">
+        <div className="text-center space-y-6">
+          {/* Progress Circle */}
+          <div className="flex justify-center">
+            <div className="relative w-32 h-32">
+              <svg className="transform -rotate-90 w-32 h-32">
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="56"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-muted"
+                />
+                <circle
+                  cx="64"
+                  cy="64"
+                  r="56"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={`${2 * Math.PI * 56}`}
+                  strokeDashoffset={`${2 * Math.PI * 56 * (1 - progress / 100)}`}
+                  className="text-primary transition-all duration-500"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-3xl font-bold text-foreground">{progress}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Message */}
+          <div className="bg-primary/5 border border-primary/20 rounded-md p-4">
+            <p className="text-primary font-medium">
+              Video Creation in Progress! Thanks for your patience - the best is yet to come! 🎉 👰
+            </p>
+          </div>
+
+          {/* What's Next Checklist */}
+          <div className="text-left space-y-3">
+            <h3 className="font-semibold text-foreground text-lg">What's next?</h3>
+            <div className="space-y-2">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Wait for 2-3 minutes. System will create the video.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Preview the video
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Pay only when you like the Preview.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Please do not click anywhere else video generation will stop.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Video will also be available under "My Videos".
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+interface PreviewModalProps {
+  previewUrl: string;
+  onClose: () => void;
+  onDownload: () => void;
+  downloadEnabled: boolean;
+}
+
+function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: PreviewModalProps) {
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl">Preview</DialogTitle>
+            <Button
+              variant="default"
+              onClick={onDownload}
+              disabled={!downloadEnabled}
+              data-testid="button-modal-download"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download Without Watermark
+            </Button>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Preview Image/Video */}
+          <div className="relative bg-muted rounded-md overflow-hidden flex items-center justify-center min-h-[400px]">
+            <img 
+              src={previewUrl}
+              alt="Preview"
+              className="max-w-full max-h-[600px] object-contain"
+              data-testid="preview-modal-image"
+            />
+          </div>
+
+          {/* Disclaimer */}
+          <div className="bg-primary text-primary-foreground rounded-md p-3 text-sm text-center">
+            This is a low-quality preview for illustration only. The final video will be high quality. 
+            Please review carefully content cannot be changed after payment.
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} data-testid="button-modal-close">
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Editor() {
   const [, params] = useRoute("/editor/:slug");
   const [, navigate] = useLocation();
@@ -352,6 +490,15 @@ export default function Editor() {
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [customizationId, setCustomizationId] = useState<string | null>(null);
+  
+  // Preview/Download states
+  const [showPreviewLoading, setShowPreviewLoading] = useState(false);
+  const [previewProgress, setPreviewProgress] = useState(0);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [downloadEnabled, setDownloadEnabled] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -365,16 +512,16 @@ export default function Editor() {
     enabled: !!slug,
   });
 
-  // Save customization mutation - MUST be declared before early returns (Rules of Hooks)
+  // Check if user is logged in
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+  });
+
+  // Save customization mutation
   const saveCustomizationMutation = useMutation({
     mutationFn: async () => {
-      // Demo mode: Auth removed, backend uses hardcoded demo-user-1
-      // TODO: Replace with real auth once login modal is implemented (Task 11)
-
-      // Create or update customization
       let customizId = customizationId;
       if (!customizId) {
-        // Create new customization
         const response = await fetch("/api/customizations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -396,10 +543,8 @@ export default function Editor() {
         setCustomizationId(customizId);
       }
 
-      // Save all page field values
       const pages = templateData!.pages || [];
       for (const page of pages) {
-        // Collect field values for this page
         const pageFieldValues: Record<string, string> = {};
         for (const field of page.editableFields) {
           const fieldKey = `${page.id}_${field.id}`;
@@ -407,7 +552,6 @@ export default function Editor() {
           pageFieldValues[field.id] = value;
         }
 
-        // Save page data
         const pageResponse = await fetch(`/api/customizations/${customizId}/pages`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -425,19 +569,12 @@ export default function Editor() {
         }
       }
 
-      console.log("[Save] Mutation completed successfully with ID:", customizId);
       return customizId;
     },
     onSuccess: (id) => {
-      console.log("[Save] Success callback fired with ID:", id);
-      toast({
-        title: "Saved successfully",
-        description: "Your customization has been saved.",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/customizations"] });
     },
     onError: (error: any) => {
-      console.log("[Save] Error callback fired:", error);
       if (error.message !== "Not authenticated") {
         toast({
           title: "Save failed",
@@ -448,7 +585,6 @@ export default function Editor() {
     },
   });
 
-  // All hooks declared - now we can do early returns
   const template = templateData;
   const pages = templateData?.pages || [];
 
@@ -502,7 +638,6 @@ export default function Editor() {
       [fieldKey]: file
     }));
 
-    // Create preview URL
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreviews(prev => ({
@@ -531,9 +666,59 @@ export default function Editor() {
     return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
   };
 
-  const handleSave = () => {
-    console.log("[Save] Starting save operation");
-    saveCustomizationMutation.mutate();
+  const handlePreview = () => {
+    // Save first, then start preview generation
+    saveCustomizationMutation.mutate(undefined, {
+      onSuccess: () => {
+        // Start preview generation
+        setShowPreviewLoading(true);
+        setPreviewProgress(0);
+
+        // Simulate progress (in production, this would track actual video generation)
+        const progressInterval = setInterval(() => {
+          setPreviewProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(progressInterval);
+              // Show preview modal when complete
+              setTimeout(() => {
+                setShowPreviewLoading(false);
+                setPreviewUrl(currentPage.thumbnailUrl); // Mock preview URL
+                setShowPreviewModal(true);
+              }, 500);
+              return 100;
+            }
+            return prev + 10;
+          });
+        }, 300);
+      }
+    });
+  };
+
+  const handleDownload = () => {
+    // Check if user is logged in
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    // Proceed with download
+    toast({
+      title: "Download started",
+      description: "Your video is being downloaded...",
+    });
+    
+    // Enable download button in editor
+    setDownloadEnabled(true);
+    
+    // TODO: Implement actual download logic
+    // For now, just close the modal
+    setShowPreviewModal(false);
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // Retry download after login
+    handleDownload();
   };
 
   const goToNextPage = () => {
@@ -550,6 +735,31 @@ export default function Editor() {
 
   return (
     <div className="h-screen flex flex-col bg-background" data-testid="editor-page">
+      {/* Preview Loading Screen */}
+      {showPreviewLoading && (
+        <PreviewLoadingScreen
+          progress={previewProgress}
+          onClose={() => setShowPreviewLoading(false)}
+        />
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && (
+        <PreviewModal
+          previewUrl={previewUrl}
+          onClose={() => setShowPreviewModal(false)}
+          onDownload={handleDownload}
+          downloadEnabled={true}
+        />
+      )}
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+      />
+
       {/* Header */}
       <div className="border-b bg-card">
         <div className="flex items-center justify-between px-4 py-3">
@@ -572,16 +782,12 @@ export default function Editor() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" data-testid="button-preview">
-              <Eye className="w-4 h-4 mr-2" />
-              Preview
-            </Button>
             <Button 
-              variant="default" 
+              variant="outline" 
               size="sm" 
-              onClick={handleSave}
+              onClick={handlePreview}
               disabled={saveCustomizationMutation.isPending}
-              data-testid="button-save"
+              data-testid="button-preview"
             >
               {saveCustomizationMutation.isPending ? (
                 <>
@@ -590,10 +796,20 @@ export default function Editor() {
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
                 </>
               )}
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              disabled={!downloadEnabled}
+              onClick={handleDownload}
+              data-testid="button-download"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download
             </Button>
           </div>
         </div>
