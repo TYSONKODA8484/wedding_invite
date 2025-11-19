@@ -1,469 +1,351 @@
-import { Link } from "wouter";
+import { useEffect } from "react";
+import { Link, useLocation } from "wouter";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
-import { CategoryCard } from "@/components/CategoryCard";
-import { TemplateCard } from "@/components/TemplateCard";
-import { CultureCard } from "@/components/CultureCard";
-import { TestimonialCard } from "@/components/TestimonialCard";
-import { ProcessStep } from "@/components/ProcessStep";
-import { Sparkles, Wand2, Palette, Share2, Heart, Briefcase, Baby, Calendar, Video, Globe, Zap, ArrowRight } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { ArrowRight, Play, Check, Heart, Calendar, Users, Star, Sparkles, Globe2, Flower2 } from "lucide-react";
 import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
-import engagementHero from "@assets/generated_images/Engagement_category_hero_image_e98e3800.png";
-import luxuryHero from "@assets/generated_images/Premium_luxury_category_hero_5c811c21.png";
-import indianPunjabiHero from "@assets/generated_images/Indian_Punjabi_wedding_culture_b8245c44.png";
-import arabicHero from "@assets/generated_images/Arabic_UAE_wedding_culture_5fdde5ea.png";
-import nigerianHero from "@assets/generated_images/Nigerian_traditional_wedding_culture_733beed6.png";
 
 export default function Home() {
-  const categories = [
-    {
-      id: "1",
-      name: "Wedding Video Invitations",
-      slug: "wedding-video-invitations",
-      description: "Cinematic wedding invitations that capture your love story",
-      heroImageUrl: homepageHero,
-      templateCount: 150,
-      icon: <Heart className="w-8 h-8" />,
-    },
-    {
-      id: "2",
-      name: "Premium Luxury",
-      slug: "premium-luxury",
-      description: "Sophisticated, high-end templates for elegant celebrations",
-      heroImageUrl: luxuryHero,
-      templateCount: 45,
-      icon: <Sparkles className="w-8 h-8" />,
-    },
-    {
-      id: "3",
-      name: "Engagement Invites",
-      slug: "engagement-invites",
-      description: "Announce your engagement with romantic video invitations",
-      heroImageUrl: engagementHero,
-      templateCount: 80,
-      icon: <Heart className="w-8 h-8" />,
-    },
-    {
-      id: "4",
-      name: "Baby Announcements",
-      slug: "baby-announcements",
-      description: "Adorable video announcements for your bundle of joy",
-      heroImageUrl: homepageHero,
-      templateCount: 60,
-      icon: <Baby className="w-8 h-8" />,
-    },
-    {
-      id: "5",
-      name: "Birthday & Anniversary",
-      slug: "birthday-anniversary",
-      description: "Celebrate milestones with personalized video invites",
-      heroImageUrl: engagementHero,
-      templateCount: 70,
-      icon: <Calendar className="w-8 h-8" />,
-    },
-    {
-      id: "6",
-      name: "Corporate Invites",
-      slug: "corporate-invites",
-      description: "Professional event invitations for business occasions",
-      heroImageUrl: luxuryHero,
-      templateCount: 40,
-      icon: <Briefcase className="w-8 h-8" />,
-    },
-  ];
+  const [location] = useLocation();
 
-  const featuredTemplates = [
-    {
-      id: "1",
-      title: "Cinematic Love Story",
-      slug: "cinematic-love-story",
-      category: "wedding",
-      duration: 45,
-      thumbnailUrl: homepageHero,
-      isPremium: true,
-    },
-    {
-      id: "2",
-      title: "Golden Elegance",
-      slug: "golden-elegance",
-      category: "engagement",
-      duration: 30,
-      thumbnailUrl: luxuryHero,
-      isPremium: false,
-    },
-    {
-      id: "3",
-      title: "Traditional Celebration",
-      slug: "traditional-celebration",
-      category: "wedding",
-      duration: 60,
-      thumbnailUrl: indianPunjabiHero,
-      isPremium: true,
-    },
-    {
-      id: "4",
-      title: "Modern Romance",
-      slug: "modern-romance",
-      category: "engagement",
-      duration: 40,
-      thumbnailUrl: engagementHero,
-      isPremium: false,
-    },
-  ];
-
-  const cultures = [
-    {
-      id: "1",
-      name: "Indian Weddings",
-      localName: "भारतीय विवाह",
-      slug: "indian-wedding-video-invitation",
-      description: "Rich traditions and vibrant celebrations",
-      heroImageUrl: indianPunjabiHero,
-      templateCount: 120,
-    },
-    {
-      id: "2",
-      name: "Arabic Weddings",
-      localName: "الزفاف العربي",
-      slug: "arabic-wedding-video-uae-saudi",
-      description: "Luxurious Middle Eastern wedding traditions",
-      heroImageUrl: arabicHero,
-      templateCount: 85,
-    },
-    {
-      id: "3",
-      name: "Nigerian Weddings",
-      localName: "Ìgbéyàwó Nàìjíríà",
-      slug: "nigerian-traditional-wedding-video",
-      description: "Colorful African cultural celebrations",
-      heroImageUrl: nigerianHero,
-      templateCount: 70,
-    },
-  ];
-
-  const testimonials = [
-    {
-      id: "1",
-      name: "Priya & Raj Sharma",
-      event: "Wedding",
-      date: "Dec 2024",
-      rating: 5,
-      quote: "WeddingInvite.ai transformed our wedding invitations into a cinematic masterpiece. Our guests were absolutely blown away!",
-      avatarUrl: undefined,
-    },
-    {
-      id: "2",
-      name: "Sarah & Michael Chen",
-      event: "Engagement",
-      date: "Nov 2024",
-      rating: 5,
-      quote: "The AI customization made it so easy to create professional-looking video invitations. Saved us thousands compared to hiring a videographer.",
-    },
-    {
-      id: "3",
-      name: "Fatima Al-Hassan",
-      event: "Wedding",
-      date: "Oct 2024",
-      rating: 5,
-      quote: "Perfect cultural accuracy for our traditional Arabic wedding. The templates captured our heritage beautifully.",
-    },
-  ];
-
-  const whyChooseUs = [
-    {
-      icon: <Wand2 className="w-12 h-12" />,
-      title: "AI-Powered Customization",
-      description: "Intelligent editor automatically generates scripts, voiceovers, and themes tailored to your event.",
-    },
-    {
-      icon: <Palette className="w-12 h-12" />,
-      title: "Culturally Accurate",
-      description: "Hundreds of templates designed for specific cultures and traditions around the world.",
-    },
-    {
-      icon: <Video className="w-12 h-12" />,
-      title: "4K Cinematic Quality",
-      description: "Professional-grade video invitations in stunning 4K resolution for premium presentation.",
-    },
-    {
-      icon: <Share2 className="w-12 h-12" />,
-      title: "Instant Export",
-      description: "Share directly to WhatsApp, Instagram Reels, TikTok, or download for any platform.",
-    },
-  ];
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const element = document.getElementById(hash.substring(1));
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+    }
+  }, [location]);
 
   return (
-    <>
-      <SEOHead
-        title="Cinematic Video Invitations. Instantly. Culturally Accurate"
-        description="Create AI-powered, fully customizable video invitations for weddings, engagements, and special events. 4K cinematic quality with cultural templates for global celebrations."
-        keywords="wedding video invitation, AI video creator, digital invitation, cinematic invitation, cultural wedding templates"
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          "name": "WeddingInvite.ai",
-          "url": "https://weddinginvite.ai",
-          "description": "Cinematic Video Invitations. Instantly. Culturally Accurate.",
-        }}
+    <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="WeddingInvite.ai - Online Indian & Arabic Wedding Invitation Maker"
+        description="Create beautiful video and card invitations in minutes for Indian and Middle Eastern weddings. Customizable templates for weddings, engagements, and special celebrations."
+        keywords="wedding invitation, indian wedding, arabic wedding, video invitation, digital invitation, engagement invitation"
       />
 
-      <div className="relative min-h-screen flex items-center justify-center overflow-hidden" data-testid="section-hero">
-        <div className="absolute inset-0 z-0">
-          <img
-            src={homepageHero}
-            alt="Cinematic Wedding Video"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
-        </div>
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-primary/5 via-background to-accent/5 py-16 md:py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/50 pointer-events-none" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm font-medium text-primary mb-4">
+              <Star className="w-4 h-4" />
+              Trusted by 10,000+ couples worldwide
+            </div>
+            
+            <h1 className="font-playfair text-4xl md:text-6xl lg:text-7xl font-bold text-foreground leading-tight">
+              Online <span className="text-primary">Invitation</span> Maker
+            </h1>
+            
+            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Create online invitations in minutes by choosing from hundreds of customizable templates for Indian and Middle Eastern weddings, engagements, and special celebrations.
+            </p>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 text-center">
-          <h1 className="font-playfair text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight" data-testid="text-hero-title">
-            Cinematic Video Invitations.
-            <br />
-            <span className="text-accent">Instantly.</span>
-          </h1>
-          <p className="text-white/90 text-xl lg:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed font-light" data-testid="text-hero-subtitle">
-            AI-powered video invitations for global weddings and events.
-            <br className="hidden sm:block" />
-            Culturally accurate. Instantly shareable.
-          </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button 
+                size="lg" 
+                className="group text-lg px-8 py-6"
+                asChild
+                data-testid="button-get-started"
+              >
+                <Link href="/templates">
+                  Get Started for Free
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="text-lg px-8 py-6"
+                data-testid="button-watch-demo"
+              >
+                <Play className="mr-2 w-5 h-5" />
+                Watch Demo
+              </Button>
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <Button
-              variant="default"
-              size="lg"
-              className="min-w-[220px] text-lg font-semibold shadow-2xl hover:shadow-accent/50 transition-all h-14"
-              asChild
-              data-testid="button-create-invitation"
-            >
-              <Link href="/templates" className="flex items-center gap-2">
-                Create Invitation
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="min-w-[220px] text-lg font-semibold bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 h-14"
-              asChild
-              data-testid="button-explore-templates"
-            >
-              <Link href="/templates">
-                Explore Templates
-              </Link>
-            </Button>
+            {/* Hero Image */}
+            <div className="mt-12 rounded-2xl overflow-hidden shadow-2xl border border-border">
+              <img 
+                src={homepageHero} 
+                alt="Wedding Invitation Templates" 
+                className="w-full h-auto"
+              />
+            </div>
           </div>
-
-          <p className="text-white/70 text-sm">4K Quality • 500+ Templates • 50+ Cultures</p>
         </div>
-      </div>
+      </section>
 
-      <section className="py-16 md:py-24 lg:py-32 bg-background" data-testid="section-why-choose-us">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Why Choose WeddingInvite.ai?
+      {/* Popular Categories */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-playfair text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Popular Invitation Categories
             </h2>
-            <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-              Create professional video invitations in minutes with our AI-powered platform
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Find the perfect invitation for your special occasion
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {whyChooseUs.map((feature, index) => (
-              <div key={index} className="text-center" data-testid={`feature-${index}`}>
-                <div className="inline-flex items-center justify-center w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-primary/10 text-primary mb-6 hover-elevate transition-all">
-                  {feature.icon}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Wedding */}
+            <Link href="/templates?category=wedding" data-testid="link-category-wedding">
+              <Card className="group overflow-hidden hover-elevate active-elevate-2 cursor-pointer border-2 transition-all" data-testid="card-category-wedding">
+                <div className="aspect-[4/3] bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/20 dark:to-pink-900/20 flex items-center justify-center">
+                  <Heart className="w-16 h-16 text-rose-500" />
                 </div>
-                <h3 className="font-playfair text-xl lg:text-2xl font-bold text-foreground mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground">
-                  {feature.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                <div className="p-6">
+                  <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
+                    Wedding Invites
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Elegant video & card invites for your big day
+                  </p>
+                  <div className="flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform">
+                    Browse Templates
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </div>
+                </div>
+              </Card>
+            </Link>
 
-      <section className="py-16 md:py-24 lg:py-32 bg-card" data-testid="section-popular-categories">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Popular Categories
-            </h2>
-            <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-              Explore our curated collection of video invitation templates
-            </p>
-          </div>
+            {/* Engagement */}
+            <Link href="/templates?category=engagement" data-testid="link-category-engagement">
+              <Card className="group overflow-hidden hover-elevate active-elevate-2 cursor-pointer border-2 transition-all" data-testid="card-category-engagement">
+                <div className="aspect-[4/3] bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/20 dark:to-indigo-900/20 flex items-center justify-center">
+                  <Users className="w-16 h-16 text-purple-500" />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
+                    Engagement Ceremony
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Celebrate your engagement with charm
+                  </p>
+                  <div className="flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform">
+                    Browse Templates
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </div>
+                </div>
+              </Card>
+            </Link>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {categories.map((category) => (
-              <CategoryCard key={category.id} {...category} />
-            ))}
+            {/* Save the Date */}
+            <Link href="/templates?category=save-the-date" data-testid="link-category-save-the-date">
+              <Card className="group overflow-hidden hover-elevate active-elevate-2 cursor-pointer border-2 transition-all" data-testid="card-category-save-the-date">
+                <div className="aspect-[4/3] bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 flex items-center justify-center">
+                  <Calendar className="w-16 h-16 text-amber-500" />
+                </div>
+                <div className="p-6">
+                  <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
+                    Save the Date
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Beautiful announcements for your upcoming celebration
+                  </p>
+                  <div className="flex items-center text-primary font-medium group-hover:translate-x-1 transition-transform">
+                    Browse Templates
+                    <ArrowRight className="ml-2 w-4 h-4" />
+                  </div>
+                </div>
+              </Card>
+            </Link>
           </div>
 
           <div className="text-center mt-12">
-            <Button variant="outline" size="lg" asChild data-testid="button-view-all-categories">
+            <Button variant="outline" size="lg" asChild data-testid="button-browse-all">
               <Link href="/templates">
-                View All Categories
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 lg:py-32 bg-background" data-testid="section-featured-templates">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Featured Templates
-            </h2>
-            <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-              Hand-picked cinematic templates for your special moments
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {featuredTemplates.map((template) => (
-              <TemplateCard key={template.id} {...template} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Button variant="default" size="lg" asChild data-testid="button-browse-templates">
-              <Link href="/templates" className="flex items-center gap-2">
                 Browse All Templates
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="ml-2 w-4 h-4" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 lg:py-32 bg-card" data-testid="section-global-cultures">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Celebrate Every Culture
-            </h2>
-            <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-              Authentic templates designed for weddings and celebrations worldwide
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {cultures.map((culture) => (
-              <CultureCard key={culture.id} {...culture} />
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg" asChild data-testid="button-explore-cultures">
-              <Link href="/culture" className="flex items-center gap-2">
-                <Globe className="w-5 h-5" />
-                Explore All Cultures
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 lg:py-32 bg-background" data-testid="section-how-it-works">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4">
+      {/* How It Works */}
+      <section id="how-it-works" className="py-16 md:py-24" data-testid="section-how-it-works">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-playfair text-3xl md:text-4xl font-bold text-foreground mb-4">
               How It Works
             </h2>
-            <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-              Create stunning video invitations in three simple steps
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Create your perfect invitation in just 3 simple steps
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 relative">
-            <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-0.5 bg-border" />
-            <ProcessStep
-              number={1}
-              title="Choose a Template"
-              description="Browse our collection of 500+ cinematic templates across cultures and categories"
-              icon={<Sparkles className="w-10 h-10 lg:w-12 lg:h-12" />}
-            />
-            <ProcessStep
-              number={2}
-              title="Customize with AI"
-              description="Add your text, photos, music, and let AI generate voiceovers and perfect timing"
-              icon={<Wand2 className="w-10 h-10 lg:w-12 lg:h-12" />}
-            />
-            <ProcessStep
-              number={3}
-              title="Export & Share"
-              description="Download in 4K or share directly to WhatsApp, Instagram Reels, and TikTok"
-              icon={<Zap className="w-10 h-10 lg:w-12 lg:h-12" />}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Step 1 */}
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-2xl">
+                  1
+                </div>
+              </div>
+              <h3 className="font-playfair text-2xl font-bold text-foreground">
+                Choose an Invite
+              </h3>
+              <p className="text-muted-foreground">
+                Select from hundreds of beautiful video & card templates designed for Indian and Middle Eastern celebrations
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-2xl">
+                  2
+                </div>
+              </div>
+              <h3 className="font-playfair text-2xl font-bold text-foreground">
+                Customize Your Invite
+              </h3>
+              <p className="text-muted-foreground">
+                Add your details, upload photos, choose colors, and personalize every element to match your style
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-2xl">
+                  3
+                </div>
+              </div>
+              <h3 className="font-playfair text-2xl font-bold text-foreground">
+                Download & Share
+              </h3>
+              <p className="text-muted-foreground">
+                Get your invitation instantly and share via WhatsApp, email, or social media with all your guests
+              </p>
+            </div>
           </div>
 
           <div className="text-center mt-12">
-            <Button variant="default" size="lg" asChild data-testid="button-get-started">
-              <Link href="/how-it-works">
-                Learn More
+            <Button size="lg" asChild data-testid="button-start-creating">
+              <Link href="/templates">
+                Start Creating Now
+                <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 lg:py-32 bg-card" data-testid="section-testimonials">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Loved by Couples Worldwide
+      {/* Cultural Focus */}
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-playfair text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Celebrate Your Heritage
             </h2>
-            <p className="text-muted-foreground text-lg lg:text-xl max-w-2xl mx-auto">
-              See what our happy customers have to say
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Invitations designed specifically for Indian and Middle Eastern wedding traditions
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial.id} {...testimonial} />
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <Card className="p-6 text-center hover-elevate" data-testid="card-culture-punjabi">
+              <div className="w-12 h-12 mx-auto mb-3 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center">
+                <Flower2 className="w-6 h-6 text-orange-600" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">Indian Punjabi</h3>
+              <p className="text-sm text-muted-foreground">Traditional & Modern</p>
+            </Card>
+
+            <Card className="p-6 text-center hover-elevate" data-testid="card-culture-south-indian">
+              <div className="w-12 h-12 mx-auto mb-3 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                <Heart className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">South Indian</h3>
+              <p className="text-sm text-muted-foreground">Temple & Cultural</p>
+            </Card>
+
+            <Card className="p-6 text-center hover-elevate" data-testid="card-culture-arabic">
+              <div className="w-12 h-12 mx-auto mb-3 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center">
+                <Star className="w-6 h-6 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">Arabic Gulf</h3>
+              <p className="text-sm text-muted-foreground">Elegant & Luxurious</p>
+            </Card>
+
+            <Card className="p-6 text-center hover-elevate" data-testid="card-culture-modern">
+              <div className="w-12 h-12 mx-auto mb-3 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-1">Modern Fusion</h3>
+              <p className="text-sm text-muted-foreground">Contemporary Style</p>
+            </Card>
           </div>
         </div>
       </section>
 
-      <section className="relative py-20 lg:py-32 overflow-hidden" data-testid="section-final-cta">
-        <div className="absolute inset-0 z-0">
-          <img
-            src={homepageHero}
-            alt="Create Your Invitation"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/70 to-black/80" />
-        </div>
+      {/* Features */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="font-playfair text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Why Choose WeddingInvite.ai
+            </h2>
+          </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-playfair text-4xl lg:text-6xl font-bold text-white mb-6">
-            Ready to Create Your Perfect Invitation?
-          </h2>
-          <p className="text-white/90 text-lg lg:text-xl mb-8 lg:mb-12 leading-relaxed">
-            Join thousands of couples who've created stunning video invitations with WeddingInvite.ai
-          </p>
-          <Button
-            variant="default"
-            size="lg"
-            className="min-w-[240px] text-lg font-semibold shadow-2xl h-14"
-            asChild
-            data-testid="button-start-creating"
-          >
-            <Link href="/templates" className="flex items-center gap-2">
-              Start Creating Now
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg text-foreground">Instant Preview</h3>
+              <p className="text-muted-foreground">See your customized invitation in real-time before you download</p>
+            </div>
+
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg text-foreground">Cultural Authenticity</h3>
+              <p className="text-muted-foreground">Templates designed specifically for Indian and Arabic traditions</p>
+            </div>
+
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                <Check className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg text-foreground">WhatsApp Ready</h3>
+              <p className="text-muted-foreground">Download and share directly via WhatsApp with your guests</p>
+            </div>
+          </div>
         </div>
       </section>
-    </>
+
+      {/* CTA Section */}
+      <section className="py-16 md:py-24 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto text-center space-y-6">
+            <h2 className="font-playfair text-3xl md:text-5xl font-bold text-foreground">
+              Ready to Create Your Perfect Invitation?
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Join thousands of couples who have created beautiful invitations for their special day
+            </p>
+            <Button size="lg" className="text-lg px-8 py-6" asChild data-testid="button-cta-browse">
+              <Link href="/templates">
+                Browse Templates
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

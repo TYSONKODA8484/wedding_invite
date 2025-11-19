@@ -19,10 +19,8 @@ export function Navigation() {
 
   const navLinks = [
     { label: "Templates", href: "/templates" },
-    { label: "Cultures", href: "/culture" },
-    { label: "Pricing", href: "/pricing" },
-    { label: "How It Works", href: "/how-it-works" },
-    { label: "Blog", href: "/blog" },
+    { label: "How It Works", href: "/#how-it-works" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
@@ -66,6 +64,13 @@ export function Navigation() {
 
           <div className="hidden md:flex items-center gap-3">
             <Button
+              variant="ghost"
+              size="default"
+              data-testid="button-login"
+            >
+              Login
+            </Button>
+            <Button
               variant="default"
               size="default"
               asChild
@@ -105,9 +110,17 @@ export function Navigation() {
                   </Link>
                 ))}
                 <Button
-                  variant="default"
+                  variant="ghost"
                   size="default"
                   className="mt-4 w-full"
+                  data-testid="button-login-mobile"
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="default"
+                  size="default"
+                  className="w-full"
                   asChild
                   data-testid="button-create-invite-mobile"
                 >
