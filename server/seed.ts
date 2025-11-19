@@ -1,5 +1,6 @@
 import { db } from "./db";
-import { templates, templatePages, type InsertTemplate, type InsertTemplatePage } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { templates, templatePages, type InsertTemplate, type InsertTemplatePage, type Template } from "@shared/schema";
 
 const seedTemplates: InsertTemplate[] = [
   // Indian Wedding Templates
@@ -11,7 +12,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "indian-punjabi",
     style: "traditional",
     duration: 45,
-    thumbnailUrl: "/public-objects/templates/royal-punjabi/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_bride_and_gro_996cdc98.jpg",
     demoVideoUrl: "/public-objects/templates/royal-punjabi/demo.mp4",
     priceInr: 149900, // ₹1,499
     isPremium: true,
@@ -28,7 +29,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "indian-south",
     style: "modern",
     duration: 40,
-    thumbnailUrl: "/public-objects/templates/modern-south-indian/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_wedding_coupl_be32a045.jpg",
     demoVideoUrl: "/public-objects/templates/modern-south-indian/demo.mp4",
     priceInr: 129900, // ₹1,299
     isPremium: false,
@@ -45,7 +46,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "indian-hindi",
     style: "cinematic",
     duration: 50,
-    thumbnailUrl: "/public-objects/templates/bollywood-romance/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_wedding_coupl_48340897.jpg",
     demoVideoUrl: "/public-objects/templates/bollywood-romance/demo.mp4",
     priceInr: 179900, // ₹1,799
     isPremium: true,
@@ -62,7 +63,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "indian-bengali",
     style: "traditional",
     duration: 35,
-    thumbnailUrl: "/public-objects/templates/bengali-traditional/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_bride_and_gro_91831f50.jpg",
     demoVideoUrl: "/public-objects/templates/bengali-traditional/demo.mp4",
     priceInr: 119900, // ₹1,199
     isPremium: false,
@@ -79,7 +80,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "indian-rajasthani",
     style: "traditional",
     duration: 45,
-    thumbnailUrl: "/public-objects/templates/rajasthani-royal/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_bride_and_gro_0efd3ecf.jpg",
     demoVideoUrl: "/public-objects/templates/rajasthani-royal/demo.mp4",
     priceInr: 169900, // ₹1,699
     isPremium: true,
@@ -98,7 +99,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "arabic-gulf",
     style: "traditional",
     duration: 40,
-    thumbnailUrl: "/public-objects/templates/arabian-nights/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_bride_and_gro_82f563ca.jpg",
     demoVideoUrl: "/public-objects/templates/arabian-nights/demo.mp4",
     priceInr: 189900, // ₹1,899
     isPremium: true,
@@ -115,7 +116,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "arabic-uae",
     style: "modern",
     duration: 35,
-    thumbnailUrl: "/public-objects/templates/modern-dubai/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_wedding_venue_b0b74efa.jpg",
     demoVideoUrl: "/public-objects/templates/modern-dubai/demo.mp4",
     priceInr: 159900, // ₹1,599
     isPremium: false,
@@ -132,7 +133,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "arabic-egypt",
     style: "traditional",
     duration: 40,
-    thumbnailUrl: "/public-objects/templates/egyptian-heritage/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_bride_and_gro_3c17d0ba.jpg",
     demoVideoUrl: "/public-objects/templates/egyptian-heritage/demo.mp4",
     priceInr: 139900, // ₹1,399
     isPremium: false,
@@ -149,7 +150,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "arabic-morocco",
     style: "traditional",
     duration: 45,
-    thumbnailUrl: "/public-objects/templates/moroccan-elegance/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_bride_and_gro_0cacd776.jpg",
     demoVideoUrl: "/public-objects/templates/moroccan-elegance/demo.mp4",
     priceInr: 149900, // ₹1,499
     isPremium: true,
@@ -166,7 +167,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "arabic-saudi",
     style: "traditional",
     duration: 50,
-    thumbnailUrl: "/public-objects/templates/saudi-royal/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_bride_and_gro_10e8c1df.jpg",
     demoVideoUrl: "/public-objects/templates/saudi-royal/demo.mp4",
     priceInr: 229900, // ₹2,299
     isPremium: true,
@@ -185,7 +186,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "modern-universal",
     style: "modern",
     duration: 30,
-    thumbnailUrl: "/public-objects/templates/minimalist-elegance/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_wedding_coupl_4fac5e3b.jpg",
     demoVideoUrl: "/public-objects/templates/minimalist-elegance/demo.mp4",
     priceInr: 99900, // ₹999
     isPremium: false,
@@ -202,7 +203,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "modern-universal",
     style: "modern",
     duration: 35,
-    thumbnailUrl: "/public-objects/templates/garden-romance/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_wedding_coupl_5ae7abcc.jpg",
     demoVideoUrl: "/public-objects/templates/garden-romance/demo.mp4",
     priceInr: 119900, // ₹1,199
     isPremium: false,
@@ -221,7 +222,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "indian-universal",
     style: "traditional",
     duration: 30,
-    thumbnailUrl: "/public-objects/templates/indian-engagement/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/indian_wedding_coupl_50b61ff2.jpg",
     demoVideoUrl: "/public-objects/templates/indian-engagement/demo.mp4",
     priceInr: 89900, // ₹899
     isPremium: false,
@@ -238,7 +239,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "arabic-universal",
     style: "modern",
     duration: 30,
-    thumbnailUrl: "/public-objects/templates/arabic-engagement/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_wedding_venue_109cc4ce.jpg",
     demoVideoUrl: "/public-objects/templates/arabic-engagement/demo.mp4",
     priceInr: 94900, // ₹949
     isPremium: false,
@@ -257,7 +258,7 @@ const seedTemplates: InsertTemplate[] = [
     culture: "modern-universal",
     style: "modern",
     duration: 35,
-    thumbnailUrl: "/public-objects/templates/grand-reception/thumbnail.jpg",
+    thumbnailUrl: "/stock-images/arabic_wedding_venue_e385e301.jpg",
     demoVideoUrl: "/public-objects/templates/grand-reception/demo.mp4",
     priceInr: 109900, // ₹1,099
     isPremium: false,
@@ -449,9 +450,46 @@ async function seedDatabase() {
 
   try {
     for (const templateData of seedTemplates) {
-      // Insert template
-      const [template] = await db.insert(templates).values(templateData).returning();
-      console.log(`✅ Created template: ${template.title}`);
+      // Check if template already exists by slug
+      const existingTemplate = await db.query.templates.findFirst({
+        where: (templates, { eq }) => eq(templates.slug, templateData.slug),
+      });
+
+      let template: Template;
+
+      if (existingTemplate) {
+        // Update existing template to preserve its ID (exclude server-managed fields)
+        const updatePayload: Partial<InsertTemplate> = {};
+        
+        // Only set fields that are defined in templateData
+        if (templateData.title !== undefined) updatePayload.title = templateData.title;
+        if (templateData.description !== undefined) updatePayload.description = templateData.description;
+        if (templateData.category !== undefined) updatePayload.category = templateData.category;
+        if (templateData.culture !== undefined) updatePayload.culture = templateData.culture;
+        if (templateData.style !== undefined) updatePayload.style = templateData.style;
+        if (templateData.duration !== undefined) updatePayload.duration = templateData.duration;
+        if (templateData.thumbnailUrl !== undefined) updatePayload.thumbnailUrl = templateData.thumbnailUrl;
+        if (templateData.demoVideoUrl !== undefined) updatePayload.demoVideoUrl = templateData.demoVideoUrl;
+        if (templateData.priceInr !== undefined) updatePayload.priceInr = templateData.priceInr;
+        if (templateData.isPremium !== undefined) updatePayload.isPremium = templateData.isPremium;
+        if (templateData.isActive !== undefined) updatePayload.isActive = templateData.isActive;
+        if (templateData.pageCount !== undefined) updatePayload.pageCount = templateData.pageCount;
+        if (templateData.tags !== undefined) updatePayload.tags = templateData.tags;
+        if (templateData.orientation !== undefined) updatePayload.orientation = templateData.orientation;
+        
+        const [updated] = await db
+          .update(templates)
+          .set(updatePayload)
+          .where(eq(templates.id, existingTemplate.id))
+          .returning();
+        template = updated;
+        console.log(`✅ Updated template: ${template.title}`);
+      } else {
+        // Insert new template
+        const [inserted] = await db.insert(templates).values(templateData).returning();
+        template = inserted;
+        console.log(`✅ Created template: ${template.title}`);
+      }
 
       // Determine which page structure to use
       let pages = indianWeddingPages;
@@ -461,7 +499,7 @@ async function seedDatabase() {
         pages = modernWeddingPages;
       }
 
-      // Insert pages for this template
+      // Upsert pages for this template (update content if it changes)
       for (const pageData of pages.slice(0, templateData.pageCount)) {
         const pageInsert: InsertTemplatePage = {
           templateId: template.id,
@@ -471,14 +509,25 @@ async function seedDatabase() {
           editableFields: pageData.editableFields,
         };
 
-        await db.insert(templatePages).values(pageInsert);
+        // Use onConflictDoUpdate to sync page content if definitions change
+        await db
+          .insert(templatePages)
+          .values(pageInsert)
+          .onConflictDoUpdate({
+            target: [templatePages.templateId, templatePages.pageNumber],
+            set: {
+              pageName: pageData.pageName,
+              thumbnailUrl: `/public-objects/templates/${templateData.slug}/page-${pageData.pageNumber}.jpg`,
+              editableFields: pageData.editableFields,
+            },
+          });
       }
 
-      console.log(`   📄 Created ${templateData.pageCount} pages for ${template.title}`);
+      console.log(`   📄 Ensured ${templateData.pageCount} pages for ${template.title}`);
     }
 
     console.log("\n✨ Database seeding complete!");
-    console.log(`📊 Total templates created: ${seedTemplates.length}`);
+    console.log(`📊 Total templates processed: ${seedTemplates.length}`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     throw error;

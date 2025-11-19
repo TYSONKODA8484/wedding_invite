@@ -9,6 +9,7 @@ import {
   timestamp,
   jsonb,
   index,
+  uniqueIndex,
   decimal,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -84,7 +85,10 @@ export const templatePages = pgTable("template_pages", {
   // Structure: [{ id: "field1", type: "text", label: "Bride Name", defaultValue: "", maxLength: 50 }, ...]
   editableFields: jsonb("editable_fields").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  // Unique constraint: one page number per template
+  uniqueTemplateIdPageNumber: uniqueIndex("template_pages_template_id_page_number_unique").on(table.templateId, table.pageNumber),
+}));
 
 export const insertTemplatePageSchema = createInsertSchema(templatePages).omit({
   id: true,

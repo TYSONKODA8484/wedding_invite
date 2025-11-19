@@ -13,6 +13,8 @@ import {
   insertPaymentSchema,
   insertAnalyticsEventSchema,
 } from "@shared/schema";
+import path from "path";
+import fs from "fs/promises";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== TEMPLATE ROUTES ====================
@@ -183,6 +185,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ==================== OBJECT STORAGE ROUTES ====================
+  
+  // Stock images serving (for demo/MVP - serves from attached_assets/stock_images)
+  app.get("/stock-images/:filename", async (req, res) => {
+    try {
+      const rawFilename = req.params.filename;
+      
+      // SECURITY LAYER 1: Reject any filename containing % to prevent double-encoding attacks
+      // This blocks payloads like %252e%252e%2F (decodes to ..%2F then to ../)
+      if (rawFilename.includes("%")) {
+        console.warn(`[SECURITY] Encoded characters detected in filename: ${rawFilename}`);
+        return res.status(400).json({ error: "Invalid filename" });
+      }
+      
+      // Decode URL-encoded filename
+      const decodedFilename = decodeURIComponent(rawFilename);
+      
+      // SECURITY LAYER 2: Use path.basename to strip ALL directory components
+      // This prevents all forms of path traversal (../, ..\, encoded variants)
+      const safeFilename = path.basename(decodedFilename);
+      
+      // Verify basename didn't change the filename (would indicate path components)
+      if (safeFilename !== decodedFilename) {
+        console.warn(`[SECURITY] Path components detected: ${decodedFilename} -> ${safeFilename}`);
+        return res.status(400).json({ error: "Invalid filename" });
+      }
+      
+      // SECURITY LAYER 3: Whitelist allowed extensions
+      const ext = path.extname(safeFilename).toLowerCase();
+      const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+      if (!allowedExtensions.includes(ext)) {
+        return res.status(400).json({ error: "Invalid file type" });
+      }
+      
+      // Build safe file path
+      const stockImagesDir = path.join(process.cwd(), "attached_assets", "stock_images");
+      const imagePath = path.join(stockImagesDir, safeFilename);
+      
+      // SECURITY LAYER 4: Verify resolved path is within stock_images directory
+      const resolvedPath = path.resolve(imagePath);
+      const resolvedBaseDir = path.resolve(stockImagesDir) + path.sep;
+      if (!resolvedPath.startsWith(resolvedBaseDir)) {
+        console.warn(`[SECURITY] Path escape detected: ${resolvedPath} not in ${resolvedBaseDir}`);
+        return res.status(403).json({ error: "Access denied" });
+      }
+      
+      // Read the image file
+      const imageBuffer = await fs.readFile(resolvedPath);
+      
+      // Set appropriate content type
+      const contentType = ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : 
+                         ext === ".png" ? "image/png" :
+                         ext === ".webp" ? "image/webp" : "image/jpeg";
+      
+      res.set("Content-Type", contentType);
+      res.set("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
+      res.send(imageBuffer);
+    } catch (error) {
+      console.error("Error serving stock image:", error);
+      res.status(404).json({ error: "Image not found" });
+    }
+  });
   
   // Public object serving (template thumbnails, demo videos)
   app.get("/public-objects/:filePath(*)", async (req, res) => {
