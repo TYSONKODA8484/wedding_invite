@@ -14,7 +14,8 @@ import CategoryPage from "@/pages/CategoryPage";
 import Cultures from "@/pages/Cultures";
 import CulturePage from "@/pages/CulturePage";
 import CountryPage from "@/pages/CountryPage";
-import Pricing from "@/pages/Pricing";
+// TODO: Re-enable after MVP - Monthly subscription pricing
+// import Pricing from "@/pages/Pricing";
 import HowItWorks from "@/pages/HowItWorks";
 import Examples from "@/pages/Examples";
 import Blog from "@/pages/Blog";
@@ -65,7 +66,8 @@ function Router() {
       <Route path="/countries/canada" component={CountryPage} />
       <Route path="/countries/china" component={CountryPage} />
       
-      <Route path="/pricing" component={Pricing} />
+      {/* TODO: Re-enable after MVP - Monthly subscription pricing */}
+      {/* <Route path="/pricing" component={Pricing} /> */}
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/examples" component={Examples} />
       <Route path="/blog" component={Blog} />

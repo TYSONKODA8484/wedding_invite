@@ -7,7 +7,8 @@ export function Footer() {
   const companyLinks = [
     { label: "About Us", href: "/about" },
     { label: "How It Works", href: "/how-it-works" },
-    { label: "Pricing", href: "/pricing" },
+    // TODO: Re-enable after MVP - Monthly subscription pricing
+    // { label: "Pricing", href: "/pricing" },
     { label: "Enterprise", href: "/enterprise" },
     { label: "Contact", href: "/contact" },
   ];
