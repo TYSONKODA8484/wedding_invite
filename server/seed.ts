@@ -104,13 +104,16 @@ export async function seed() {
       .insert(templates)
       .values({
         name: "Indian Hindu Wedding Invite",
-        type: "card",
+        slug: "indian-hindu-wedding-invite",
+        type: "wedding",
         orientation: "portrait",
         photoOption: "with_photo",
         tags: ["hindu", "marathi", "indian", "wedding", "save-the-date"],
         coverImage: "/stock-images/indian_wedding_couple.jpg",
+        thumbnailUrl: "/stock-images/indian_wedding_couple.jpg",
+        duration: 45,
         currency: "INR",
-        price: "199.00",
+        price: "1200.00",
         templateJson: indianTemplateJson,
         createdBy: testUser?.id || null,
       })

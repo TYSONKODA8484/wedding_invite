@@ -23,11 +23,15 @@ import Enterprise from "@/pages/Enterprise";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
 import FAQ from "@/pages/FAQ";
+import Signup from "@/pages/Signup";
+import Login from "@/pages/Login";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/login" component={Login} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:slug" component={TemplateDetail} />
       <Route path="/editor/:slug" component={Editor} />
@@ -75,17 +79,18 @@ function Router() {
 function App() {
   const [location] = useLocation();
   const isEditorMode = location.startsWith('/editor');
+  const isAuthPage = location.startsWith('/signup') || location.startsWith('/login');
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen flex flex-col bg-background">
-          {/* Hide Navigation and Footer in Editor mode for full-screen customization */}
-          {!isEditorMode && <Navigation />}
+          {/* Hide Navigation and Footer in Editor mode and Auth pages */}
+          {!isEditorMode && !isAuthPage && <Navigation />}
           <main className="flex-1">
             <Router />
           </main>
-          {!isEditorMode && <Footer />}
+          {!isEditorMode && !isAuthPage && <Footer />}
         </div>
         <Toaster />
       </TooltipProvider>

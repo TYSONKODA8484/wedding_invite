@@ -10,62 +10,41 @@ import { SlidersHorizontal, X, Loader2 } from "lucide-react";
 import templatesHubHero from "@assets/generated_images/Templates_hub_hero_image_bf0e94da.png";
 
 export default function Templates() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedCulture, setSelectedCulture] = useState<string | null>(null);
-  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedOrientation, setSelectedOrientation] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const categories = ["All", "Wedding", "Engagement", "Reception"];
-  const cultures = ["All", "Indian", "Arabic", "Modern"];
-  const styles = ["All", "Cinematic", "Modern", "Traditional"];
-
-  const buildQueryParams = () => {
-    const params = new URLSearchParams();
-    if (selectedCategory && selectedCategory !== "All") {
-      params.append("category", selectedCategory.toLowerCase());
-    }
-    if (selectedCulture && selectedCulture !== "All") {
-      // Map UI culture names to database culture prefixes
-      const cultureMap: Record<string, string> = {
-        "Indian": "indian",
-        "Arabic": "arabic",
-        "Modern": "modern"
-      };
-      params.append("culture", cultureMap[selectedCulture] || selectedCulture.toLowerCase());
-    }
-    if (selectedStyle && selectedStyle !== "All") {
-      params.append("style", selectedStyle.toLowerCase());
-    }
-    return params.toString();
-  };
+  const types = ["All", "Wedding", "Engagement", "Reception", "Pre-Wedding"];
+  const orientations = ["All", "Portrait", "Landscape", "Square"];
 
   const { data: templates = [], isLoading, error } = useQuery<Template[]>({
-    queryKey: ["/api/templates", selectedCategory, selectedCulture, selectedStyle],
-    queryFn: async () => {
-      const queryString = buildQueryParams();
-      const url = `/api/templates${queryString ? `?${queryString}` : ""}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch templates");
-      }
-      return response.json();
-    },
+    queryKey: ["/api/templates"],
   });
 
-  const activeFiltersCount = [selectedCategory, selectedCulture, selectedStyle].filter(Boolean).length;
+  // Filter templates on the client side
+  const filteredTemplates = templates.filter((template: any) => {
+    if (selectedType && selectedType !== "All" && template.category !== selectedType.toLowerCase()) {
+      return false;
+    }
+    if (selectedOrientation && selectedOrientation !== "All" && template.orientation !== selectedOrientation.toLowerCase()) {
+      return false;
+    }
+    return true;
+  });
+
+  const activeFiltersCount = [selectedType, selectedOrientation].filter(f => f && f !== "All").length;
 
   const clearFilters = () => {
-    setSelectedCategory(null);
-    setSelectedCulture(null);
-    setSelectedStyle(null);
+    setSelectedType(null);
+    setSelectedOrientation(null);
   };
 
   return (
     <>
       <SEOHead
-        title="Video Invitation Templates - 500+ Cinematic Designs"
-        description="Browse our collection of 500+ premium video invitation templates for weddings, engagements, and special events. Customizable, culturally accurate, and ready to share."
-        keywords="wedding video templates, invitation templates, video creator, wedding invitation designs"
+        title="Video Invitation Templates - Cinematic Wedding Designs"
+        description="Browse our collection of premium video invitation templates for weddings, engagements, and special events. Customizable, culturally accurate, and ready to share."
+        keywords="wedding video templates, invitation templates, video creator, wedding invitation designs, indian wedding video, arabic wedding invitation"
       />
 
       <div className="relative min-h-[60vh] flex items-center justify-center overflow-hidden" data-testid="hero-templates">
@@ -83,7 +62,7 @@ export default function Templates() {
             Explore Our Templates
           </h1>
           <p className="text-white/90 text-lg lg:text-xl max-w-3xl mx-auto mb-8 leading-relaxed">
-            500+ cinematic video invitation templates designed for every culture and celebration
+            Cinematic video invitation templates designed for every culture and celebration
           </p>
         </div>
       </div>
@@ -93,7 +72,7 @@ export default function Templates() {
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <div>
               <h2 className="font-playfair text-2xl lg:text-3xl font-bold text-foreground">
-                {templates.length} Templates
+                {filteredTemplates.length} Template{filteredTemplates.length !== 1 ? 's' : ''}
               </h2>
               <p className="text-muted-foreground">Find the perfect template for your event</p>
             </div>
@@ -133,58 +112,38 @@ export default function Templates() {
                 <div>
                   <label className="text-sm font-medium text-foreground mb-3 block">Event Type</label>
                   <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => (
+                    {types.map((type) => (
                       <Badge
-                        key={category}
+                        key={type}
                         className={`cursor-pointer hover-elevate active-elevate-2 ${
-                          selectedCategory === category || (!selectedCategory && category === "All")
+                          selectedType === type || (!selectedType && type === "All")
                             ? "bg-primary text-primary-foreground"
                             : "bg-secondary text-secondary-foreground"
                         }`}
-                        onClick={() => setSelectedCategory(category === "All" ? null : category)}
-                        data-testid={`filter-category-${category.toLowerCase()}`}
+                        onClick={() => setSelectedType(type === "All" ? null : type)}
+                        data-testid={`filter-type-${type.toLowerCase()}`}
                       >
-                        {category}
+                        {type}
                       </Badge>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">Culture</label>
+                  <label className="text-sm font-medium text-foreground mb-3 block">Orientation</label>
                   <div className="flex flex-wrap gap-2">
-                    {cultures.map((culture) => (
+                    {orientations.map((orientation) => (
                       <Badge
-                        key={culture}
+                        key={orientation}
                         className={`cursor-pointer hover-elevate active-elevate-2 ${
-                          selectedCulture === culture || (!selectedCulture && culture === "All")
+                          selectedOrientation === orientation || (!selectedOrientation && orientation === "All")
                             ? "bg-primary text-primary-foreground"
                             : "bg-secondary text-secondary-foreground"
                         }`}
-                        onClick={() => setSelectedCulture(culture === "All" ? null : culture)}
-                        data-testid={`filter-culture-${culture.toLowerCase()}`}
+                        onClick={() => setSelectedOrientation(orientation === "All" ? null : orientation)}
+                        data-testid={`filter-orientation-${orientation.toLowerCase()}`}
                       >
-                        {culture}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">Style</label>
-                  <div className="flex flex-wrap gap-2">
-                    {styles.map((style) => (
-                      <Badge
-                        key={style}
-                        className={`cursor-pointer hover-elevate active-elevate-2 ${
-                          selectedStyle === style || (!selectedStyle && style === "All")
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary text-secondary-foreground"
-                        }`}
-                        onClick={() => setSelectedStyle(style === "All" ? null : style)}
-                        data-testid={`filter-style-${style.toLowerCase()}`}
-                      >
-                        {style}
+                        {orientation}
                       </Badge>
                     ))}
                   </div>
@@ -217,7 +176,7 @@ export default function Templates() {
                 </Button>
               </div>
             </Card>
-          ) : templates.length === 0 ? (
+          ) : filteredTemplates.length === 0 ? (
             <Card className="p-12 text-center" data-testid="empty-templates">
               <div className="max-w-md mx-auto">
                 <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
@@ -234,12 +193,22 @@ export default function Templates() {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-                {templates.map((template) => (
-                  <TemplateCard key={template.id} {...template} />
+                {filteredTemplates.map((template: any) => (
+                  <TemplateCard
+                    key={template.id}
+                    id={template.id}
+                    title={template.title}
+                    slug={template.slug}
+                    category={template.category}
+                    duration={template.duration}
+                    thumbnailUrl={template.thumbnailUrl}
+                    priceInr={template.priceInr}
+                    isPremium={template.isPremium}
+                  />
                 ))}
               </div>
 
-              {templates.length >= 12 && (
+              {filteredTemplates.length >= 12 && (
                 <div className="text-center mt-12">
                   <Button variant="outline" size="lg" data-testid="button-load-more">
                     Load More Templates

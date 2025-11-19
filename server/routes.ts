@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as bcrypt from "bcryptjs";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -87,14 +87,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const templates = await storage.getTemplates();
       
       const templateList = templates.map(t => ({
-        template_id: t.id,
-        name: t.name,
-        cover_image: t.coverImage,
+        id: t.id,
+        title: t.name,
+        slug: t.slug,
+        category: t.type,
+        duration: t.duration,
+        thumbnailUrl: t.thumbnailUrl,
+        priceInr: Math.floor(parseFloat(t.price) * 100), // Convert rupees to paise
         tags: t.tags,
-        price: parseFloat(t.price),
-        currency: t.currency,
-        type: t.type,
         orientation: t.orientation,
+        isPremium: parseFloat(t.price) >= 2000, // Templates >= ₹2000 are premium
       }));
       
       res.json(templateList);

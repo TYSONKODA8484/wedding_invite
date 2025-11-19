@@ -8,6 +8,7 @@ import {
   jsonb,
   index,
   decimal,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -47,11 +48,14 @@ export type User = typeof users.$inferSelect;
 export const templates = pgTable("templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
-  type: varchar("type").notNull(), // 'card' or 'video'
+  slug: varchar("slug").notNull().unique(),
+  type: varchar("type").notNull(), // 'wedding', 'engagement', 'reception', etc.
   orientation: varchar("orientation").notNull(), // 'portrait' or 'landscape'
   photoOption: varchar("photo_option").notNull(), // 'with_photo' or 'without_photo'
   tags: jsonb("tags").notNull().default([]), // array of strings
   coverImage: varchar("cover_image").notNull(), // S3 key or URL
+  thumbnailUrl: varchar("thumbnail_url").notNull(), // thumbnail for gallery
+  duration: integer("duration").notNull().default(30), // duration in seconds
   currency: varchar("currency").notNull().default("INR"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(), // e.g., 199.00
   templateJson: jsonb("template_json").notNull(), // Full template structure (pages[], fields[], media[])
