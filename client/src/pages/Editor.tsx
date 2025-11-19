@@ -1,7 +1,9 @@
 import { useRoute, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useRef, useEffect } from "react";
 import type { Template, TemplatePage } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2, X, Save, Eye, ArrowLeft, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -349,6 +351,9 @@ export default function Editor() {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
+  const [customizationId, setCustomizationId] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const { data: templateData, isLoading, error } = useQuery<Template & { pages?: TemplatePage[] }>({
     queryKey: ["/api/templates", slug],
@@ -442,6 +447,99 @@ export default function Editor() {
     return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
   };
 
+  // Save customization mutation
+  const saveCustomizationMutation = useMutation({
+    mutationFn: async () => {
+      // Check authentication first
+      const authResponse = await fetch("/api/auth/user", { credentials: "include" });
+      if (!authResponse.ok) {
+        // Redirect to login
+        window.location.href = "/api/login";
+        throw new Error("Not authenticated");
+      }
+
+      // Create or update customization
+      let customizId = customizationId;
+      if (!customizId) {
+        // Create new customization
+        const response = await fetch("/api/customizations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            templateId: templateData!.id,
+            customizationName: `${templateData!.title} Customization`,
+            status: "draft",
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to create customization: ${errorText}`);
+        }
+
+        const customization = await response.json();
+        customizId = customization.id;
+        setCustomizationId(customizId);
+      }
+
+      // Save all page field values
+      const pages = templateData!.pages || [];
+      for (const page of pages) {
+        // Collect field values for this page
+        const pageFieldValues: Record<string, string> = {};
+        for (const field of page.editableFields) {
+          const fieldKey = `${page.id}_${field.id}`;
+          const value = fieldValues[fieldKey] || field.defaultValue || '';
+          pageFieldValues[field.id] = value;
+        }
+
+        // Save page data
+        const pageResponse = await fetch(`/api/customizations/${customizId}/pages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            templatePageId: page.id,
+            pageNumber: page.pageNumber,
+            fieldValues: pageFieldValues,
+          }),
+        });
+
+        if (!pageResponse.ok) {
+          const errorText = await pageResponse.text();
+          throw new Error(`Failed to save page ${page.pageNumber}: ${errorText}`);
+        }
+      }
+
+      console.log("[Save] Mutation completed successfully with ID:", customizId);
+      return customizId;
+    },
+    onSuccess: (id) => {
+      console.log("[Save] Success callback fired with ID:", id);
+      toast({
+        title: "Saved successfully",
+        description: "Your customization has been saved.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/customizations"] });
+    },
+    onError: (error: any) => {
+      console.log("[Save] Error callback fired:", error);
+      if (error.message !== "Not authenticated") {
+        toast({
+          title: "Save failed",
+          description: error.message || "Failed to save customization",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const handleSave = () => {
+    console.log("[Save] Starting save operation");
+    saveCustomizationMutation.mutate();
+  };
+
   const goToNextPage = () => {
     if (currentPageIndex < pages.length - 1) {
       setCurrentPageIndex(currentPageIndex + 1);
@@ -482,9 +580,24 @@ export default function Editor() {
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
-            <Button variant="default" size="sm" data-testid="button-save">
-              <Save className="w-4 h-4 mr-2" />
-              Save
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handleSave}
+              disabled={saveCustomizationMutation.isPending}
+              data-testid="button-save"
+            >
+              {saveCustomizationMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save
+                </>
+              )}
             </Button>
           </div>
         </div>
