@@ -1,268 +1,316 @@
-import { randomUUID } from "crypto";
-import type { Template, InsertTemplate, Contact, InsertContact, Article, InsertArticle } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
+import {
+  users,
+  templates,
+  templatePages,
+  customizations,
+  customizationPages,
+  orders,
+  payments,
+  downloads,
+  analyticsEvents,
+  type User,
+  type UpsertUser,
+  type Template,
+  type InsertTemplate,
+  type TemplatePage,
+  type InsertTemplatePage,
+  type Customization,
+  type InsertCustomization,
+  type CustomizationPage,
+  type InsertCustomizationPage,
+  type Order,
+  type InsertOrder,
+  type Payment,
+  type InsertPayment,
+  type Download,
+  type InsertDownload,
+  type InsertAnalyticsEvent,
+} from "@shared/schema";
 
 export interface IStorage {
+  // User operations (REQUIRED for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Template operations
   getTemplates(filters?: {
     category?: string;
     culture?: string;
     style?: string;
+    isActive?: boolean;
   }): Promise<Template[]>;
+  getTemplateById(id: string): Promise<Template | undefined>;
   getTemplateBySlug(slug: string): Promise<Template | undefined>;
   createTemplate(template: InsertTemplate): Promise<Template>;
   
-  createContact(contact: InsertContact): Promise<Contact>;
+  // Template pages operations
+  getTemplatePages(templateId: string): Promise<TemplatePage[]>;
+  createTemplatePage(page: InsertTemplatePage): Promise<TemplatePage>;
   
-  getArticles(): Promise<Article[]>;
-  getArticleBySlug(slug: string): Promise<Article | undefined>;
-  createArticle(article: InsertArticle): Promise<Article>;
+  // Customization operations
+  getUserCustomizations(userId: string): Promise<Customization[]>;
+  getCustomizationById(id: string): Promise<Customization | undefined>;
+  createCustomization(customization: InsertCustomization): Promise<Customization>;
+  updateCustomization(id: string, updates: Partial<Customization>): Promise<Customization | undefined>;
+  
+  // Customization pages operations
+  getCustomizationPages(customizationId: string): Promise<CustomizationPage[]>;
+  createCustomizationPage(page: InsertCustomizationPage): Promise<CustomizationPage>;
+  updateCustomizationPage(id: string, fieldValues: any): Promise<CustomizationPage | undefined>;
+  
+  // Order operations
+  createOrder(order: InsertOrder): Promise<Order>;
+  getOrderById(id: string): Promise<Order | undefined>;
+  getOrderByRazorpayId(razorpayOrderId: string): Promise<Order | undefined>;
+  updateOrderStatus(id: string, status: string): Promise<Order | undefined>;
+  getUserOrders(userId: string): Promise<Order[]>;
+  
+  // Payment operations
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getPaymentByRazorpayId(razorpayPaymentId: string): Promise<Payment | undefined>;
+  
+  // Download operations
+  createDownload(download: InsertDownload): Promise<Download>;
+  getOrderDownloads(orderId: string): Promise<Download[]>;
+  
+  // Analytics operations
+  trackEvent(event: InsertAnalyticsEvent): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private templates: Map<string, Template>;
-  private contacts: Map<string, Contact>;
-  private articles: Map<string, Article>;
-
-  constructor() {
-    this.templates = new Map();
-    this.contacts = new Map();
-    this.articles = new Map();
-    this.seedData();
+export class DatabaseStorage implements IStorage {
+  // User operations (REQUIRED for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
-  private seedData() {
-    const sampleTemplates: InsertTemplate[] = [
-      {
-        title: "Cinematic Love Story",
-        slug: "cinematic-love-story",
-        description: "A breathtaking cinematic wedding invitation",
-        category: "wedding",
-        culture: "western",
-        style: "cinematic",
-        duration: 45,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template1.jpg",
-        videoUrl: "/videos/template1.mp4",
-        price: 2900,
-        isPremium: true,
-        tags: ["romantic", "elegant", "modern"],
-      },
-      {
-        title: "Golden Elegance",
-        slug: "golden-elegance",
-        description: "Luxurious engagement invitation with gold accents",
-        category: "engagement",
-        culture: "western",
-        style: "elegant",
-        duration: 30,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template2.jpg",
-        videoUrl: "/videos/template2.mp4",
-        price: 0,
-        isPremium: false,
-        tags: ["gold", "luxury", "engagement"],
-      },
-      {
-        title: "Traditional Celebration",
-        slug: "traditional-celebration",
-        description: "Authentic cultural wedding invitation",
-        category: "wedding",
-        culture: "indian",
-        style: "traditional",
-        duration: 60,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template3.jpg",
-        videoUrl: "/videos/template3.mp4",
-        price: 2900,
-        isPremium: true,
-        tags: ["traditional", "cultural", "indian"],
-      },
-      {
-        title: "Arabian Nights",
-        slug: "arabian-nights",
-        description: "Elegant Arabic wedding invitation",
-        category: "wedding",
-        culture: "arabic",
-        style: "elegant",
-        duration: 50,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template4.jpg",
-        videoUrl: "/videos/template4.mp4",
-        price: 2900,
-        isPremium: true,
-        tags: ["arabic", "elegant", "cultural"],
-      },
-      {
-        title: "Nigerian Heritage",
-        slug: "nigerian-heritage",
-        description: "Vibrant Nigerian wedding celebration",
-        category: "wedding",
-        culture: "nigerian",
-        style: "traditional",
-        duration: 55,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template5.jpg",
-        videoUrl: "/videos/template5.mp4",
-        price: 2900,
-        isPremium: true,
-        tags: ["nigerian", "vibrant", "cultural"],
-      },
-      {
-        title: "Chinese Elegance",
-        slug: "chinese-elegance",
-        description: "Traditional Chinese wedding invitation",
-        category: "wedding",
-        culture: "chinese",
-        style: "traditional",
-        duration: 48,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template6.jpg",
-        videoUrl: "/videos/template6.mp4",
-        price: 2900,
-        isPremium: true,
-        tags: ["chinese", "traditional", "cultural"],
-      },
-      {
-        title: "Modern Romance",
-        slug: "modern-romance",
-        description: "Contemporary engagement invitation",
-        category: "engagement",
-        culture: "western",
-        style: "modern",
-        duration: 40,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template7.jpg",
-        videoUrl: "/videos/template7.mp4",
-        price: 1900,
-        isPremium: false,
-        tags: ["modern", "contemporary", "engagement"],
-      },
-      {
-        title: "Baby Celebration",
-        slug: "baby-celebration",
-        description: "Sweet baby shower invitation",
-        category: "baby",
-        culture: "western",
-        style: "modern",
-        duration: 35,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template8.jpg",
-        videoUrl: "/videos/template8.mp4",
-        price: 1500,
-        isPremium: false,
-        tags: ["baby", "shower", "modern"],
-      },
-      {
-        title: "Birthday Bash",
-        slug: "birthday-bash",
-        description: "Fun birthday party invitation",
-        category: "birthday",
-        culture: "western",
-        style: "modern",
-        duration: 30,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template9.jpg",
-        videoUrl: "/videos/template9.mp4",
-        price: 1200,
-        isPremium: false,
-        tags: ["birthday", "fun", "party"],
-      },
-      {
-        title: "Corporate Event",
-        slug: "corporate-event",
-        description: "Professional corporate event invitation",
-        category: "corporate",
-        culture: "western",
-        style: "modern",
-        duration: 42,
-        orientation: "portrait",
-        isVideo: true,
-        thumbnailUrl: "/images/template10.jpg",
-        videoUrl: "/videos/template10.mp4",
-        price: 2500,
-        isPremium: true,
-        tags: ["corporate", "professional", "business"],
-      },
-    ];
-
-    sampleTemplates.forEach(template => {
-      const id = randomUUID();
-      this.templates.set(id, { ...template, id });
-    });
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
+  // Template operations
   async getTemplates(filters?: {
     category?: string;
     culture?: string;
     style?: string;
+    isActive?: boolean;
   }): Promise<Template[]> {
-    let templates = Array.from(this.templates.values());
+    const conditions = [];
     
     if (filters?.category) {
-      templates = templates.filter(t => 
-        t.category.toLowerCase() === filters.category!.toLowerCase()
-      );
+      conditions.push(eq(templates.category, filters.category));
     }
-    
     if (filters?.culture) {
-      templates = templates.filter(t => 
-        t.culture?.toLowerCase() === filters.culture!.toLowerCase()
-      );
+      conditions.push(eq(templates.culture, filters.culture));
     }
-    
     if (filters?.style) {
-      templates = templates.filter(t => 
-        t.style.toLowerCase() === filters.style!.toLowerCase()
-      );
+      conditions.push(eq(templates.style, filters.style));
+    }
+    if (filters?.isActive !== undefined) {
+      conditions.push(eq(templates.isActive, filters.isActive));
     }
     
-    return templates;
+    if (conditions.length > 0) {
+      return await db.select().from(templates).where(and(...conditions));
+    }
+    
+    return await db.select().from(templates);
+  }
+
+  async getTemplateById(id: string): Promise<Template | undefined> {
+    const [template] = await db.select().from(templates).where(eq(templates.id, id));
+    return template || undefined;
   }
 
   async getTemplateBySlug(slug: string): Promise<Template | undefined> {
-    return Array.from(this.templates.values()).find(
-      (template) => template.slug === slug
-    );
+    const [template] = await db.select().from(templates).where(eq(templates.slug, slug));
+    return template || undefined;
   }
 
   async createTemplate(insertTemplate: InsertTemplate): Promise<Template> {
-    const id = randomUUID();
-    const template: Template = { ...insertTemplate, id };
-    this.templates.set(id, template);
+    const [template] = await db
+      .insert(templates)
+      .values(insertTemplate)
+      .returning();
     return template;
   }
 
-  async createContact(insertContact: InsertContact): Promise<Contact> {
-    const id = randomUUID();
-    const contact: Contact = { ...insertContact, id };
-    this.contacts.set(id, contact);
-    return contact;
+  // Template pages operations
+  async getTemplatePages(templateId: string): Promise<TemplatePage[]> {
+    return await db
+      .select()
+      .from(templatePages)
+      .where(eq(templatePages.templateId, templateId))
+      .orderBy(templatePages.pageNumber);
   }
 
-  async getArticles(): Promise<Article[]> {
-    return Array.from(this.articles.values());
+  async createTemplatePage(page: InsertTemplatePage): Promise<TemplatePage> {
+    const [templatePage] = await db
+      .insert(templatePages)
+      .values(page)
+      .returning();
+    return templatePage;
   }
 
-  async getArticleBySlug(slug: string): Promise<Article | undefined> {
-    return Array.from(this.articles.values()).find(
-      (article) => article.slug === slug
-    );
+  // Customization operations
+  async getUserCustomizations(userId: string): Promise<Customization[]> {
+    return await db
+      .select()
+      .from(customizations)
+      .where(eq(customizations.userId, userId))
+      .orderBy(desc(customizations.createdAt));
   }
 
-  async createArticle(insertArticle: InsertArticle): Promise<Article> {
-    const id = randomUUID();
-    const article: Article = { ...insertArticle, id };
-    this.articles.set(id, article);
-    return article;
+  async getCustomizationById(id: string): Promise<Customization | undefined> {
+    const [customization] = await db
+      .select()
+      .from(customizations)
+      .where(eq(customizations.id, id));
+    return customization || undefined;
+  }
+
+  async createCustomization(insertCustomization: InsertCustomization): Promise<Customization> {
+    const [customization] = await db
+      .insert(customizations)
+      .values(insertCustomization)
+      .returning();
+    return customization;
+  }
+
+  async updateCustomization(
+    id: string,
+    updates: Partial<Customization>
+  ): Promise<Customization | undefined> {
+    const [updated] = await db
+      .update(customizations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(customizations.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Customization pages operations
+  async getCustomizationPages(customizationId: string): Promise<CustomizationPage[]> {
+    return await db
+      .select()
+      .from(customizationPages)
+      .where(eq(customizationPages.customizationId, customizationId))
+      .orderBy(customizationPages.pageNumber);
+  }
+
+  async createCustomizationPage(page: InsertCustomizationPage): Promise<CustomizationPage> {
+    const [customizationPage] = await db
+      .insert(customizationPages)
+      .values(page)
+      .returning();
+    return customizationPage;
+  }
+
+  async updateCustomizationPage(
+    id: string,
+    fieldValues: any
+  ): Promise<CustomizationPage | undefined> {
+    const [updated] = await db
+      .update(customizationPages)
+      .set({ fieldValues, updatedAt: new Date() })
+      .where(eq(customizationPages.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Order operations
+  async createOrder(insertOrder: InsertOrder): Promise<Order> {
+    const [order] = await db
+      .insert(orders)
+      .values(insertOrder)
+      .returning();
+    return order;
+  }
+
+  async getOrderById(id: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async getOrderByRazorpayId(razorpayOrderId: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.razorpayOrderId, razorpayOrderId));
+    return order || undefined;
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<Order | undefined> {
+    const [updated] = await db
+      .update(orders)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(orders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getUserOrders(userId: string): Promise<Order[]> {
+    return await db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, userId))
+      .orderBy(desc(orders.createdAt));
+  }
+
+  // Payment operations
+  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
+    const [payment] = await db
+      .insert(payments)
+      .values(insertPayment)
+      .returning();
+    return payment;
+  }
+
+  async getPaymentByRazorpayId(razorpayPaymentId: string): Promise<Payment | undefined> {
+    const [payment] = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.razorpayPaymentId, razorpayPaymentId));
+    return payment || undefined;
+  }
+
+  // Download operations
+  async createDownload(insertDownload: InsertDownload): Promise<Download> {
+    const [download] = await db
+      .insert(downloads)
+      .values(insertDownload)
+      .returning();
+    return download;
+  }
+
+  async getOrderDownloads(orderId: string): Promise<Download[]> {
+    return await db
+      .select()
+      .from(downloads)
+      .where(eq(downloads.orderId, orderId))
+      .orderBy(desc(downloads.downloadedAt));
+  }
+
+  // Analytics operations
+  async trackEvent(event: InsertAnalyticsEvent): Promise<void> {
+    await db.insert(analyticsEvents).values(event);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
