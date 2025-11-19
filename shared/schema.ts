@@ -51,6 +51,7 @@ export const templates = pgTable("templates", {
   description: text("description").notNull(),
   category: text("category").notNull(), // wedding, engagement, birthday, etc.
   culture: text("culture").notNull(), // indian-punjabi, indian-tamil, arabic, etc.
+  country: text("country").notNull(), // india, uae, saudi-arabia
   style: text("style").notNull(), // cinematic, modern, traditional
   duration: integer("duration").notNull(), // video duration in seconds (20-60s)
   thumbnailUrl: text("thumbnail_url").notNull(),

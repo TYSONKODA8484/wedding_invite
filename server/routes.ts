@@ -21,10 +21,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/templates", async (req, res) => {
     try {
-      const { category, culture, style } = req.query;
+      const { category, culture, country, style } = req.query;
       const templates = await storage.getTemplates({
         category: category as string | undefined,
         culture: culture as string | undefined,
+        country: country as string | undefined,
         style: style as string | undefined,
         isActive: true,
       });

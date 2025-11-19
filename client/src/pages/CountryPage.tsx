@@ -1,70 +1,36 @@
 import { useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
 import { HeroSection } from "@/components/HeroSection";
 import { TemplateCard } from "@/components/TemplateCard";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import type { Template } from "@shared/schema";
 import indianPunjabiHero from "@assets/generated_images/Indian_Punjabi_wedding_culture_b8245c44.png";
 import arabicHero from "@assets/generated_images/Arabic_UAE_wedding_culture_5fdde5ea.png";
-import nigerianHero from "@assets/generated_images/Nigerian_traditional_wedding_culture_733beed6.png";
-import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
-import luxuryHero from "@assets/generated_images/Premium_luxury_category_hero_5c811c21.png";
+import saudiHero from "@assets/stock_images/saudi_arabian_weddin_519f891c.jpg";
 
 const countryData: Record<string, any> = {
   india: {
     name: "India",
+    slug: "india",
     description: "Diverse wedding traditions across India featuring Punjabi, Tamil, Telugu, Bengali, Gujarati, and more regional styles with vibrant colors and rich cultural heritage.",
     popularStyles: ["Traditional Indian", "Punjabi Bhangra", "South Indian Temple", "Rajasthani Royal", "Bollywood Glam"],
     heroImage: indianPunjabiHero,
-    templateCount: 150,
-  },
-  usa: {
-    name: "United States",
-    description: "American wedding styles from classic church ceremonies to modern destination weddings, rustic barn celebrations, and multicultural fusion events.",
-    popularStyles: ["Classic American", "Rustic Barn", "Beach Wedding", "Garden Party", "Modern Minimalist"],
-    heroImage: homepageHero,
-    templateCount: 95,
   },
   uae: {
     name: "United Arab Emirates",
+    slug: "uae",
     description: "Luxurious Emirati and Arabic wedding celebrations featuring opulent venues, gold decor, and traditional Middle Eastern elegance.",
     popularStyles: ["Luxury Arabic", "Modern Emirati", "Traditional Khaleeji", "Gold & Crystal", "Desert Romance"],
     heroImage: arabicHero,
-    templateCount: 68,
   },
-  uk: {
-    name: "United Kingdom",
-    description: "British wedding traditions featuring classic church ceremonies, elegant manor house celebrations, and countryside garden parties.",
-    popularStyles: ["Classic British", "Country Garden", "Manor House", "Modern London", "Scottish Highlands"],
-    heroImage: luxuryHero,
-    templateCount: 72,
-  },
-  nigeria: {
-    name: "Nigeria",
-    description: "Vibrant Nigerian wedding traditions with colorful Ankara fabrics, traditional dances, and diverse cultural ceremonies across ethnic groups.",
-    popularStyles: ["Traditional Nigerian", "Yoruba Wedding", "Igbo Ceremony", "Modern Fusion", "Afrobeat Celebration"],
-    heroImage: nigerianHero,
-    templateCount: 58,
-  },
-  mexico: {
-    name: "Mexico",
-    description: "Festive Mexican wedding celebrations with mariachi music, vibrant colors, and beautiful Catholic and cultural traditions.",
-    popularStyles: ["Traditional Mexican", "Hacienda Style", "Beach Riviera", "Folkloric Theme", "Modern Mexico City"],
-    heroImage: homepageHero,
-    templateCount: 52,
-  },
-  canada: {
-    name: "Canada",
-    description: "Multicultural Canadian wedding styles blending diverse traditions with stunning natural backdrops from mountains to lakeshores.",
-    popularStyles: ["Canadian Rustic", "Mountain Lodge", "Lakeside Elegance", "Urban Toronto", "French Canadian"],
-    heroImage: luxuryHero,
-    templateCount: 64,
-  },
-  china: {
-    name: "China",
-    description: "Traditional Chinese wedding customs featuring tea ceremonies, red and gold colors, and ancient cultural rituals.",
-    popularStyles: ["Traditional Chinese", "Modern Shanghai", "Tea Ceremony", "Imperial Palace", "Contemporary Fusion"],
-    heroImage: homepageHero,
-    templateCount: 46,
+  "saudi-arabia": {
+    name: "Saudi Arabia",
+    slug: "saudi-arabia",
+    description: "Opulent Saudi Arabian wedding celebrations with royal gold details, traditional Islamic patterns, and majestic cultural heritage.",
+    popularStyles: ["Saudi Royal", "Traditional Islamic", "Luxury Gold", "Cultural Heritage", "Modern Saudi"],
+    heroImage: saudiHero,
   },
 };
 
@@ -73,18 +39,21 @@ export default function CountryPage() {
   const slug = params?.slug || "india";
   const country = countryData[slug] || countryData.india;
 
-  const templates = [
-    { id: "1", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: country.heroImage, isPremium: true },
-    { id: "2", title: "Modern Style", slug: "modern-style", category: "wedding", duration: 45, thumbnailUrl: country.heroImage, isPremium: false },
-    { id: "3", title: "Classic Elegance", slug: "classic-elegance", category: "wedding", duration: 50, thumbnailUrl: country.heroImage, isPremium: true },
-    { id: "4", title: "Contemporary Fusion", slug: "contemporary-fusion", category: "wedding", duration: 48, thumbnailUrl: country.heroImage, isPremium: false },
-  ];
+  // Fetch templates from the database by country
+  const { data: templates = [], isLoading } = useQuery<Template[]>({
+    queryKey: ["/api/templates", { country: country.slug }],
+    queryFn: async () => {
+      const response = await fetch(`/api/templates?country=${country.slug}`);
+      if (!response.ok) throw new Error("Failed to fetch templates");
+      return response.json();
+    },
+  });
 
   return (
     <>
       <SEOHead
         title={`${country.name} Wedding Video Invitations`}
-        description={`${country.description} Browse ${country.templateCount}+ video invitation templates designed for ${country.name} weddings.`}
+        description={`${country.description} Browse our collection of video invitation templates designed for ${country.name} weddings.`}
         keywords={`${country.name} wedding video, ${slug} wedding invitation, ${country.name} celebration videos`}
       />
 
@@ -125,14 +94,28 @@ export default function CountryPage() {
             <h3 className="font-playfair text-3xl lg:text-4xl font-bold text-foreground mb-2 text-center">
               {country.name} Templates
             </h3>
-            <p className="text-muted-foreground text-center text-lg">{country.templateCount} templates available</p>
+            <p className="text-muted-foreground text-center text-lg">
+              {isLoading ? "Loading..." : `${templates.length} template${templates.length !== 1 ? 's' : ''} available`}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-            {templates.map((template) => (
-              <TemplateCard key={template.id} {...template} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            </div>
+          ) : templates.length === 0 ? (
+            <Card className="p-12 text-center">
+              <p className="text-muted-foreground text-lg">
+                No templates available for {country.name} yet. Check back soon!
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+              {templates.map((template) => (
+                <TemplateCard key={template.id} {...template} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>

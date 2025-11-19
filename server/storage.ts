@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, desc, like } from "drizzle-orm";
+import { eq, and, desc, like, sql } from "drizzle-orm";
 import {
   users,
   templates,
@@ -38,6 +38,7 @@ export interface IStorage {
   getTemplates(filters?: {
     category?: string;
     culture?: string;
+    country?: string;
     style?: string;
     isActive?: boolean;
   }): Promise<Template[]>;
@@ -105,6 +106,7 @@ export class DatabaseStorage implements IStorage {
   async getTemplates(filters?: {
     category?: string;
     culture?: string;
+    country?: string;
     style?: string;
     isActive?: boolean;
   }): Promise<Template[]> {
@@ -117,6 +119,9 @@ export class DatabaseStorage implements IStorage {
       // Support partial culture matching (e.g., "indian" matches "indian-punjabi", "indian-tamil", etc.)
       conditions.push(like(templates.culture, `${filters.culture}%`));
     }
+    if (filters?.country) {
+      conditions.push(eq(templates.country, filters.country));
+    }
     if (filters?.style) {
       conditions.push(eq(templates.style, filters.style));
     }
@@ -128,7 +133,15 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(templates).where(and(...conditions));
     }
     
-    return await db.select().from(templates);
+    // When no filters, sort by country with India first
+    return await db.select().from(templates).orderBy(
+      sql`CASE 
+        WHEN ${templates.country} = 'india' THEN 1
+        WHEN ${templates.country} = 'uae' THEN 2
+        WHEN ${templates.country} = 'saudi-arabia' THEN 3
+        ELSE 4
+      END`
+    );
   }
 
   async getTemplateById(id: string): Promise<Template | undefined> {

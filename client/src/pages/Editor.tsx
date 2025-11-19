@@ -861,10 +861,10 @@ export default function Editor() {
 
         {/* Center - Page Preview */}
         <div className="flex-1 flex flex-col bg-muted/30">
-          <div className="flex-1 flex items-center justify-center p-6">
+          <div className="flex-1 flex items-center justify-center p-4 md:p-6 overflow-auto">
             {currentPage && (
-              <div className="relative max-w-md w-full">
-                <div className="aspect-[9/16] bg-card rounded-lg shadow-2xl overflow-hidden border-4 border-card">
+              <div className="relative w-full max-w-sm">
+                <div className="aspect-[9/16] bg-card rounded-lg shadow-2xl overflow-hidden border-4 border-card max-h-[calc(100vh-250px)]">
                   <img
                     src={currentPage.thumbnailUrl}
                     alt={currentPage.pageName}
