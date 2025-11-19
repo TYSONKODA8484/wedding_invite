@@ -1,7 +1,6 @@
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useRef } from "react";
-import type { Template, TemplatePage } from "@shared/schema";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +19,7 @@ export default function TemplateDetail() {
   const [showControls, setShowControls] = useState(false);
   const [videoError, setVideoError] = useState(false);
 
-  const { data: template, isLoading, error } = useQuery<Template>({
+  const { data: template, isLoading, error } = useQuery<any>({
     queryKey: ["/api/templates", slug],
     queryFn: async () => {
       const response = await fetch(`/api/templates/${slug}`);
@@ -30,15 +29,7 @@ export default function TemplateDetail() {
     enabled: !!slug,
   });
 
-  const { data: pages = [] } = useQuery<TemplatePage[]>({
-    queryKey: ["/api/templates", template?.id, "pages"],
-    queryFn: async () => {
-      const response = await fetch(`/api/templates/${slug}/pages`);
-      if (!response.ok) throw new Error("Failed to fetch pages");
-      return response.json();
-    },
-    enabled: !!template?.id && !!slug,
-  });
+  const pages = template?.pages || [];
 
   if (isLoading) {
     return (

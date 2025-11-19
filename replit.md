@@ -69,6 +69,37 @@ The design aims for a premium, cinematic aesthetic inspired by Airbnb, Netflix, 
 - **After Effects API**: External service for video rendering (preview and final quality).
 - **WhatsApp Business API**: For video delivery to users.
 
+## Template System (Nov 19, 2024 - COMPLETE)
+
+### Indian Hindu Wedding Invite Template
+**Complete multi-page template with 24 editable fields**
+
+**Template Details:**
+- **ID**: T_IND_001
+- **Slug**: indian-hindu-wedding-invite
+- **Duration**: 50 seconds
+- **Price**: ₹1,200
+- **Pages**: 5 (P1, P2, P3, P4, P9)
+
+**Page Structure:**
+1. **Page 1 (P1)**: Title page - Main title lines in Hindi
+2. **Page 2 (P2)**: Ganesh mantra, couple names, dates, venue (5 fields)
+3. **Page 3 (P3)**: Formal invite text, bride/groom details with parents (6 fields)
+4. **Page 4 (P4)**: Haldi ceremony event details (5 fields)
+5. **Page 9 (P9)**: Guest list with 8 customizable guest names
+
+**Editor Integration:**
+- API endpoint `/api/templates/:slugOrId` parses template_json and returns pages array
+- Each page includes id, pageNumber, thumbnailUrl, editableFields[], media[]
+- Editor displays page navigation (Previous/Next) and field editing interface
+- All Hindi/Marathi text preserved with proper UTF-8 encoding
+
+**Complete Flow:**
+1. Templates page → User clicks "Use Template"
+2. Template detail page → Shows template preview and "Customize This Template"
+3. Editor page → Multi-page editor with all 24 fields editable
+4. User customizes fields → Preview → Download (when implemented)
+
 ## SEO Implementation (Nov 19, 2024 - COMPLETE)
 
 ### ✅ Comprehensive SEO Strategy - India-First, Global Reach

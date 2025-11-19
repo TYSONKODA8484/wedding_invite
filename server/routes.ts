@@ -120,21 +120,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Template not found" });
       }
       
+      // Parse template_json to get pages
+      const templateJson = typeof template.templateJson === 'string' 
+        ? JSON.parse(template.templateJson) 
+        : template.templateJson;
+      
+      const pages = (templateJson?.pages || []).map((page: any) => ({
+        id: page.page_id,
+        pageNumber: page.page_number,
+        thumbnailUrl: template.thumbnailUrl, // Use template thumbnail for now
+        editableFields: (page.fields || []).map((field: any) => ({
+          id: field.field_id,
+          type: field.type,
+          label: field.label,
+          defaultValue: field.value,
+          maxLength: field.type === 'text' ? 100 : 500,
+          ae_layer: field.ae_layer
+        })),
+        media: page.media || []
+      }));
+      
+      const priceInr = parseFloat(template.price);
+      
       res.json({
-        template_id: template.id,
+        id: template.id,
         name: template.name,
+        title: template.name, // Add title alias for TemplateDetail compatibility
         slug: template.slug,
         type: template.type,
+        category: template.type, // Add category alias for TemplateDetail compatibility
         orientation: template.orientation,
-        photo_option: template.photoOption,
+        photoOption: template.photoOption,
         tags: template.tags,
-        cover_image: template.coverImage,
-        thumbnail_url: template.thumbnailUrl,
+        coverImage: template.coverImage,
+        thumbnailUrl: template.thumbnailUrl,
+        demoVideoUrl: template.thumbnailUrl, // Use thumbnail as demo video placeholder
         duration: template.duration,
         currency: template.currency,
-        price: parseFloat(template.price),
-        template_json: template.templateJson,
-        created_by: template.createdBy,
+        price: priceInr,
+        priceInr: Math.floor(priceInr * 100), // Price in paise for compatibility
+        isPremium: priceInr >= 2000,
+        description: `Create beautiful ${template.name} with customizable pages and send via WhatsApp`,
+        country: "india", // Default country
+        culture: "hindu", // Default culture from tags
+        style: "traditional", // Default style
+        pageCount: pages.length,
+        templateJson: template.templateJson,
+        createdBy: template.createdBy,
+        pages: pages, // Add pages array for editor
       });
     } catch (error) {
       console.error("Error fetching template:", error);
