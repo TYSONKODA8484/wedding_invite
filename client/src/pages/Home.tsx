@@ -21,12 +21,74 @@ export default function Home() {
     }
   }, [location]);
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "WeddingInvite.ai",
+    url: "https://weddinginvite.ai",
+    logo: "https://weddinginvite.ai/logo.png",
+    description: "Premium AI-powered wedding video invitation maker for Indian, UAE, and Saudi Arabian weddings",
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "IN"
+    },
+    sameAs: [
+      "https://instagram.com/weddinginvite.ai",
+      "https://facebook.com/weddinginvite.ai"
+    ]
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "WeddingInvite.ai",
+    url: "https://weddinginvite.ai",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://weddinginvite.ai/templates?search={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Can I share wedding invitations on WhatsApp?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes! All our wedding video invitations are optimized for WhatsApp sharing. You can easily download and share them with your guests via WhatsApp, Instagram, or any messaging platform."
+        }
+      },
+      {
+        "@type": "Question",
+        name: "Do you have templates for Indian weddings?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, we offer beautiful templates for Indian weddings including Punjabi, South Indian, Marathi, and North Indian styles. We also have ceremony-specific templates for Mehendi, Sangeet, Haldi, and Reception."
+        }
+      },
+      {
+        "@type": "Question",
+        name: "Are templates available for Arabic weddings?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, we have elegant templates for UAE and Saudi Arabian weddings with traditional Arabic designs, Islamic motifs, and bilingual English-Arabic support."
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="WeddingInvite.ai - Online Indian & Arabic Wedding Invitation Maker"
-        description="Create beautiful video and card invitations in minutes for Indian and Middle Eastern weddings. Customizable templates for weddings, engagements, and special celebrations."
-        keywords="wedding invitation, indian wedding, arabic wedding, video invitation, digital invitation, engagement invitation"
+        title="Indian Wedding Video Invitation Maker | WhatsApp Wedding Invites"
+        description="Create stunning Indian wedding video invitations for WhatsApp in minutes. 500+ templates for Mehendi, Sangeet, Hindu, Muslim weddings. Free preview, instant download. ₹1,200-₹2,900."
+        keywords="indian wedding invitation video, whatsapp wedding video, wedding invitation video maker, digital wedding invitation india, hindi wedding video, punjabi wedding invitation, south indian wedding video, mehendi invitation video, sangeet video invitation, muslim wedding invitation, arabic wedding video, uae wedding invitation, dubai wedding video, saudi wedding invitation"
+        schema={[organizationSchema, websiteSchema, faqSchema]}
+        locale="en_IN"
       />
 
       {/* Hero Section */}

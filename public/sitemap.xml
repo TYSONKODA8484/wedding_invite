@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Homepage - Highest Priority -->
+  <url>
+    <loc>https://weddinginvite.ai/</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- India Country Page - Primary Market -->
+  <url>
+    <loc>https://weddinginvite.ai/countries/india</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- UAE Country Page - Secondary Market -->
+  <url>
+    <loc>https://weddinginvite.ai/countries/uae</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Saudi Arabia Country Page - Tertiary Market -->
+  <url>
+    <loc>https://weddinginvite.ai/countries/saudi-arabia</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Template Browsing Page -->
+  <url>
+    <loc>https://weddinginvite.ai/templates</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Template Detail Pages - Indian Templates (Higher Priority) -->
+  <url>
+    <loc>https://weddinginvite.ai/template/royal-punjabi-wedding</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://weddinginvite.ai/template/modern-south-indian-wedding</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- Template Detail Pages - UAE Templates -->
+  <url>
+    <loc>https://weddinginvite.ai/template/luxury-dubai-wedding</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://weddinginvite.ai/template/modern-emirati-wedding</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Template Detail Pages - Saudi Templates -->
+  <url>
+    <loc>https://weddinginvite.ai/template/saudi-royal-wedding</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://weddinginvite.ai/template/traditional-saudi-wedding</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- How It Works Page -->
+  <url>
+    <loc>https://weddinginvite.ai/how-it-works</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  
+  <!-- Contact Page -->
+  <url>
+    <loc>https://weddinginvite.ai/contact</loc>
+    <lastmod>2024-11-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+</urlset>

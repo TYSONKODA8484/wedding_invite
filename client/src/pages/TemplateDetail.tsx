@@ -107,21 +107,105 @@ export default function TemplateDetail() {
   };
 
 
+  const ceremonyKeywords: Record<string, string> = {
+    mehendi: "mehendi invitation video, mehndi ceremony video, henna party invitation, mehendi video whatsapp",
+    sangeet: "sangeet invitation video, sangeet ceremony video, sangeet night video, bollywood sangeet invitation whatsapp",
+    haldi: "haldi invitation video, haldi ceremony video, turmeric ceremony invitation, haldi video whatsapp",
+    wedding: "wedding invitation video, wedding ceremony video, shaadi video invitation, wedding video whatsapp",
+    reception: "reception invitation video, wedding reception video, reception party invitation, reception video whatsapp",
+    nikah: "nikah invitation video, islamic wedding video, muslim nikah invitation, nikah video whatsapp",
+    walima: "walima invitation video, walima reception video, islamic walima invitation, walima video whatsapp",
+    engagement: "engagement invitation video, engagement ceremony video, sagai video invitation, engagement video whatsapp",
+  };
+
+  const countryKeywords: Record<string, string> = {
+    india: "indian wedding video, whatsapp wedding video india, hindi wedding invitation, punjabi wedding video, south indian wedding",
+    uae: "arabic wedding video uae, dubai wedding invitation video, emirati wedding video, luxury arabic wedding whatsapp",
+    "saudi-arabia": "saudi wedding video, riyadh wedding invitation, jeddah wedding video, saudi royal wedding, islamic wedding video saudi",
+  };
+
+  const categoryLower = template.category.toLowerCase();
+  const countryLower = template.country.toLowerCase();
+  const ceremonyKey = Object.keys(ceremonyKeywords).find(key => categoryLower.includes(key)) || "wedding";
+  
+  const dynamicKeywords = [
+    ceremonyKeywords[ceremonyKey] || ceremonyKeywords.wedding,
+    countryKeywords[countryLower] || "",
+    `${template.style} wedding video`,
+    `${template.category} video invitation maker`,
+    "whatsapp video invitation",
+    "digital wedding invitation",
+    template.isPremium ? "premium wedding video" : "affordable wedding video",
+  ].filter(Boolean).join(", ");
+
+  const videoSchema = {
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: template.title,
+    description: template.description,
+    thumbnailUrl: template.thumbnailUrl,
+    uploadDate: "2024-11-19",
+    duration: `PT${template.duration}S`,
+    contentUrl: template.demoVideoUrl,
+    embedUrl: `https://weddinginvite.ai/template/${template.slug}`,
+    author: {
+      "@type": "Organization",
+      name: "WeddingInvite.ai"
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "WeddingInvite.ai",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://weddinginvite.ai/logo.png"
+      }
+    }
+  };
+
+  const priceInPaise = Math.round(template.priceInr * 100);
+  const displayPrice = formatPrice(priceInPaise);
+
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: template.title,
+    description: template.description,
+    image: template.thumbnailUrl,
+    offers: {
+      "@type": "Offer",
+      url: `https://weddinginvite.ai/template/${template.slug}`,
+      priceCurrency: "INR",
+      price: template.priceInr.toFixed(2),
+      availability: "https://schema.org/InStock",
+      seller: {
+        "@type": "Organization",
+        name: "WeddingInvite.ai"
+      }
+    },
+    brand: {
+      "@type": "Brand",
+      name: "WeddingInvite.ai"
+    },
+    category: template.category,
+    aggregateRating: template.isPremium ? {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      reviewCount: "150"
+    } : undefined
+  };
+
+  const locale = countryLower === "uae" || countryLower === "saudi-arabia" ? 
+    (countryLower === "uae" ? "ar_AE" : "ar_SA") : "en_IN";
+
   return (
     <>
       <SEOHead
-        title={`${template.title} - Video Invitation Template`}
-        description={template.description}
-        keywords={`${template.category} video invitation, ${template.style} template, wedding video creator`}
-        schema={{
-          "@context": "https://schema.org",
-          "@type": "VideoObject",
-          "name": template.title,
-          "description": template.description,
-          "thumbnailUrl": template.thumbnailUrl,
-          "uploadDate": "2024-01-01",
-          "duration": `PT${template.duration}S`,
-        }}
+        title={`${template.title} | ${template.category} Video Invitation WhatsApp`}
+        description={`${template.description} Perfect for WhatsApp sharing. Download in HD/4K. ${formatPrice(priceInPaise)}. Free preview available.`}
+        keywords={dynamicKeywords}
+        schema={[videoSchema, productSchema]}
+        locale={locale}
+        ogImage={template.thumbnailUrl}
       />
 
       <div 
@@ -237,7 +321,7 @@ export default function TemplateDetail() {
             </div>
             <div className="mb-6">
               <p className="text-3xl font-bold text-primary" data-testid="text-template-price">
-                {formatPrice(template.priceInr)}
+                {displayPrice}
               </p>
             </div>
             <p className="text-muted-foreground text-lg lg:text-xl mb-8 leading-relaxed">

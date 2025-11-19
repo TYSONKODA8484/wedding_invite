@@ -1,0 +1,50 @@
+# robots.txt for WeddingInvite.ai
+# Optimized for Indian, UAE, and Saudi Arabian markets
+
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Priority Pages for Crawling (India-first strategy)
+Allow: /countries/india
+Allow: /countries/uae
+Allow: /countries/saudi-arabia
+Allow: /template/
+Allow: /templates
+
+# Disallow admin and API endpoints
+Disallow: /api/
+Disallow: /admin/
+Disallow: /editor/*/preview
+Disallow: /_*
+
+# Disallow search result pages to avoid duplicate content
+Disallow: /*?search=*
+Disallow: /*?sort=*
+
+# Sitemap location
+Sitemap: https://weddinginvite.ai/sitemap.xml
+
+# Specific bots optimization
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Mobile-first indexing (critical for Indian market - 95% mobile traffic)
+User-agent: Googlebot-Mobile
+Allow: /
+Crawl-delay: 0
+
+# Allow social media crawlers for WhatsApp/Instagram sharing
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /

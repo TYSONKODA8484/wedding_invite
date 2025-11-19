@@ -17,6 +17,11 @@ const countryData: Record<string, any> = {
     description: "Diverse wedding traditions across India featuring Punjabi, Tamil, Telugu, Bengali, Gujarati, and more regional styles with vibrant colors and rich cultural heritage.",
     popularStyles: ["Traditional Indian", "Punjabi Bhangra", "South Indian Temple", "Rajasthani Royal", "Bollywood Glam"],
     heroImage: indianPunjabiHero,
+    seoTitle: "Indian Wedding Invitation Video | WhatsApp Wedding Invites India",
+    seoDescription: "Create stunning Indian wedding video invitations for WhatsApp. 100+ templates for Punjabi, South Indian, Hindi, Marathi weddings. Mehendi, Sangeet, Haldi invites. ₹1,200-₹2,900.",
+    keywords: "indian wedding invitation video, whatsapp wedding video india, hindi wedding invitation, punjabi wedding video, south indian wedding invitation, marathi wedding video, mehendi invitation video, sangeet video invitation, haldi ceremony video, bengali wedding invitation, gujarati wedding video, indian wedding video maker",
+    locale: "en_IN",
+    ceremonies: ["Mehendi", "Sangeet", "Haldi", "Wedding", "Reception"],
   },
   uae: {
     name: "United Arab Emirates",
@@ -24,6 +29,13 @@ const countryData: Record<string, any> = {
     description: "Luxurious Emirati and Arabic wedding celebrations featuring opulent venues, gold decor, and traditional Middle Eastern elegance.",
     popularStyles: ["Luxury Arabic", "Modern Emirati", "Traditional Khaleeji", "Gold & Crystal", "Desert Romance"],
     heroImage: arabicHero,
+    seoTitle: "UAE Arabic Wedding Invitation Video | دعوة زفاف فيديو الإمارات",
+    seoDescription: "Create luxury Arabic wedding videos for UAE. Dubai, Abu Dhabi, Sharjah weddings. 4K Emirati & Islamic invitation templates. دعوة زفاف عربية فاخرة",
+    keywords: "arabic wedding invitation video, uae wedding video, dubai wedding invitation, abu dhabi wedding video, emirati wedding invitation, islamic wedding video, khaleeji wedding, دعوة زفاف عربية, فيديو دعوة زفاف إماراتي, luxury arabic wedding, zaffa video invitation",
+    locale: "ar_AE",
+    ceremonies: ["Kateb Katb", "Henna Night", "Wedding Ceremony", "Walima Reception"],
+    arabicTitle: "دعوة زفاف فيديو الإمارات",
+    arabicDescription: "إنشاء دعوات زفاف فيديو عربية فاخرة. قوالب إماراتية وإسلامية راقية لحفلات الزفاف في دبي وأبو ظبي",
   },
   "saudi-arabia": {
     name: "Saudi Arabia",
@@ -31,6 +43,13 @@ const countryData: Record<string, any> = {
     description: "Opulent Saudi Arabian wedding celebrations with royal gold details, traditional Islamic patterns, and majestic cultural heritage.",
     popularStyles: ["Saudi Royal", "Traditional Islamic", "Luxury Gold", "Cultural Heritage", "Modern Saudi"],
     heroImage: saudiHero,
+    seoTitle: "Saudi Wedding Invitation Video Riyadh Jeddah | كروت زفاف السعودية",
+    seoDescription: "Create Saudi Arabian wedding video invitations. Riyadh, Jeddah, Mecca templates. Islamic & royal designs. كروت زفاف سعودية فاخرة",
+    keywords: "saudi wedding invitation video, riyadh wedding video, jeddah wedding invitation, mecca wedding video, saudi arabian wedding, islamic wedding invitation video, كروت زفاف الرياض, دعوات زفاف جدة, فيديو زفاف سعودي, saudi royal wedding",
+    locale: "ar_SA",
+    ceremonies: ["Nikah", "Walima", "Reception"],
+    arabicTitle: "كروت زفاف فيديو السعودية",
+    arabicDescription: "إنشاء دعوات زفاف فيديو سعودية ملكية. قوالب إسلامية فاخرة للأفراح في الرياض وجدة ومكة",
   },
 };
 
@@ -49,12 +68,55 @@ export default function CountryPage() {
     },
   });
 
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `${country.name} Wedding Video Invitations`,
+    description: country.seoDescription,
+    url: `https://weddinginvite.ai/countries/${country.slug}`,
+    about: {
+      "@type": "Thing",
+      name: `${country.name} Weddings`,
+      description: country.description
+    }
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://weddinginvite.ai"
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: `${country.name} Weddings`,
+        item: `https://weddinginvite.ai/countries/${country.slug}`
+      }
+    ]
+  };
+
+  const alternateLang = country.slug === "uae" || country.slug === "saudi-arabia" 
+    ? [
+        { lang: "en", url: `https://weddinginvite.ai/countries/${country.slug}` },
+        { lang: "ar", url: `https://weddinginvite.ai/ar/countries/${country.slug}` }
+      ]
+    : undefined;
+
   return (
     <>
       <SEOHead
-        title={`${country.name} Wedding Video Invitations`}
-        description={`${country.description} Browse our collection of video invitation templates designed for ${country.name} weddings.`}
-        keywords={`${country.name} wedding video, ${slug} wedding invitation, ${country.name} celebration videos`}
+        title={country.seoTitle}
+        description={country.seoDescription}
+        keywords={country.keywords}
+        schema={[collectionSchema, breadcrumbSchema]}
+        locale={country.locale}
+        ogImage={country.heroImage}
+        alternateLang={alternateLang}
       />
 
       <HeroSection
