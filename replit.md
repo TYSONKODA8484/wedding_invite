@@ -2,274 +2,69 @@
 
 ## Overview
 
-**NEW DIRECTION (Nov 2024)**: WeddingInvite.ai is a 247invites.com-style video invitation platform focused on the Indian + Arabic/Middle East markets. Users browse templates, customize multi-page invitations (6-7 pages) with text and photos, preview watermarked low-quality videos, pay via Razorpay, and download full-quality videos with WhatsApp delivery.
-
-**Market Focus**: Indian and Arabic wedding markets only (MVP test market launch)
-
-**Business Model**: Pay-per-template (NO subscriptions). Prices range from ₹1,200-₹2,900 per template.
-
-**Key Differentiator**: 247invites-style multi-page editor with instant preview generation and WhatsApp integration.
+WeddingInvite.ai is a video invitation platform inspired by 247invites.com, specifically targeting the Indian and Arabic/Middle Eastern wedding markets. It enables users to browse templates, customize multi-page invitations with text and photos, preview watermarked low-quality videos, make payments, and download full-quality videos with WhatsApp delivery. The business model is pay-per-template, with prices ranging from ₹1,200-₹2,900. Its key differentiator is a multi-page editor with instant preview generation and WhatsApp integration for video delivery.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
 
-## Current Build Status (Nov 19, 2024 - Latest Update)
-
-### ✅ EDITOR REDESIGN COMPLETE (Nov 19, 2024):
-
-**Latest Changes:**
-1. ✅ **Editor/Customization Page Redesigned** - Modern 3-column layout matching 247invites.com style:
-   - Left: Scrollable page list with thumbnails
-   - Center: Large page preview (9:16 aspect ratio)
-   - Right: Editable fields sidebar
-   - Clean header with Preview + Download buttons
-
-2. ✅ **Preview & Download Flow Implemented**:
-   - Preview button triggers loading screen with progress indicator (10% increments)
-   - Loading screen shows "What's next?" checklist with encouraging messages
-   - Preview modal displays watermarked video with "Download Without Watermark" button
-   - Download button disabled until preview generated
-   - Login check before download (shows auth modal if not logged in)
-   - After download, button stays enabled in editor for re-downloads
-
-3. ✅ **Market Focus Narrowed to India + UAE**:
-   - Removed all non-relevant countries (kept: India, UAE, Saudi Arabia)
-   - Removed non-Indian/Arabic cultures from routes and footer
-   - Pricing page commented out (pay-per-template model only)
-
-4. ✅ **SEO Implementation**:
-   - SEOHead component with dynamic meta tags (title, description, keywords)
-   - Open Graph tags for social sharing
-   - Twitter Card tags
-   - JSON-LD structured data for VideoObject schema
-   - Already implemented in TemplateDetail pages
-
-### ✅ FOUNDATION COMPLETE (App Running on Port 5000):
-
-**Integrations Installed:**
-1. ✅ Replit Auth - Login/signup with Google, GitHub, Email
-2. ✅ PostgreSQL Database - Provisioned and schema pushed
-3. ✅ Object Storage - Integration installed (bucket creation pending)
-4. ✅ Package Dependencies - @google-cloud/storage, @uppy/*, openid-client, memoizee
-
-**Database Schema (8 Tables Created):**
-- `users` - User accounts from Replit Auth
-- `sessions` - Session management
-- `templates` - Video invitation templates (title, category, culture, style, pricing)
-- `template_pages` - Multi-page structure (6-7 pages per template)
-- `customizations` - User's saved template edits
-- `customization_pages` - Field values for each customized page
-- `orders` - Pre-payment order records
-- `payments` - Razorpay payment tracking
-- `downloads` - Download tracking (5 per order limit)
-- `analytics_events` - Funnel analytics
-- `contacts` - Contact form submissions (marketing site)
-
-**Core Server Files:**
-- `server/replitAuth.ts` - Replit Auth integration with session management
-- `server/objectStorage.ts` - Object storage service for file uploads
-- `server/objectAcl.ts` - ACL system for private file access
-- `server/storage.ts` - DatabaseStorage with full CRUD operations
-- `server/routes.ts` - Complete API endpoints (40+ routes)
-- `server/db.ts` - Drizzle ORM database connection
-
-**API Endpoints Implemented:**
-- `/api/auth/user` - Get authenticated user
-- `/api/templates` - Browse templates with filters
-- `/api/templates/:slug` - Template details with pages
-- `/api/customizations` - CRUD for user customizations
-- `/api/customizations/:id/pages` - Page-level customization
-- `/api/orders` - Order creation and listing
-- `/api/payments/verify` - Razorpay payment verification
-- `/api/downloads` - Download tracking and URL generation
-- `/api/objects/upload` - Image upload URL generation
-- `/api/analytics/track` - Event tracking
-- `/public-objects/*` - Serve public assets (templates)
-- `/objects/*` - Serve private assets (user uploads)
-
-### ⚠️ KNOWN GAPS (Architect Review Feedback):
-
-**Schema Improvements Needed:**
-- Status fields are free-form text instead of enum types
-- Missing: render job IDs, WhatsApp delivery tracking, download counters
-- Missing: composite unique constraints (template_id + page_number)
-- Missing: indexes for common queries
-
-**Infrastructure Gaps:**
-- Object ACL `createObjectAccessGroup()` is a stub (throws for all groups)
-- Private asset access will fail until ACL is completed
-- Secure cookies fixed for local dev (was breaking auth)
-
-**Frontend State:**
-- ✅ Editor/Customization page redesigned with modern UI
-- ✅ Preview + Download flow implemented (with auth check)
-- ✅ Market focused on India + UAE only (non-relevant countries/cultures removed)
-- ✅ SEO meta tags implemented on template pages
-- Old marketing site pages still present (Contact, Blog, About, FAQ, Enterprise)
-- Payment integration pending (Razorpay setup required)
-
-### 🔧 REQUIRED MANUAL STEPS:
-
-**1. Object Storage Setup (Critical for File Uploads):**
-```bash
-# In Replit UI: Tools > Object Storage
-# 1. Create a bucket (e.g., "wedding-invite-storage")
-# 2. Set environment variables:
-PUBLIC_OBJECT_SEARCH_PATHS=/wedding-invite-storage/public,/wedding-invite-storage/templates
-PRIVATE_OBJECT_DIR=/wedding-invite-storage/private
-```
-
-**2. Razorpay Integration (Required for Payments):**
-```bash
-# Get from Razorpay Dashboard: https://dashboard.razorpay.com/
-RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxx
-RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxx
-```
-
-**3. After Effects API (Required for Video Rendering):**
-- External service not yet configured
-- Need API endpoint URL for preview/final video generation
-- Must support: customization data → watermarked preview (480p) + full quality final video
-
-**4. WhatsApp Business API (Optional - for Video Delivery):**
-- Meta Business account required
-- WhatsApp Business API credentials
-- Template message approval for video delivery
-
-### ⏳ NEXT DEVELOPMENT PRIORITIES:
-
-**Critical Path to MVP:**
-1. **Fix Schema Gaps** (~2-3 hours)
-   - Add enum types for status fields
-   - Add render job tracking, WhatsApp metadata
-   - Add composite unique constraints and indexes
-   
-2. **Seed Template Data** (~2 hours)
-   - Create 15-20 Indian + Arabic wedding templates
-   - Define 6-7 pages per template with editable fields
-   - Generate placeholder thumbnails and demo videos
-
-3. **Build Template Browser** (~3-4 hours)
-   - Mobile-first gallery with filtering
-   - Template cards (thumbnail, price, duration)
-   - Template detail page with page previews
-
-4. **Build Multi-Page Editor** (~8-10 hours)
-   - Left: scrollable page list
-   - Center: page preview
-   - Right: editable field sidebar
-   - Image upload with crop/resize
-
-5. **Implement Razorpay Payment** (~4-5 hours)
-   - Order creation flow
-   - Razorpay checkout integration
-   - Payment verification with signature
-   - Webhook handling
-
-6. **Build Video Player & Download** (~3-4 hours)
-   - Watermarked preview player
-   - Download flow after payment
-   - 5-download limit enforcement
-
-**Estimated Total: 22-30 hours to functional MVP**
-
 ## System Architecture
 
 ### Frontend Architecture
-**Technology Stack**: React with TypeScript, Vite build tool, Wouter for routing, TanStack Query for server state management.
-
-**UI Framework**: Shadcn/ui component library (New York style variant) built on Radix UI primitives with Tailwind CSS for styling. The design system emphasizes a cinematic, premium aesthetic with:
-- Typography: Playfair Display (serif headings), Inter (body text), Cormorant Garamond (decorative accents)
-- Custom color scheme supporting light/dark modes with HSL-based theming
-- Responsive grid layouts optimized for template browsing and cultural showcase
-
-**Component Architecture**: 
-- Presentational components for templates, categories, cultures, testimonials
-- SEO component for dynamic meta tag management
-- Reusable card components (TemplateCard, CategoryCard, CultureCard) for consistent UI patterns
-- Form handling via React Hook Form with Zod validation
-
-**Routing Structure**: Multi-page application with dedicated routes for:
-- Template browsing and detail pages
-- Category-specific landing pages (wedding, engagement, baby, corporate)
-- **Focus Market Cultures**: Indian weddings (Punjabi, Tamil, Telugu, Gujarati, Bengali, Muslim Nikah) + Arabic weddings (UAE/Saudi)
-- **Focus Market Countries**: India, UAE, Saudi Arabia
-- Marketing pages (how-it-works, blog, enterprise, about, contact, FAQ)
-- **Note**: Pricing page commented out (pay-per-template model, not subscriptions)
+The frontend is built with React and TypeScript, using Vite for building, and Wouter for routing. TanStack Query manages server state. The UI leverages Shadcn/ui (New York style) built on Radix UI primitives and Tailwind CSS. The design emphasizes a cinematic, premium aesthetic with specific typography (Playfair Display, Inter, Cormorant Garamond), HSL-based theming, and responsive grid layouts. Component architecture includes presentational components, an SEO component for dynamic meta tags, reusable cards, and React Hook Form with Zod validation for forms. Routing supports template browsing, detail pages, category-specific landings, and focused market cultures (Indian, UAE, Saudi Arabian weddings).
 
 ### Backend Architecture
-**Server Framework**: Express.js with TypeScript running on Node.js.
-
-**API Design**: RESTful endpoints for:
-- Template retrieval with filtering by category, culture, and style (`/api/templates`)
-- Individual template lookup by slug (`/api/templates/:slug`)
-- Contact form submissions (`/api/contact`)
-- Article/blog content (`/api/articles`)
-
-**Data Storage Strategy**: Currently using in-memory storage (MemStorage class) with seed data for templates, contacts, and articles. The architecture abstracts storage behind an IStorage interface, enabling future migration to persistent database solutions.
-
-**Request/Response Handling**: JSON-based API with error handling, request logging middleware, and validation using Zod schemas. Raw body capture for potential webhook integrations.
+The backend is an Express.js server with TypeScript. It provides RESTful API endpoints for template management, contact form submissions, and article content. Data storage currently uses an in-memory solution (MemStorage class) with seed data, abstracting storage behind an `IStorage` interface for future database migration. The API uses JSON for requests/responses, includes error handling, logging middleware, and Zod for validation.
 
 ### Database & Data Models
-**Schema Definition**: Drizzle ORM configured for PostgreSQL with type-safe schema definitions in `/shared/schema.ts`.
-
-**Core Entities**:
-- **Templates**: Video invitation templates with fields for title, slug, category, culture, style, duration, orientation, media URLs, pricing, and premium status
-- **Contacts**: Form submissions capturing name, email, subject, message, phone
-- **Articles**: Blog content with title, slug, excerpt, content, author, category, publish date, and media
-
-**Schema Validation**: Zod schemas generated from Drizzle tables via drizzle-zod for runtime validation and type inference.
-
-**Migration Strategy**: Drizzle Kit configured for schema migrations with PostgreSQL dialect. Database URL expected via environment variable `DATABASE_URL`.
+The project uses Drizzle ORM with PostgreSQL. The schema defines core entities like `templates`, `contacts`, and `articles`, with `template_pages`, `customizations`, `orders`, `payments`, `downloads`, `analytics_events`, and `sessions` also being core. Zod schemas are generated from Drizzle tables for validation. Drizzle Kit is configured for schema migrations.
 
 ### Design System Implementation
-**Premium Cinematic Aesthetic**: Design guidelines document specifies Airbnb-inspired card layouts, Netflix-style video-first interface, and luxury wedding platform aesthetics. Key principles:
-- Generous whitespace and elegant animations
-- Video-centric layouts with aspect ratios optimized for portrait mobile formats (9:16)
-- Cultural authenticity in design elements
-- Professional polish signaling high-quality output
-
-**Responsive Design**: Mobile-first approach with breakpoints at 768px (md), 1024px (lg), 1280px (xl). Spacing scale using Tailwind units (4, 6, 8, 12, 16, 20, 24, 32).
-
-**Typography Hierarchy**: Structured from H1 Hero (text-6xl/7xl) down to Caption (text-sm), with semantic font family assignments for different content types.
+The design aims for a premium, cinematic aesthetic inspired by Airbnb, Netflix, and luxury wedding platforms. It prioritizes generous whitespace, elegant animations, video-centric layouts optimized for portrait mobile formats (9:16), and culturally authentic design elements. A mobile-first responsive design approach is used with Tailwind CSS breakpoints and spacing scale. Typography is structured hierarchically with semantic font family assignments.
 
 ## External Dependencies
 
 ### UI Component Libraries
-- **Radix UI**: Headless UI primitives (@radix-ui/react-*) for accessible components including dialogs, dropdowns, accordions, tooltips, navigation menus
-- **Shadcn/ui**: Pre-built component variants configured in components.json
-- **Lucide React**: Icon library for consistent iconography
+- **Radix UI**: Headless UI primitives for accessible components.
+- **Shadcn/ui**: Pre-built component variants.
+- **Lucide React**: Icon library.
 
 ### Data Management
-- **TanStack Query (React Query)**: Server state management, caching, and data fetching with custom query client configuration
-- **React Hook Form**: Form state management with Zod resolver integration
-- **Zod**: Runtime type validation and schema definition
+- **TanStack Query (React Query)**: Server state management, caching, and data fetching.
+- **React Hook Form**: Form state management with Zod resolver.
+- **Zod**: Runtime type validation and schema definition.
 
 ### Database & ORM
-- **Drizzle ORM**: Type-safe PostgreSQL ORM with migration support
-- **@neondatabase/serverless**: PostgreSQL driver compatible with serverless environments
-- **Drizzle Zod**: Integration layer for generating Zod schemas from Drizzle tables
+- **Drizzle ORM**: Type-safe PostgreSQL ORM.
+- **@neondatabase/serverless**: PostgreSQL driver for serverless environments.
+- **Drizzle Zod**: Integration for generating Zod schemas from Drizzle tables.
 
 ### Styling & Theming
-- **Tailwind CSS**: Utility-first CSS framework with custom configuration
-- **Class Variance Authority (CVA)**: Type-safe variant system for component styling
-- **clsx & tailwind-merge**: Utility for conditional class merging
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Class Variance Authority (CVA)**: Type-safe variant system for component styling.
+- **clsx & tailwind-merge**: Utilities for conditional class merging.
 
 ### Development Tools
-- **Vite**: Build tool and dev server with React plugin
-- **TypeScript**: Type safety across client, server, and shared code
-- **ESBuild**: Production build bundler for server code
-- **TSX**: TypeScript execution for development server
-
-### Asset Management
-Generated images stored in `/attached_assets/generated_images/` directory, referenced via Vite's asset import system with `@assets` alias.
+- **Vite**: Build tool and dev server.
+- **TypeScript**: Type safety.
+- **ESBuild**: Production build bundler for server code.
+- **TSX**: TypeScript execution for development server.
 
 ### Session & Storage
-- **connect-pg-simple**: PostgreSQL session store for Express sessions (prepared for authentication implementation)
+- **connect-pg-simple**: PostgreSQL session store for Express.
 
 ### Additional Libraries
-- **date-fns**: Date formatting and manipulation
-- **embla-carousel-react**: Carousel/slider functionality for template showcases
-- **cmdk**: Command palette component (likely for search/navigation)
-- **wouter**: Lightweight routing library (~1.2KB alternative to React Router)
+- **date-fns**: Date formatting and manipulation.
+- **embla-carousel-react**: Carousel functionality.
+- **cmdk**: Command palette component.
+- **wouter**: Lightweight routing library.
+- **@google-cloud/storage**: Google Cloud Storage client.
+- **@uppy/\***: File upload components.
+- **openid-client**: OpenID Connect client.
+- **memoizee**: Memoization utility.
+
+### Critical Integrations (Manual Setup Required)
+- **Object Storage**: Google Cloud Storage or compatible service for public and private assets.
+- **Razorpay**: Payment gateway for transaction processing.
+- **After Effects API**: External service for video rendering (preview and final quality).
+- **WhatsApp Business API**: For video delivery to users.
