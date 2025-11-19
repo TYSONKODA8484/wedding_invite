@@ -450,13 +450,8 @@ export default function Editor() {
   // Save customization mutation
   const saveCustomizationMutation = useMutation({
     mutationFn: async () => {
-      // Check authentication first
-      const authResponse = await fetch("/api/auth/user", { credentials: "include" });
-      if (!authResponse.ok) {
-        // Redirect to login
-        window.location.href = "/api/login";
-        throw new Error("Not authenticated");
-      }
+      // Demo mode: Auth removed, backend uses hardcoded demo-user-1
+      // TODO: Replace with real auth once login modal is implemented (Task 11)
 
       // Create or update customization
       let customizId = customizationId;

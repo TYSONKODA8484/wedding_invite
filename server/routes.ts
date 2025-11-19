@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import {
   ObjectStorageService,
   ObjectNotFoundError,
@@ -16,22 +15,6 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  await setupAuth(app);
-
-  // ==================== AUTH ROUTES ====================
-  
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
   // ==================== TEMPLATE ROUTES ====================
   
   app.get("/api/templates", async (req, res) => {
@@ -79,9 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== CUSTOMIZATION ROUTES ====================
   
-  app.get("/api/customizations", isAuthenticated, async (req: any, res) => {
+  app.get("/api/customizations", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const customizations = await storage.getUserCustomizations(userId);
       res.json(customizations);
     } catch (error) {
@@ -90,9 +73,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/customizations/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/customizations/:id", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const customization = await storage.getCustomizationById(req.params.id);
       
       if (!customization) {
@@ -114,9 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customizations", isAuthenticated, async (req: any, res) => {
+  app.post("/api/customizations", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const validated = insertCustomizationSchema.parse({
         ...req.body,
         userId,
@@ -133,9 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/customizations/:id", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/customizations/:id", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const customization = await storage.getCustomizationById(req.params.id);
       
       if (!customization) {
@@ -157,9 +140,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== CUSTOMIZATION PAGE ROUTES ====================
   
-  app.post("/api/customizations/:id/pages", isAuthenticated, async (req: any, res) => {
+  app.post("/api/customizations/:id/pages", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const customization = await storage.getCustomizationById(req.params.id);
       
       if (!customization) {
@@ -186,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/customization-pages/:id", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/customization-pages/:id", async (req: any, res) => {
     try {
       const updated = await storage.updateCustomizationPage(
         req.params.id,
@@ -218,8 +201,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Private object serving (user uploaded photos)
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+  app.get("/objects/:objectPath(*)", async (req: any, res) => {
+    const userId = "demo-user-1"; // Demo mode: no auth required
     const objectStorageService = new ObjectStorageService();
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(
@@ -243,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload URL generation
-  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+  app.post("/api/objects/upload", async (req, res) => {
     const objectStorageService = new ObjectStorageService();
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -255,12 +238,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Image upload completion (set ACL)
-  app.put("/api/images", isAuthenticated, async (req: any, res) => {
+  app.put("/api/images", async (req: any, res) => {
     if (!req.body.imageURL) {
       return res.status(400).json({ error: "imageURL is required" });
     }
 
-    const userId = req.user?.claims?.sub;
+    const userId = "demo-user-1"; // Demo mode: no auth required
 
     try {
       const objectStorageService = new ObjectStorageService();
@@ -284,9 +267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== PREVIEW & ORDER ROUTES ====================
   
   // Request preview generation
-  app.post("/api/customizations/:id/request-preview", isAuthenticated, async (req: any, res) => {
+  app.post("/api/customizations/:id/request-preview", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const customization = await storage.getCustomizationById(req.params.id);
       
       if (!customization) {
@@ -315,9 +298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create order (before Razorpay payment)
-  app.post("/api/orders", isAuthenticated, async (req: any, res) => {
+  app.post("/api/orders", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const validated = insertOrderSchema.parse({
         ...req.body,
         userId,
@@ -337,9 +320,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/orders", isAuthenticated, async (req: any, res) => {
+  app.get("/api/orders", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const orders = await storage.getUserOrders(userId);
       res.json(orders);
     } catch (error) {
@@ -351,9 +334,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== PAYMENT ROUTES ====================
   
   // Verify Razorpay payment
-  app.post("/api/payments/verify", isAuthenticated, async (req: any, res) => {
+  app.post("/api/payments/verify", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       
       // TODO: Verify Razorpay signature
       // TODO: Update order status to 'paid'
@@ -378,9 +361,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== DOWNLOAD ROUTES ====================
   
-  app.post("/api/downloads", isAuthenticated, async (req: any, res) => {
+  app.post("/api/downloads", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const { orderId } = req.body;
       
       // Check download limit (max 5 per order)
@@ -417,9 +400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/orders/:id/downloads", isAuthenticated, async (req: any, res) => {
+  app.get("/api/orders/:id/downloads", async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = "demo-user-1"; // Demo mode: no auth required
       const order = await storage.getOrderById(req.params.id);
       
       if (!order || order.userId !== userId) {
