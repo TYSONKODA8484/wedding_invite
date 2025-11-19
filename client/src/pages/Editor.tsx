@@ -1,7 +1,7 @@
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState, useRef, useEffect } from "react";
-import type { Template, TemplatePage } from "@shared/schema";
+import type { Template } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check } from "lucide-react";
@@ -502,7 +502,7 @@ export default function Editor() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: templateData, isLoading, error } = useQuery<Template & { pages?: TemplatePage[] }>({
+  const { data: templateData, isLoading, error } = useQuery<Template & { pages?: any[] }>({
     queryKey: ["/api/templates", slug],
     queryFn: async () => {
       const response = await fetch(`/api/templates/${slug}`);
@@ -528,7 +528,7 @@ export default function Editor() {
           credentials: "include",
           body: JSON.stringify({
             templateId: templateData!.id,
-            customizationName: `${templateData!.title} Customization`,
+            customizationName: `${templateData!.name} Customization`,
             status: "draft",
           }),
         });
@@ -774,7 +774,7 @@ export default function Editor() {
             </Button>
             <div>
               <h1 className="font-semibold text-foreground text-lg line-clamp-1" data-testid="text-template-title">
-                {template.title}
+                {template.name}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Page {currentPageIndex + 1} of {pages.length}

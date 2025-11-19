@@ -106,9 +106,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/templates/:id", async (req, res) => {
+  app.get("/api/templates/:slugOrId", async (req, res) => {
     try {
-      const template = await storage.getTemplateById(req.params.id);
+      const { slugOrId } = req.params;
+      
+      // Try to find by slug first, then by ID
+      let template = await storage.getTemplateBySlug(slugOrId);
+      if (!template) {
+        template = await storage.getTemplateById(slugOrId);
+      }
+      
       if (!template) {
         return res.status(404).json({ error: "Template not found" });
       }
@@ -116,11 +123,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         template_id: template.id,
         name: template.name,
+        slug: template.slug,
         type: template.type,
         orientation: template.orientation,
         photo_option: template.photoOption,
         tags: template.tags,
         cover_image: template.coverImage,
+        thumbnail_url: template.thumbnailUrl,
+        duration: template.duration,
         currency: template.currency,
         price: parseFloat(template.price),
         template_json: template.templateJson,
