@@ -12,6 +12,7 @@ interface TemplateCardProps {
   duration: number;
   thumbnailUrl: string;
   isPremium?: boolean;
+  priceInr: number; // Price in paise
 }
 
 export function TemplateCard({
@@ -22,11 +23,17 @@ export function TemplateCard({
   duration,
   thumbnailUrl,
   isPremium,
+  priceInr,
 }: TemplateCardProps) {
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const formatPrice = (paise: number) => {
+    const rupees = Math.floor(paise / 100);
+    return `₹${rupees.toLocaleString('en-IN')}`;
   };
 
   return (
@@ -60,7 +67,12 @@ export function TemplateCard({
           <h3 className="font-playfair text-base lg:text-lg font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <p className="text-sm text-muted-foreground capitalize mb-3">{category}</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-muted-foreground capitalize">{category}</p>
+            <p className="text-lg font-semibold text-primary" data-testid={`price-template-${id}`}>
+              {formatPrice(priceInr)}
+            </p>
+          </div>
           <Button variant="default" size="sm" className="w-full" data-testid={`button-use-template-${id}`}>
             Use Template
           </Button>

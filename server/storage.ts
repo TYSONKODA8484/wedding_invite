@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, like } from "drizzle-orm";
 import {
   users,
   templates,
@@ -114,7 +114,8 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(templates.category, filters.category));
     }
     if (filters?.culture) {
-      conditions.push(eq(templates.culture, filters.culture));
+      // Support partial culture matching (e.g., "indian" matches "indian-punjabi", "indian-tamil", etc.)
+      conditions.push(like(templates.culture, `${filters.culture}%`));
     }
     if (filters?.style) {
       conditions.push(eq(templates.style, filters.style));

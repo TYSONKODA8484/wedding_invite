@@ -15,9 +15,9 @@ export default function Templates() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const categories = ["All", "Wedding", "Engagement", "Baby", "Birthday", "Corporate"];
-  const cultures = ["All", "Indian", "Arabic", "Nigerian", "Chinese", "Western"];
-  const styles = ["All", "Cinematic", "Modern", "Traditional", "Elegant"];
+  const categories = ["All", "Wedding", "Engagement", "Reception"];
+  const cultures = ["All", "Indian", "Arabic", "Modern"];
+  const styles = ["All", "Cinematic", "Modern", "Traditional"];
 
   const buildQueryParams = () => {
     const params = new URLSearchParams();
@@ -25,7 +25,13 @@ export default function Templates() {
       params.append("category", selectedCategory.toLowerCase());
     }
     if (selectedCulture && selectedCulture !== "All") {
-      params.append("culture", selectedCulture.toLowerCase());
+      // Map UI culture names to database culture prefixes
+      const cultureMap: Record<string, string> = {
+        "Indian": "indian",
+        "Arabic": "arabic",
+        "Modern": "modern"
+      };
+      params.append("culture", cultureMap[selectedCulture] || selectedCulture.toLowerCase());
     }
     if (selectedStyle && selectedStyle !== "All") {
       params.append("style", selectedStyle.toLowerCase());
