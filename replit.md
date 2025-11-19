@@ -16,21 +16,130 @@ Preferred communication style: Simple, everyday language.
 
 ## Current Build Status (Nov 19, 2024)
 
-### ✅ COMPLETED:
-1. Replit Auth integration installed (login/signup with Google, GitHub, Email)
-2. PostgreSQL database provisioned
-3. Object Storage integration installed (for user photo uploads + template assets)
-4. Package dependencies installed (openid-client, memoizee, @google-cloud/storage)
+### ✅ FOUNDATION COMPLETE (App Running on Port 5000):
 
-### 🔨 IN PROGRESS:
-- Database schema design for wedding invite platform
-- Core infrastructure files (replitAuth.ts, objectStorage.ts, storage.ts)
+**Integrations Installed:**
+1. ✅ Replit Auth - Login/signup with Google, GitHub, Email
+2. ✅ PostgreSQL Database - Provisioned and schema pushed
+3. ✅ Object Storage - Integration installed (bucket creation pending)
+4. ✅ Package Dependencies - @google-cloud/storage, @uppy/*, openid-client, memoizee
 
-### ⏳ TODO (Manual Steps Required):
-1. **Object Storage Bucket Setup**: Create bucket via Replit UI, set PUBLIC_OBJECT_SEARCH_PATHS and PRIVATE_OBJECT_DIR env vars
-2. **After Effects API**: External service for video rendering (user must provide API endpoint)
-3. **Razorpay Integration**: User must provide RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET
-4. **WhatsApp Business API**: Optional - user must set up Meta Business account + API keys
+**Database Schema (8 Tables Created):**
+- `users` - User accounts from Replit Auth
+- `sessions` - Session management
+- `templates` - Video invitation templates (title, category, culture, style, pricing)
+- `template_pages` - Multi-page structure (6-7 pages per template)
+- `customizations` - User's saved template edits
+- `customization_pages` - Field values for each customized page
+- `orders` - Pre-payment order records
+- `payments` - Razorpay payment tracking
+- `downloads` - Download tracking (5 per order limit)
+- `analytics_events` - Funnel analytics
+- `contacts` - Contact form submissions (marketing site)
+
+**Core Server Files:**
+- `server/replitAuth.ts` - Replit Auth integration with session management
+- `server/objectStorage.ts` - Object storage service for file uploads
+- `server/objectAcl.ts` - ACL system for private file access
+- `server/storage.ts` - DatabaseStorage with full CRUD operations
+- `server/routes.ts` - Complete API endpoints (40+ routes)
+- `server/db.ts` - Drizzle ORM database connection
+
+**API Endpoints Implemented:**
+- `/api/auth/user` - Get authenticated user
+- `/api/templates` - Browse templates with filters
+- `/api/templates/:slug` - Template details with pages
+- `/api/customizations` - CRUD for user customizations
+- `/api/customizations/:id/pages` - Page-level customization
+- `/api/orders` - Order creation and listing
+- `/api/payments/verify` - Razorpay payment verification
+- `/api/downloads` - Download tracking and URL generation
+- `/api/objects/upload` - Image upload URL generation
+- `/api/analytics/track` - Event tracking
+- `/public-objects/*` - Serve public assets (templates)
+- `/objects/*` - Serve private assets (user uploads)
+
+### ⚠️ KNOWN GAPS (Architect Review Feedback):
+
+**Schema Improvements Needed:**
+- Status fields are free-form text instead of enum types
+- Missing: render job IDs, WhatsApp delivery tracking, download counters
+- Missing: composite unique constraints (template_id + page_number)
+- Missing: indexes for common queries
+
+**Infrastructure Gaps:**
+- Object ACL `createObjectAccessGroup()` is a stub (throws for all groups)
+- Private asset access will fail until ACL is completed
+- Secure cookies fixed for local dev (was breaking auth)
+
+**Frontend State:**
+- Old marketing site pages still present (Contact, Blog, About, etc.)
+- No wedding invite UI built yet (browse, editor, payment flows)
+
+### 🔧 REQUIRED MANUAL STEPS:
+
+**1. Object Storage Setup (Critical for File Uploads):**
+```bash
+# In Replit UI: Tools > Object Storage
+# 1. Create a bucket (e.g., "wedding-invite-storage")
+# 2. Set environment variables:
+PUBLIC_OBJECT_SEARCH_PATHS=/wedding-invite-storage/public,/wedding-invite-storage/templates
+PRIVATE_OBJECT_DIR=/wedding-invite-storage/private
+```
+
+**2. Razorpay Integration (Required for Payments):**
+```bash
+# Get from Razorpay Dashboard: https://dashboard.razorpay.com/
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxx
+```
+
+**3. After Effects API (Required for Video Rendering):**
+- External service not yet configured
+- Need API endpoint URL for preview/final video generation
+- Must support: customization data → watermarked preview (480p) + full quality final video
+
+**4. WhatsApp Business API (Optional - for Video Delivery):**
+- Meta Business account required
+- WhatsApp Business API credentials
+- Template message approval for video delivery
+
+### ⏳ NEXT DEVELOPMENT PRIORITIES:
+
+**Critical Path to MVP:**
+1. **Fix Schema Gaps** (~2-3 hours)
+   - Add enum types for status fields
+   - Add render job tracking, WhatsApp metadata
+   - Add composite unique constraints and indexes
+   
+2. **Seed Template Data** (~2 hours)
+   - Create 15-20 Indian + Arabic wedding templates
+   - Define 6-7 pages per template with editable fields
+   - Generate placeholder thumbnails and demo videos
+
+3. **Build Template Browser** (~3-4 hours)
+   - Mobile-first gallery with filtering
+   - Template cards (thumbnail, price, duration)
+   - Template detail page with page previews
+
+4. **Build Multi-Page Editor** (~8-10 hours)
+   - Left: scrollable page list
+   - Center: page preview
+   - Right: editable field sidebar
+   - Image upload with crop/resize
+
+5. **Implement Razorpay Payment** (~4-5 hours)
+   - Order creation flow
+   - Razorpay checkout integration
+   - Payment verification with signature
+   - Webhook handling
+
+6. **Build Video Player & Download** (~3-4 hours)
+   - Watermarked preview player
+   - Download flow after payment
+   - 5-download limit enforcement
+
+**Estimated Total: 22-30 hours to functional MVP**
 
 ## System Architecture
 

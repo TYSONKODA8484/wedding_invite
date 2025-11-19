@@ -311,6 +311,12 @@ export class DatabaseStorage implements IStorage {
   async trackEvent(event: InsertAnalyticsEvent): Promise<void> {
     await db.insert(analyticsEvents).values(event);
   }
+
+  // Contact form (for marketing pages - temporary)
+  async createContact(contact: any): Promise<any> {
+    const [result] = await db.insert(contacts).values(contact).returning();
+    return result;
+  }
 }
 
 export const storage = new DatabaseStorage();

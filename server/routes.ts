@@ -447,6 +447,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== CONTACT ROUTE (Marketing Site) ====================
+  
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const contact = await storage.createContact(req.body);
+      res.status(201).json({ 
+        success: true, 
+        message: "Thank you for contacting us. We'll get back to you soon!",
+        id: contact.id 
+      });
+    } catch (error) {
+      console.error("Error creating contact:", error);
+      res.status(400).json({ 
+        error: "Invalid contact form data",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
