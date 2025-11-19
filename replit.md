@@ -2,13 +2,35 @@
 
 ## Overview
 
-WeddingInvite.ai is a premium digital invitation platform that enables users to create AI-powered, cinematic video invitations for weddings and events. The platform focuses on cultural authenticity, offering 500+ templates across diverse global wedding traditions including Indian (Punjabi, Tamil, Telugu, etc.), Arabic, Nigerian, Chinese, and Western celebrations. Users can customize templates with personal photos, text, music, and AI voiceovers in 20+ languages, then export in 4K quality for sharing on WhatsApp, Instagram Reels, and other platforms.
+**NEW DIRECTION (Nov 2024)**: WeddingInvite.ai is a 247invites.com-style video invitation platform focused on the Indian + Arabic/Middle East markets. Users browse templates, customize multi-page invitations (6-7 pages) with text and photos, preview watermarked low-quality videos, pay via Razorpay, and download full-quality videos with WhatsApp delivery.
 
-The application serves individual users creating personal invitations, event planners managing multiple clients, and enterprises seeking white-label video invitation solutions.
+**Market Focus**: Indian and Arabic wedding markets only (MVP test market launch)
+
+**Business Model**: Pay-per-template (NO subscriptions). Prices range from ₹1,200-₹2,900 per template.
+
+**Key Differentiator**: 247invites-style multi-page editor with instant preview generation and WhatsApp integration.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Current Build Status (Nov 19, 2024)
+
+### ✅ COMPLETED:
+1. Replit Auth integration installed (login/signup with Google, GitHub, Email)
+2. PostgreSQL database provisioned
+3. Object Storage integration installed (for user photo uploads + template assets)
+4. Package dependencies installed (openid-client, memoizee, @google-cloud/storage)
+
+### 🔨 IN PROGRESS:
+- Database schema design for wedding invite platform
+- Core infrastructure files (replitAuth.ts, objectStorage.ts, storage.ts)
+
+### ⏳ TODO (Manual Steps Required):
+1. **Object Storage Bucket Setup**: Create bucket via Replit UI, set PUBLIC_OBJECT_SEARCH_PATHS and PRIVATE_OBJECT_DIR env vars
+2. **After Effects API**: External service for video rendering (user must provide API endpoint)
+3. **Razorpay Integration**: User must provide RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET
+4. **WhatsApp Business API**: Optional - user must set up Meta Business account + API keys
 
 ## System Architecture
 
