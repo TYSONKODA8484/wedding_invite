@@ -1,0 +1,287 @@
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  // Sign In form state
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
+
+  // Sign Up form state
+  const [signUpName, setSignUpName] = useState("");
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [signUpPhone, setSignUpPhone] = useState("");
+  const [signUpPassword, setSignUpPassword] = useState("");
+  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState("");
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Demo mode: Store fake auth data in localStorage
+    const fakeToken = `demo-token-${Date.now()}`;
+    const fakeUser = {
+      id: "demo-user-1",
+      email: signInEmail,
+      name: signInEmail.split('@')[0],
+    };
+
+    localStorage.setItem("authToken", fakeToken);
+    localStorage.setItem("authUser", JSON.stringify(fakeUser));
+
+    setIsLoading(false);
+    toast({
+      title: "Signed in successfully!",
+      description: `Welcome back, ${fakeUser.name}`,
+    });
+
+    // Reset form
+    setSignInEmail("");
+    setSignInPassword("");
+    
+    onSuccess?.();
+    onClose();
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validation
+    if (signUpPassword !== signUpConfirmPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please ensure both passwords are the same.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (signUpPassword.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Demo mode: Store fake auth data in localStorage
+    const fakeToken = `demo-token-${Date.now()}`;
+    const fakeUser = {
+      id: "demo-user-1",
+      email: signUpEmail,
+      name: signUpName,
+      phone: signUpPhone,
+    };
+
+    localStorage.setItem("authToken", fakeToken);
+    localStorage.setItem("authUser", JSON.stringify(fakeUser));
+
+    setIsLoading(false);
+    toast({
+      title: "Account created successfully!",
+      description: `Welcome, ${signUpName}!`,
+    });
+
+    // Reset form
+    setSignUpName("");
+    setSignUpEmail("");
+    setSignUpPhone("");
+    setSignUpPassword("");
+    setSignUpConfirmPassword("");
+
+    onSuccess?.();
+    onClose();
+  };
+
+  const handleClose = () => {
+    if (!isLoading) {
+      onClose();
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[480px]" data-testid="modal-auth">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-playfair text-center">
+            {activeTab === "signin" ? "Welcome Back" : "Create Account"}
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            {activeTab === "signin" 
+              ? "Sign in to continue creating your wedding invitation" 
+              : "Join WeddingInvite.ai and create stunning video invitations"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2" data-testid="tabs-auth">
+            <TabsTrigger value="signin" data-testid="tab-signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
+          </TabsList>
+
+          {/* Sign In Tab */}
+          <TabsContent value="signin">
+            <form onSubmit={handleSignIn} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email">Email</Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={signInEmail}
+                  onChange={(e) => setSignInEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  data-testid="input-signin-email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signin-password">Password</Label>
+                <Input
+                  id="signin-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={signInPassword}
+                  onChange={(e) => setSignInPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  data-testid="input-signin-password"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                data-testid="button-signin-submit"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+
+          {/* Sign Up Tab */}
+          <TabsContent value="signup">
+            <form onSubmit={handleSignUp} className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name">Full Name</Label>
+                <Input
+                  id="signup-name"
+                  type="text"
+                  placeholder="John Doe"
+                  value={signUpName}
+                  onChange={(e) => setSignUpName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  data-testid="input-signup-name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email">Email</Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={signUpEmail}
+                  onChange={(e) => setSignUpEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  data-testid="input-signup-email"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-phone">Phone Number (Optional)</Label>
+                <Input
+                  id="signup-phone"
+                  type="tel"
+                  placeholder="+91 98765 43210"
+                  value={signUpPhone}
+                  onChange={(e) => setSignUpPhone(e.target.value)}
+                  disabled={isLoading}
+                  data-testid="input-signup-phone"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password">Password</Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={signUpPassword}
+                  onChange={(e) => setSignUpPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  data-testid="input-signup-password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                <Input
+                  id="signup-confirm-password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={signUpConfirmPassword}
+                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  data-testid="input-signup-confirm-password"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                data-testid="button-signup-submit"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -2,12 +2,56 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Sparkles } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Menu, Sparkles, User, LogOut } from "lucide-react";
+import { AuthModal } from "@/components/AuthModal";
 
 export function Navigation() {
   const [location] = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+
+  // Check localStorage for auth state
+  useEffect(() => {
+    const checkAuthState = () => {
+      const token = localStorage.getItem("authToken");
+      const userStr = localStorage.getItem("authUser");
+      
+      if (token && userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          setUser(userData);
+          setIsLoggedIn(true);
+        } catch (e) {
+          // Invalid user data
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("authUser");
+          setIsLoggedIn(false);
+          setUser(null);
+        }
+      } else {
+        // No auth data - ensure logged out state (for cross-tab logout)
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    };
+    
+    checkAuthState();
+    // Check periodically in case user logs in/out from another tab
+    const interval = setInterval(checkAuthState, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,6 +60,23 @@ export function Navigation() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("authUser");
+    setIsLoggedIn(false);
+    setUser(null);
+  };
+
+  const getUserInitials = () => {
+    if (!user) return "U";
+    return user.name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   const navLinks = [
     { label: "Templates", href: "/templates" },
@@ -63,23 +124,79 @@ export function Navigation() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="default"
-              data-testid="button-login"
-            >
-              Login
-            </Button>
-            <Button
-              variant="default"
-              size="default"
-              asChild
-              data-testid="button-create-invite"
-            >
-              <Link href="/templates" className="font-medium">
-                Create Invite
-              </Link>
-            </Button>
+            {isLoggedIn && user ? (
+              <>
+                <Button
+                  variant="default"
+                  size="default"
+                  asChild
+                  data-testid="button-create-invite"
+                >
+                  <Link href="/templates" className="font-medium">
+                    Create Invite
+                  </Link>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="rounded-full"
+                      data-testid="button-user-menu"
+                    >
+                      <Avatar className="w-9 h-9">
+                        <AvatarFallback className="text-sm font-semibold">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem data-testid="menu-item-profile">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      data-testid="menu-item-logout"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="default"
+                  onClick={() => setAuthModalOpen(true)}
+                  data-testid="button-login"
+                >
+                  Login
+                </Button>
+                <Button
+                  variant="default"
+                  size="default"
+                  asChild
+                  data-testid="button-create-invite"
+                >
+                  <Link href="/templates" className="font-medium">
+                    Create Invite
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -109,30 +226,76 @@ export function Navigation() {
                     {link.label}
                   </Link>
                 ))}
-                <Button
-                  variant="ghost"
-                  size="default"
-                  className="mt-4 w-full"
-                  data-testid="button-login-mobile"
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="default"
-                  size="default"
-                  className="w-full"
-                  asChild
-                  data-testid="button-create-invite-mobile"
-                >
-                  <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
-                    Create Invite
-                  </Link>
-                </Button>
+                
+                {isLoggedIn && user ? (
+                  <>
+                    <div className="mt-4 px-4 py-3 bg-accent/10 rounded-md">
+                      <p className="text-sm font-medium">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="w-full justify-start"
+                      onClick={handleLogout}
+                      data-testid="button-logout-mobile"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="default"
+                      className="w-full"
+                      asChild
+                      data-testid="button-create-invite-mobile"
+                    >
+                      <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
+                        Create Invite
+                      </Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="mt-4 w-full"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setAuthModalOpen(true);
+                      }}
+                      data-testid="button-login-mobile"
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="default"
+                      className="w-full"
+                      asChild
+                      data-testid="button-create-invite-mobile"
+                    >
+                      <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
+                        Create Invite
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={() => {
+          // Auth state will be updated by the useEffect polling
+        }}
+      />
     </header>
   );
 }
