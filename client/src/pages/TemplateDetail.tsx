@@ -13,6 +13,13 @@ export default function TemplateDetail() {
   const [, navigate] = useLocation();
   const slug = params?.slug;
 
+  // All hooks must be declared before any conditional returns
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [showControls, setShowControls] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+
   const { data: template, isLoading, error } = useQuery<Template>({
     queryKey: ["/api/templates", slug],
     queryFn: async () => {
@@ -75,12 +82,6 @@ export default function TemplateDetail() {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showControls, setShowControls] = useState(false);
-  const [videoError, setVideoError] = useState(false);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -248,7 +249,7 @@ export default function TemplateDetail() {
                 variant="default"
                 size="lg"
                 className="flex-1 text-base font-semibold h-14"
-                onClick={() => navigate(`/editor/${template.id}`)}
+                onClick={() => navigate(`/editor/${template.slug}`)}
                 data-testid="button-customize-template"
               >
                 Customize This Template

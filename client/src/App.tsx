@@ -29,7 +29,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:slug" component={TemplateDetail} />
-      <Route path="/editor/:id" component={Editor} />
+      <Route path="/editor/:slug" component={Editor} />
       
       <Route path="/categories/wedding-video-invitations" component={CategoryPage} />
       <Route path="/categories/premium-luxury" component={CategoryPage} />
