@@ -1,12 +1,68 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { insertContactSchema, type InsertContact } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { SEOHead } from "@/components/SEOHead";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Loader2, CheckCircle } from "lucide-react";
 
 export default function Contact() {
+  const { toast } = useToast();
+
+  const form = useForm<InsertContact>({
+    resolver: zodResolver(insertContactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+    },
+  });
+
+  const contactMutation = useMutation({
+    mutationFn: async (data: InsertContact) => {
+      return await apiRequest("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message Sent Successfully",
+        description: "Thank you for contacting us. We'll get back to you soon!",
+      });
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to Send Message",
+        description: error.message || "Please try again later.",
+      });
+    },
+  });
+
+  const onSubmit = (data: InsertContact) => {
+    contactMutation.mutate(data);
+  };
+
   return (
     <>
       <SEOHead
@@ -31,75 +87,127 @@ export default function Contact() {
               <h2 className="font-playfair text-3xl font-bold text-foreground mb-6">
                 Send us a Message
               </h2>
-              <form className="space-y-6">
-                <div>
-                  <Label htmlFor="name" className="text-foreground">Name *</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Your full name"
-                    className="mt-2"
-                    data-testid="input-name"
-                    required
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">Name *</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Your full name"
+                            data-testid="input-name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div>
-                  <Label htmlFor="email" className="text-foreground">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    className="mt-2"
-                    data-testid="input-email"
-                    required
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">Email *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="your.email@example.com"
+                            data-testid="input-email"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div>
-                  <Label htmlFor="phone" className="text-foreground">Phone</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    className="mt-2"
-                    data-testid="input-phone"
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">Phone</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="tel"
+                            placeholder="+1 (555) 000-0000"
+                            data-testid="input-phone"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div>
-                  <Label htmlFor="subject" className="text-foreground">Subject</Label>
-                  <Input
-                    id="subject"
-                    type="text"
-                    placeholder="How can we help?"
-                    className="mt-2"
-                    data-testid="input-subject"
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">Subject</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="How can we help?"
+                            data-testid="input-subject"
+                            {...field}
+                            value={field.value || ""}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <div>
-                  <Label htmlFor="message" className="text-foreground">Message *</Label>
-                  <Textarea
-                    id="message"
-                    rows={6}
-                    placeholder="Tell us more about your inquiry..."
-                    className="mt-2"
-                    data-testid="textarea-message"
-                    required
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">Message *</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            rows={6}
+                            placeholder="Tell us more about your inquiry..."
+                            data-testid="textarea-message"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
 
-                <Button
-                  type="submit"
-                  variant="default"
-                  size="lg"
-                  className="w-full font-semibold"
-                  data-testid="button-submit"
-                >
-                  Send Message
-                </Button>
-              </form>
+                  <Button
+                    type="submit"
+                    variant="default"
+                    size="lg"
+                    className="w-full font-semibold"
+                    data-testid="button-submit"
+                    disabled={contactMutation.isPending}
+                  >
+                    {contactMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                        Sending...
+                      </>
+                    ) : contactMutation.isSuccess ? (
+                      <>
+                        <CheckCircle className="w-5 h-5 mr-2" />
+                        Message Sent!
+                      </>
+                    ) : (
+                      "Send Message"
+                    )}
+                  </Button>
+                </form>
+              </Form>
             </Card>
 
             <div className="space-y-8">

@@ -1,15 +1,13 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { Template } from "@shared/schema";
 import { SEOHead } from "@/components/SEOHead";
 import { TemplateCard } from "@/components/TemplateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { SlidersHorizontal, X, Loader2 } from "lucide-react";
 import templatesHubHero from "@assets/generated_images/Templates_hub_hero_image_bf0e94da.png";
-import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
-import engagementHero from "@assets/generated_images/Engagement_category_hero_image_e98e3800.png";
-import luxuryHero from "@assets/generated_images/Premium_luxury_category_hero_5c811c21.png";
-import indianPunjabiHero from "@assets/generated_images/Indian_Punjabi_wedding_culture_b8245c44.png";
-import arabicHero from "@assets/generated_images/Arabic_UAE_wedding_culture_5fdde5ea.png";
 
 export default function Templates() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -21,16 +19,32 @@ export default function Templates() {
   const cultures = ["All", "Indian", "Arabic", "Nigerian", "Chinese", "Western"];
   const styles = ["All", "Cinematic", "Modern", "Traditional", "Elegant"];
 
-  const templates = [
-    { id: "1", title: "Cinematic Love Story", slug: "cinematic-love-story", category: "wedding", duration: 45, thumbnailUrl: homepageHero, isPremium: true },
-    { id: "2", title: "Golden Elegance", slug: "golden-elegance", category: "engagement", duration: 30, thumbnailUrl: luxuryHero, isPremium: false },
-    { id: "3", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: indianPunjabiHero, isPremium: true },
-    { id: "4", title: "Modern Romance", slug: "modern-romance", category: "engagement", duration: 40, thumbnailUrl: engagementHero, isPremium: false },
-    { id: "5", title: "Royal Wedding", slug: "royal-wedding", category: "wedding", duration: 55, thumbnailUrl: arabicHero, isPremium: true },
-    { id: "6", title: "Simple Elegance", slug: "simple-elegance", category: "wedding", duration: 35, thumbnailUrl: luxuryHero, isPremium: false },
-    { id: "7", title: "Cultural Heritage", slug: "cultural-heritage", category: "wedding", duration: 50, thumbnailUrl: indianPunjabiHero, isPremium: true },
-    { id: "8", title: "Contemporary Style", slug: "contemporary-style", category: "engagement", duration: 38, thumbnailUrl: homepageHero, isPremium: false },
-  ];
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== "All") {
+      params.append("category", selectedCategory.toLowerCase());
+    }
+    if (selectedCulture && selectedCulture !== "All") {
+      params.append("culture", selectedCulture.toLowerCase());
+    }
+    if (selectedStyle && selectedStyle !== "All") {
+      params.append("style", selectedStyle.toLowerCase());
+    }
+    return params.toString();
+  };
+
+  const { data: templates = [], isLoading, error } = useQuery<Template[]>({
+    queryKey: ["/api/templates", selectedCategory, selectedCulture, selectedStyle],
+    queryFn: async () => {
+      const queryString = buildQueryParams();
+      const url = `/api/templates${queryString ? `?${queryString}` : ""}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch templates");
+      }
+      return response.json();
+    },
+  });
 
   const activeFiltersCount = [selectedCategory, selectedCulture, selectedStyle].filter(Boolean).length;
 
@@ -173,17 +187,61 @@ export default function Templates() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
-            {templates.map((template) => (
-              <TemplateCard key={template.id} {...template} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20" data-testid="loading-templates">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground text-lg">Loading templates...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <Card className="p-12 text-center" data-testid="error-templates">
+              <div className="max-w-md mx-auto">
+                <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                  <X className="w-8 h-8 text-destructive" />
+                </div>
+                <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
+                  Failed to Load Templates
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  {error instanceof Error ? error.message : "An error occurred while loading templates"}
+                </p>
+                <Button onClick={() => window.location.reload()} data-testid="button-retry">
+                  Try Again
+                </Button>
+              </div>
+            </Card>
+          ) : templates.length === 0 ? (
+            <Card className="p-12 text-center" data-testid="empty-templates">
+              <div className="max-w-md mx-auto">
+                <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
+                  No Templates Found
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Try adjusting your filters to see more results
+                </p>
+                <Button onClick={clearFilters} variant="outline" data-testid="button-clear-filters-empty">
+                  Clear Filters
+                </Button>
+              </div>
+            </Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+                {templates.map((template) => (
+                  <TemplateCard key={template.id} {...template} />
+                ))}
+              </div>
 
-          <div className="text-center mt-12">
-            <Button variant="outline" size="lg" data-testid="button-load-more">
-              Load More Templates
-            </Button>
-          </div>
+              {templates.length >= 12 && (
+                <div className="text-center mt-12">
+                  <Button variant="outline" size="lg" data-testid="button-load-more">
+                    Load More Templates
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
     </>
