@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -80,15 +80,19 @@ function Router() {
 }
 
 function App() {
+  const [location] = useLocation();
+  const isEditorMode = location.startsWith('/editor');
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="min-h-screen flex flex-col bg-background">
-          <Navigation />
+          {/* Hide Navigation and Footer in Editor mode for full-screen customization */}
+          {!isEditorMode && <Navigation />}
           <main className="flex-1">
             <Router />
           </main>
-          <Footer />
+          {!isEditorMode && <Footer />}
         </div>
         <Toaster />
       </TooltipProvider>

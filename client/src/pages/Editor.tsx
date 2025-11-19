@@ -365,89 +365,7 @@ export default function Editor() {
     enabled: !!slug,
   });
 
-  const template = templateData;
-  const pages = templateData?.pages || [];
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" data-testid="loading-editor">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground text-lg">Loading editor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !template) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-4" data-testid="error-editor">
-        <Card className="p-12 text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-            <X className="w-8 h-8 text-destructive" />
-          </div>
-          <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
-            Template Not Found
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            Unable to load the editor for this template.
-          </p>
-          <Button onClick={() => navigate("/templates")} data-testid="button-back-templates">
-            Back to Templates
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  const currentPage = pages[currentPageIndex];
-  const editableFields: EditableField[] = currentPage?.editableFields as EditableField[] || [];
-
-  const handleFieldChange = (fieldId: string, value: string) => {
-    setFieldValues(prev => ({ ...prev, [`${currentPage.id}_${fieldId}`]: value }));
-  };
-
-  const getFieldValue = (fieldId: string) => {
-    return fieldValues[`${currentPage.id}_${fieldId}`] || '';
-  };
-
-  const handleImageSelect = (fieldId: string, file: File) => {
-    const fieldKey = `${currentPage.id}_${fieldId}`;
-    setImageFiles(prev => ({
-      ...prev,
-      [fieldKey]: file
-    }));
-
-    // Create preview URL
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreviews(prev => ({
-        ...prev,
-        [fieldKey]: reader.result as string
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleImageRemove = (fieldId: string) => {
-    const fieldKey = `${currentPage.id}_${fieldId}`;
-    setImageFiles(prev => {
-      const updated = { ...prev };
-      delete updated[fieldKey];
-      return updated;
-    });
-    setImagePreviews(prev => {
-      const updated = { ...prev };
-      delete updated[fieldKey];
-      return updated;
-    });
-  };
-
-  const getImagePreview = (fieldId: string): string | null => {
-    return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
-  };
-
-  // Save customization mutation
+  // Save customization mutation - MUST be declared before early returns (Rules of Hooks)
   const saveCustomizationMutation = useMutation({
     mutationFn: async () => {
       // Demo mode: Auth removed, backend uses hardcoded demo-user-1
@@ -529,6 +447,89 @@ export default function Editor() {
       }
     },
   });
+
+  // All hooks declared - now we can do early returns
+  const template = templateData;
+  const pages = templateData?.pages || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" data-testid="loading-editor">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground text-lg">Loading editor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !template) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4" data-testid="error-editor">
+        <Card className="p-12 text-center max-w-md">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <X className="w-8 h-8 text-destructive" />
+          </div>
+          <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
+            Template Not Found
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Unable to load the editor for this template.
+          </p>
+          <Button onClick={() => navigate("/templates")} data-testid="button-back-templates">
+            Back to Templates
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const currentPage = pages[currentPageIndex];
+  const editableFields: EditableField[] = currentPage?.editableFields as EditableField[] || [];
+
+  const handleFieldChange = (fieldId: string, value: string) => {
+    setFieldValues(prev => ({ ...prev, [`${currentPage.id}_${fieldId}`]: value }));
+  };
+
+  const getFieldValue = (fieldId: string) => {
+    return fieldValues[`${currentPage.id}_${fieldId}`] || '';
+  };
+
+  const handleImageSelect = (fieldId: string, file: File) => {
+    const fieldKey = `${currentPage.id}_${fieldId}`;
+    setImageFiles(prev => ({
+      ...prev,
+      [fieldKey]: file
+    }));
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreviews(prev => ({
+        ...prev,
+        [fieldKey]: reader.result as string
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageRemove = (fieldId: string) => {
+    const fieldKey = `${currentPage.id}_${fieldId}`;
+    setImageFiles(prev => {
+      const updated = { ...prev };
+      delete updated[fieldKey];
+      return updated;
+    });
+    setImagePreviews(prev => {
+      const updated = { ...prev };
+      delete updated[fieldKey];
+      return updated;
+    });
+  };
+
+  const getImagePreview = (fieldId: string): string | null => {
+    return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
+  };
 
   const handleSave = () => {
     console.log("[Save] Starting save operation");
