@@ -39,13 +39,15 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-12">
           <div className="lg:col-span-2">
-            <Link href="/">
-              <a className="flex items-center gap-2 mb-4 hover-elevate active-elevate-2 rounded-md px-2 py-2 -ml-2 inline-flex" data-testid="link-footer-logo">
-                <Sparkles className="w-6 h-6 text-primary" />
-                <span className="font-playfair text-xl font-bold text-foreground">
-                  WeddingInvite.ai
-                </span>
-              </a>
+            <Link 
+              href="/"
+              className="flex items-center gap-2 mb-4 hover-elevate active-elevate-2 rounded-md px-2 py-2 -ml-2 inline-flex"
+              data-testid="link-footer-logo"
+            >
+              <Sparkles className="w-6 h-6 text-primary" />
+              <span className="font-playfair text-xl font-bold text-foreground">
+                WeddingInvite.ai
+              </span>
             </Link>
             <p className="text-muted-foreground mb-6 text-sm lg:text-base max-w-xs">
               Create stunning, AI-powered cinematic video invitations for your special moments. Culturally accurate and instantly shareable.
@@ -71,10 +73,12 @@ export function Footer() {
             <ul className="space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href}>
-                    <a className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md" data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                      {link.label}
-                    </a>
+                  <Link 
+                    href={link.href}
+                    className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md"
+                    data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -86,10 +90,12 @@ export function Footer() {
             <ul className="space-y-3">
               {resourceLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href}>
-                    <a className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md" data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                      {link.label}
-                    </a>
+                  <Link 
+                    href={link.href}
+                    className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md"
+                    data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -101,10 +107,12 @@ export function Footer() {
             <ul className="space-y-3">
               {cultureLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href}>
-                    <a className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md" data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                      {link.label}
-                    </a>
+                  <Link 
+                    href={link.href}
+                    className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md"
+                    data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
                   </Link>
                 </li>
               ))}
@@ -116,10 +124,12 @@ export function Footer() {
             <ul className="space-y-3">
               {countryLinks.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href}>
-                    <a className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md" data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}>
-                      {link.label}
-                    </a>
+                  <Link 
+                    href={link.href}
+                    className="text-sm lg:text-base text-muted-foreground hover:text-foreground transition-colors hover-elevate active-elevate-2 inline-block px-2 py-1 -ml-2 rounded-md"
+                    data-testid={`link-footer-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
                   </Link>
                 </li>
               ))}

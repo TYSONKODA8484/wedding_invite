@@ -92,42 +92,40 @@ export default function Blog() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {articles.map((article) => (
-              <Card key={article.id} className="group overflow-hidden hover-elevate active-elevate-2 transition-all duration-300" data-testid={`article-${article.id}`}>
-                <Link href={`/blog/${article.slug}`}>
-                  <a className="block">
-                    <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                      <img
-                        src={article.thumbnailUrl}
-                        alt={article.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
-                        {article.category}
-                      </Badge>
+              <Card key={article.id} className="group overflow-hidden transition-all duration-300" data-testid={`article-${article.id}`}>
+                <Link href={`/blog/${article.slug}`} className="block hover-elevate active-elevate-2">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+                    <img
+                      src={article.thumbnailUrl}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
+                      {article.category}
+                    </Badge>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-playfair text-xl lg:text-2xl font-bold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                      {article.title}
+                    </h3>
+                    <p className="text-muted-foreground mb-4 line-clamp-2">
+                      {article.excerpt}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      <span className="flex items-center gap-1">
+                        <User className="w-4 h-4" />
+                        {article.author}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        {article.publishedAt}
+                      </span>
                     </div>
-                    <div className="p-6">
-                      <h3 className="font-playfair text-xl lg:text-2xl font-bold text-foreground mb-3 line-clamp-2 group-hover:text-primary transition-colors">
-                        {article.title}
-                      </h3>
-                      <p className="text-muted-foreground mb-4 line-clamp-2">
-                        {article.excerpt}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                        <span className="flex items-center gap-1">
-                          <User className="w-4 h-4" />
-                          {article.author}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {article.publishedAt}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-primary font-medium group-hover:gap-3 transition-all">
-                        Read More
-                        <ArrowRight className="w-4 h-4" />
-                      </div>
+                    <div className="flex items-center gap-2 text-primary font-medium group-hover:gap-3 transition-all">
+                      Read More
+                      <ArrowRight className="w-4 h-4" />
                     </div>
-                  </a>
+                  </div>
                 </Link>
               </Card>
             ))}

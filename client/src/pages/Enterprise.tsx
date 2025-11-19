@@ -160,13 +160,13 @@ export default function Enterprise() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button variant="default" size="lg" asChild data-testid="button-schedule-demo">
-              <Link href="/contact">
-                <a className="font-semibold">Schedule a Demo</a>
+              <Link href="/contact" className="font-semibold">
+                Schedule a Demo
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild data-testid="button-contact-sales">
               <Link href="/contact">
-                <a>Contact Sales</a>
+                Contact Sales
               </Link>
             </Button>
           </div>

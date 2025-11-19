@@ -237,11 +237,9 @@ export default function Home() {
               asChild
               data-testid="button-create-invitation"
             >
-              <Link href="/templates">
-                <a className="flex items-center gap-2">
-                  Create Invitation
-                  <ArrowRight className="w-5 h-5" />
-                </a>
+              <Link href="/templates" className="flex items-center gap-2">
+                Create Invitation
+                <ArrowRight className="w-5 h-5" />
               </Link>
             </Button>
             <Button
@@ -252,7 +250,7 @@ export default function Home() {
               data-testid="button-explore-templates"
             >
               <Link href="/templates">
-                <a>Explore Templates</a>
+                Explore Templates
               </Link>
             </Button>
           </div>
@@ -310,7 +308,7 @@ export default function Home() {
           <div className="text-center mt-12">
             <Button variant="outline" size="lg" asChild data-testid="button-view-all-categories">
               <Link href="/templates">
-                <a>View All Categories</a>
+                View All Categories
               </Link>
             </Button>
           </div>
@@ -336,11 +334,9 @@ export default function Home() {
 
           <div className="text-center mt-12">
             <Button variant="default" size="lg" asChild data-testid="button-browse-templates">
-              <Link href="/templates">
-                <a className="flex items-center gap-2">
-                  Browse All Templates
-                  <ArrowRight className="w-5 h-5" />
-                </a>
+              <Link href="/templates" className="flex items-center gap-2">
+                Browse All Templates
+                <ArrowRight className="w-5 h-5" />
               </Link>
             </Button>
           </div>
@@ -366,11 +362,9 @@ export default function Home() {
 
           <div className="text-center mt-12">
             <Button variant="outline" size="lg" asChild data-testid="button-explore-cultures">
-              <Link href="/culture">
-                <a className="flex items-center gap-2">
-                  <Globe className="w-5 h-5" />
-                  Explore All Cultures
-                </a>
+              <Link href="/culture" className="flex items-center gap-2">
+                <Globe className="w-5 h-5" />
+                Explore All Cultures
               </Link>
             </Button>
           </div>
@@ -413,7 +407,7 @@ export default function Home() {
           <div className="text-center mt-12">
             <Button variant="default" size="lg" asChild data-testid="button-get-started">
               <Link href="/how-it-works">
-                <a>Learn More</a>
+                Learn More
               </Link>
             </Button>
           </div>
@@ -463,11 +457,9 @@ export default function Home() {
             asChild
             data-testid="button-start-creating"
           >
-            <Link href="/templates">
-              <a className="flex items-center gap-2">
-                Start Creating Now
-                <ArrowRight className="w-5 h-5" />
-              </a>
+            <Link href="/templates" className="flex items-center gap-2">
+              Start Creating Now
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </Button>
         </div>
