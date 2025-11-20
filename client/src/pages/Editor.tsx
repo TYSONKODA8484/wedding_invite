@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
+import { VideoPlayer } from "@/components/VideoPlayer";
 
 interface EditableField {
   id: string;
@@ -882,41 +883,33 @@ export default function Editor() {
           </ScrollArea>
         </div>
 
-        {/* Center - Page Preview */}
+        {/* Center - Video Preview */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-muted/30 via-background to-muted/20">
           <div className="flex-1 flex items-center justify-center p-6 md:p-8 lg:p-12 overflow-auto">
-            {currentPage && (
-              <div className="relative w-full max-w-lg lg:max-w-xl">
-                {/* Page Name Badge */}
-                <div className="flex items-center justify-center mb-4">
-                  <Badge variant="secondary" className="text-sm font-medium px-4 py-1.5 shadow-sm">
-                    {currentPage.pageName} • Page {currentPage.pageNumber} of {pages.length}
-                  </Badge>
-                </div>
-                
-                {/* Canvas */}
-                <div className="relative mx-auto" style={{ maxWidth: '90%' }}>
-                  <div className="aspect-[9/16] bg-white dark:bg-card rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
-                    {currentPage.media && currentPage.media.length > 0 && currentPage.media[0].url ? (
-                      <img
-                        src={currentPage.media[0].url}
-                        alt={`Page ${currentPage.pageNumber} background`}
-                        className="w-full h-full object-cover"
-                        data-testid="page-preview-image"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-muted">
-                        Page {currentPage.pageNumber}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Decorative corner accents */}
-                  <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-primary/20 rounded-tl-lg" />
-                  <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-primary/20 rounded-br-lg" />
-                </div>
+            <div className="relative w-full max-w-lg lg:max-w-xl">
+              {/* Template Name Badge */}
+              <div className="flex items-center justify-center mb-4">
+                <Badge variant="secondary" className="text-sm font-medium px-4 py-1.5 shadow-sm">
+                  {template.name}
+                  {currentPage && <span className="ml-2">• Page {currentPage.pageNumber} of {pages.length}</span>}
+                </Badge>
               </div>
-            )}
+              
+              {/* Video Player */}
+              {template.coverImage ? (
+                <VideoPlayer 
+                  videoUrl={template.coverImage}
+                  className="mx-auto"
+                  style={{ maxWidth: '90%' }}
+                />
+              ) : (
+                <div className="relative mx-auto" style={{ maxWidth: '90%' }}>
+                  <div className="aspect-[9/16] bg-muted rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex items-center justify-center">
+                    <p className="text-muted-foreground">No video available</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Page Navigation */}

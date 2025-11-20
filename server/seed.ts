@@ -109,7 +109,7 @@ export async function seed() {
         orientation: "portrait",
         photoOption: "with_photo",
         tags: ["hindu", "marathi", "indian", "wedding", "save-the-date"],
-        coverImage: "/stock-images/indian_wedding_couple.jpg",
+        coverImage: "/api/media/Ind/IndWedVid_a.mp4",
         thumbnailUrl: "/stock-images/indian_wedding_couple.jpg",
         duration: 45,
         currency: "INR",
