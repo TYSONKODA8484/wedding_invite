@@ -632,7 +632,7 @@ export default function Editor() {
     if (fieldValues[fieldKey] !== undefined) {
       return fieldValues[fieldKey];
     }
-    const field = currentPage.editableFields.find(f => f.id === fieldId);
+    const field = currentPage.editableFields.find((f: any) => f.id === fieldId);
     return field?.defaultValue || '';
   };
 
@@ -934,20 +934,26 @@ export default function Editor() {
                 </div>
               ) : (
                 editableFields.filter(field => field?.id).map((field, index) => (
-                  <div key={index} className="space-y-2" data-testid={`field-${field.id}`}>
-                    <Label htmlFor={field.id} className="text-sm font-medium">
-                      {field.label}
-                    </Label>
+                  <div key={index} className="space-y-1.5" data-testid={`field-${field.id}`}>
                     {field.type === 'textarea' ? (
-                      <Textarea
-                        id={field.id}
-                        placeholder={`Enter ${field.label?.toLowerCase() || 'text'}`}
-                        value={getFieldValue(field.id)}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                        maxLength={field.maxLength}
-                        rows={4}
-                        data-testid={`input-${field.id}`}
-                      />
+                      <>
+                        <Textarea
+                          id={field.id}
+                          value={getFieldValue(field.id)}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          maxLength={field.maxLength}
+                          rows={3}
+                          className="resize-none"
+                          data-testid={`input-${field.id}`}
+                        />
+                        {field.maxLength && (
+                          <div className="flex justify-end">
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                              {getFieldValue(field.id).length}
+                            </span>
+                          </div>
+                        )}
+                      </>
                     ) : field.type === 'image' ? (
                       <ImageUploadField
                         fieldName={field.id}
@@ -956,20 +962,23 @@ export default function Editor() {
                         onRemove={() => handleImageRemove(field.id)}
                       />
                     ) : (
-                      <Input
-                        id={field.id}
-                        type="text"
-                        placeholder={`Enter ${field.label?.toLowerCase() || 'text'}`}
-                        value={getFieldValue(field.id)}
-                        onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                        maxLength={field.maxLength}
-                        data-testid={`input-${field.id}`}
-                      />
-                    )}
-                    {field.maxLength && (
-                      <p className="text-xs text-muted-foreground text-right">
-                        {getFieldValue(field.id).length} / {field.maxLength}
-                      </p>
+                      <>
+                        <Input
+                          id={field.id}
+                          type="text"
+                          value={getFieldValue(field.id)}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          maxLength={field.maxLength}
+                          data-testid={`input-${field.id}`}
+                        />
+                        {field.maxLength && (
+                          <div className="flex justify-end">
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                              {getFieldValue(field.id).length}
+                            </span>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 ))
