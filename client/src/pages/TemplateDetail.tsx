@@ -17,7 +17,6 @@ export default function TemplateDetail() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showControls, setShowControls] = useState(false);
-  const [videoError, setVideoError] = useState(false);
 
   const { data: template, isLoading, error } = useQuery<any>({
     queryKey: ["/api/templates", slug],
@@ -205,84 +204,65 @@ export default function TemplateDetail() {
         onMouseEnter={() => setShowControls(true)}
         onMouseLeave={() => setShowControls(false)}
       >
-        {!videoError ? (
-          <>
-            <video
-              ref={videoRef}
-              className="w-full h-full object-contain max-h-[70vh]"
-              poster={template.thumbnailUrl}
-              muted={isMuted}
-              loop
-              playsInline
-              onError={() => setVideoError(true)}
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              data-testid="video-demo"
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain max-h-[70vh]"
+          poster={template.thumbnailUrl}
+          muted={isMuted}
+          loop
+          playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          data-testid="video-demo"
+        >
+          <source src={template.demoVideoUrl} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {!isPlaying && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20">
+            <Button
+              size="lg"
+              onClick={togglePlay}
+              className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-primary/90 backdrop-blur-sm hover:bg-primary shadow-2xl transition-transform hover:scale-110"
+              data-testid="button-play-video"
             >
-              <source src={template.demoVideoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+              <Play className="w-10 h-10 lg:w-12 lg:h-12 text-primary-foreground fill-current ml-1" />
+            </Button>
+          </div>
+        )}
 
-            {!isPlaying && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20">
-                <Button
-                  size="lg"
-                  onClick={togglePlay}
-                  className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-primary/90 backdrop-blur-sm hover:bg-primary shadow-2xl transition-transform hover:scale-110"
-                  data-testid="button-play-video"
-                >
-                  <Play className="w-10 h-10 lg:w-12 lg:h-12 text-primary-foreground fill-current ml-1" />
-                </Button>
-              </div>
-            )}
-
-            {isPlaying && (showControls || true) && (
-              <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity">
-                <div className="flex items-center gap-3 max-w-7xl mx-auto">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={togglePlay}
-                    className="text-white hover:bg-white/20"
-                    data-testid="button-pause-video"
-                  >
-                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleMute}
-                    className="text-white hover:bg-white/20"
-                    data-testid="button-mute-video"
-                  >
-                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                  </Button>
-                  <div className="flex-1" />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleFullscreen}
-                    className="text-white hover:bg-white/20"
-                    data-testid="button-fullscreen-video"
-                  >
-                    <Maximize className="w-5 h-5" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-center w-full h-full">
-            <img
-              src={template.thumbnailUrl}
-              alt={template.title}
-              className="w-full h-full object-contain"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-              <div className="text-center text-white">
-                <Play className="w-16 h-16 mx-auto mb-2 opacity-60" />
-                <p className="text-sm">Demo video preview unavailable</p>
-              </div>
+        {isPlaying && (showControls || true) && (
+          <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity">
+            <div className="flex items-center gap-3 max-w-7xl mx-auto">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={togglePlay}
+                className="text-white hover:bg-white/20"
+                data-testid="button-pause-video"
+              >
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleMute}
+                className="text-white hover:bg-white/20"
+                data-testid="button-mute-video"
+              >
+                {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+              </Button>
+              <div className="flex-1" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleFullscreen}
+                className="text-white hover:bg-white/20"
+                data-testid="button-fullscreen-video"
+              >
+                <Maximize className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         )}
@@ -338,7 +318,7 @@ export default function TemplateDetail() {
                   Template Pages ({pages.length})
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {pages.map((page, index) => (
+                  {pages.map((page: any, index: number) => (
                     <div key={page.id} className="group" data-testid={`page-preview-${index}`}>
                       <div className="relative aspect-[9/16] overflow-hidden rounded-md bg-muted mb-2">
                         <img

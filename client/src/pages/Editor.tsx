@@ -512,6 +512,25 @@ export default function Editor() {
     enabled: !!slug,
   });
 
+  // Preload all page images to eliminate loading delays
+  useEffect(() => {
+    if (templateData?.pages) {
+      templateData.pages.forEach((page) => {
+        // Preload page thumbnails
+        if (page.thumbnailUrl) {
+          const thumbnailImg = new Image();
+          thumbnailImg.src = page.thumbnailUrl;
+        }
+        // Preload page background images from media array
+        const backgroundMedia = page.media?.find((m: any) => m.position === 'background');
+        if (backgroundMedia?.url) {
+          const bgImg = new Image();
+          bgImg.src = backgroundMedia.url;
+        }
+      });
+    }
+  }, [templateData]);
+
   // Check if user is logged in
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -823,38 +842,37 @@ export default function Editor() {
       {/* Main Editor Area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Page List */}
-        <div className="w-64 border-r bg-card hidden md:flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-foreground">Pages</h2>
-            <p className="text-xs text-muted-foreground">{pages.length} pages total</p>
+        <div className="w-20 md:w-28 border-r bg-card hidden sm:flex flex-col">
+          <div className="p-3 border-b text-center">
+            <h2 className="text-xs font-semibold text-foreground">Pages</h2>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{pages.length} total</p>
           </div>
           <ScrollArea className="flex-1">
-            <div className="p-3 space-y-2">
+            <div className="p-2 space-y-2">
               {pages.map((page, index) => (
                 <button
                   key={page.id}
                   onClick={() => setCurrentPageIndex(index)}
-                  className={`w-full text-left rounded-md p-3 transition-colors hover-elevate ${
+                  className={`w-full group relative rounded-md transition-all duration-200 hover-elevate ${
                     currentPageIndex === index
-                      ? 'bg-primary/10 border-2 border-primary'
-                      : 'bg-muted border-2 border-transparent'
+                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+                      : 'hover:ring-1 hover:ring-muted-foreground/20'
                   }`}
                   data-testid={`page-list-item-${index}`}
                 >
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-12 h-16 bg-background rounded overflow-hidden">
-                      <img
-                        src={page.thumbnailUrl}
-                        alt={page.pageName}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground line-clamp-1">
-                        {page.pageName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Page {page.pageNumber}
+                  <div className="relative aspect-[9/16] overflow-hidden rounded-md bg-muted">
+                    <img
+                      src={page.thumbnailUrl}
+                      alt={page.pageName}
+                      className="w-full h-full object-cover"
+                      loading="eager"
+                    />
+                    {currentPageIndex === index && (
+                      <div className="absolute inset-0 bg-primary/20 pointer-events-none" />
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-1">
+                      <p className="text-[10px] font-semibold text-white text-center">
+                        P{page.pageNumber}
                       </p>
                     </div>
                   </div>

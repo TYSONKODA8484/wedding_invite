@@ -129,7 +129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pages = (templateJson?.pages || []).map((page: any) => ({
         id: page.page_id,
         pageNumber: page.page_number,
-        thumbnailUrl: template.thumbnailUrl, // Use template thumbnail for now
+        pageName: page.page_name || `Page ${page.page_number}`,
+        thumbnailUrl: page.media?.find((m: any) => m.position === 'background')?.url || template.thumbnailUrl,
         editableFields: (page.fields || []).map((field: any) => ({
           id: field.field_id,
           type: field.type,
