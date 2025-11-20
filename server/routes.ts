@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tags: template.tags,
         coverImage: template.coverImage,
         thumbnailUrl: template.thumbnailUrl,
-        demoVideoUrl: template.thumbnailUrl, // Use thumbnail as demo video placeholder
+        demoVideoUrl: template.coverImage, // Use coverImage which contains video URL
         duration: template.duration,
         currency: template.currency,
         price: priceInr,
