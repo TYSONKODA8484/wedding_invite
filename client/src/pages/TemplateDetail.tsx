@@ -5,7 +5,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Clock, Play, Pause, Volume2, VolumeX, Maximize, ArrowRight, Loader2, X } from "lucide-react";
+import { Clock, Play, Pause, Volume2, VolumeX, Maximize, ArrowRight, Loader2, X, SkipForward, SkipBack } from "lucide-react";
 
 export default function TemplateDetail() {
   const [, params] = useRoute("/template/:slug");
@@ -94,6 +94,19 @@ export default function TemplateDetail() {
     if (videoRef.current.requestFullscreen) {
       videoRef.current.requestFullscreen();
     }
+  };
+
+  const skipForward = () => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.min(
+      videoRef.current.currentTime + 10,
+      videoRef.current.duration
+    );
+  };
+
+  const skipBackward = () => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
   };
 
 
@@ -208,6 +221,7 @@ export default function TemplateDetail() {
           ref={videoRef}
           className="w-full h-full object-contain max-h-[70vh]"
           poster={template.thumbnailUrl}
+          preload="metadata"
           muted={isMuted}
           loop
           playsInline
@@ -234,7 +248,7 @@ export default function TemplateDetail() {
 
         {isPlaying && (showControls || true) && (
           <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity">
-            <div className="flex items-center gap-3 max-w-7xl mx-auto">
+            <div className="flex items-center gap-2 max-w-7xl mx-auto">
               <Button
                 variant="ghost"
                 size="icon"
@@ -243,6 +257,26 @@ export default function TemplateDetail() {
                 data-testid="button-pause-video"
               >
                 {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={skipBackward}
+                className="text-white hover:bg-white/20"
+                data-testid="button-skip-backward"
+                aria-label="Skip backward 10 seconds"
+              >
+                <SkipBack className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={skipForward}
+                className="text-white hover:bg-white/20"
+                data-testid="button-skip-forward"
+                aria-label="Skip forward 10 seconds"
+              >
+                <SkipForward className="w-5 h-5" />
               </Button>
               <Button
                 variant="ghost"

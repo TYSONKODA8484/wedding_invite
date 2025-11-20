@@ -883,28 +883,37 @@ export default function Editor() {
         </div>
 
         {/* Center - Page Preview */}
-        <div className="flex-1 flex flex-col bg-muted/30">
-          <div className="flex-1 flex items-center justify-center p-4 md:p-6 overflow-auto">
+        <div className="flex-1 flex flex-col bg-gradient-to-br from-muted/30 via-background to-muted/20">
+          <div className="flex-1 flex items-center justify-center p-6 md:p-8 lg:p-12 overflow-auto">
             {currentPage && (
-              <div className="relative w-full max-w-sm">
-                <div className="aspect-[9/16] bg-card rounded-lg shadow-2xl overflow-hidden border-4 border-card max-h-[calc(100vh-250px)]">
-                  {currentPage.media && currentPage.media.length > 0 && currentPage.media[0].url ? (
-                    <img
-                      src={currentPage.media[0].url}
-                      alt={`Page ${currentPage.pageNumber} background`}
-                      className="w-full h-full object-cover"
-                      data-testid="page-preview-image"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-muted">
-                      Page {currentPage.pageNumber}
-                    </div>
-                  )}
-                </div>
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge variant="secondary" className="shadow-lg">
-                    {currentPage.pageName}
+              <div className="relative w-full max-w-lg lg:max-w-xl">
+                {/* Page Name Badge */}
+                <div className="flex items-center justify-center mb-4">
+                  <Badge variant="secondary" className="text-sm font-medium px-4 py-1.5 shadow-sm">
+                    {currentPage.pageName} • Page {currentPage.pageNumber} of {pages.length}
                   </Badge>
+                </div>
+                
+                {/* Canvas */}
+                <div className="relative mx-auto" style={{ maxWidth: '90%' }}>
+                  <div className="aspect-[9/16] bg-white dark:bg-card rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
+                    {currentPage.media && currentPage.media.length > 0 && currentPage.media[0].url ? (
+                      <img
+                        src={currentPage.media[0].url}
+                        alt={`Page ${currentPage.pageNumber} background`}
+                        className="w-full h-full object-cover"
+                        data-testid="page-preview-image"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-muted">
+                        Page {currentPage.pageNumber}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Decorative corner accents */}
+                  <div className="absolute -top-2 -left-2 w-6 h-6 border-t-2 border-l-2 border-primary/20 rounded-tl-lg" />
+                  <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-2 border-r-2 border-primary/20 rounded-br-lg" />
                 </div>
               </div>
             )}
