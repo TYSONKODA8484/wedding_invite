@@ -870,12 +870,18 @@ export default function Editor() {
             {currentPage && (
               <div className="relative w-full max-w-sm">
                 <div className="aspect-[9/16] bg-card rounded-lg shadow-2xl overflow-hidden border-4 border-card max-h-[calc(100vh-250px)]">
-                  <img
-                    src={currentPage.thumbnailUrl}
-                    alt={currentPage.pageName}
-                    className="w-full h-full object-cover"
-                    data-testid="page-preview-image"
-                  />
+                  {currentPage.media && currentPage.media.length > 0 && currentPage.media[0].url ? (
+                    <img
+                      src={currentPage.media[0].url}
+                      alt={`Page ${currentPage.pageNumber} background`}
+                      className="w-full h-full object-cover"
+                      data-testid="page-preview-image"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-muted">
+                      Page {currentPage.pageNumber}
+                    </div>
+                  )}
                 </div>
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <Badge variant="secondary" className="shadow-lg">
@@ -949,7 +955,7 @@ export default function Editor() {
                         {field.maxLength && (
                           <div className="flex justify-end">
                             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                              {getFieldValue(field.id).length}
+                              {getFieldValue(field.id).length} / {field.maxLength}
                             </span>
                           </div>
                         )}
@@ -974,7 +980,7 @@ export default function Editor() {
                         {field.maxLength && (
                           <div className="flex justify-end">
                             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                              {getFieldValue(field.id).length}
+                              {getFieldValue(field.id).length} / {field.maxLength}
                             </span>
                           </div>
                         )}
