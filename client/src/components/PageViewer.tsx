@@ -143,7 +143,7 @@ export function PageViewer({ page, className = "" }: PageViewerProps) {
           <div
             className="relative aspect-[9/16] shadow-2xl rounded-lg overflow-hidden ring-1 ring-black/10 dark:ring-white/10"
             style={{
-              width: 'min(90vh * 9/16, 600px)', // Fits viewport height, max 600px wide
+              width: 'min(calc(90vh * 9 / 16), 600px)', // Fits viewport height, max 600px wide
               maxHeight: '85vh',
             }}
             data-testid="page-content"
