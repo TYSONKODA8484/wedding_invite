@@ -1,0 +1,187 @@
+{
+  "template_id": "T_IND_001",
+  "name": "Indian Hindu Wedding Invite",
+  "type": "card",
+  "orientation": "portrait",
+  "photo_option": "with_photo",
+  "tags": ["hindu", "marathi", "indian", "wedding"],
+  "cover_image": "/s3/T_IND_001/cover.jpg",
+
+  "pages": [
+    {
+      "page_id": "P1",
+      "page_number": 1,
+      "fields": [
+        {
+          "field_id": "title_1",
+          "label": "Main Title Line 1",
+          "value": "शादी",
+          "type": "text",
+          "ae_layer": "Page1_TitleLine1"
+        },
+        {
+          "field_id": "title_2",
+          "label": "Main Title Line 2",
+          "value": "आमंत्रण",
+          "type": "text",
+          "ae_layer": "Page1_TitleLine2"
+        }
+      ],
+      "media": []
+    },
+
+    {
+      "page_id": "P2",
+      "page_number": 2,
+      "fields": [
+        {
+          "field_id": "mantra",
+          "label": "Ganesh Mantra",
+          "value": "|| श्री गणेशाय नमः ||",
+          "type": "text",
+          "ae_layer": "Page2_Mantra"
+        },
+        {
+          "field_id": "initials",
+          "label": "Initials",
+          "value": "SA",
+          "type": "text",
+          "ae_layer": "Page2_Initials"
+        },
+        {
+          "field_id": "couple_names",
+          "label": "Couple Names",
+          "value": "आदिलक्ष्मी और रवींद्रन",
+          "type": "text",
+          "ae_layer": "Page2_CoupleNames"
+        },
+        {
+          "field_id": "wedding_dates",
+          "label": "Wedding Dates",
+          "value": "14 और 15 अक्टूबर, 2025",
+          "type": "text",
+          "ae_layer": "Page2_Dates"
+        },
+        {
+          "field_id": "venue",
+          "label": "Venue",
+          "value": "ग्रैंड हयात होटल, फेज़ 2, अहमदाबाद, गुजरात - 380001",
+          "type": "text",
+          "ae_layer": "Page2_Venue"
+        }
+      ],
+      "media": []
+    },
+
+    {
+      "page_id": "P3",
+      "page_number": 3,
+      "fields": [
+        {
+          "field_id": "invite_line",
+          "label": "Invite Text",
+          "value": "हम आपके विवाह समारोह में आपकी गरिमामयी उपस्थिति का सम्मान चाहते हैं।",
+          "type": "text",
+          "ae_layer": "Page3_InviteLine"
+        },
+        {
+          "field_id": "bride_name",
+          "label": "Bride Name",
+          "value": "आदिलक्ष्मी",
+          "type": "text",
+          "ae_layer": "Page3_BrideName"
+        },
+        {
+          "field_id": "bride_parents",
+          "label": "Bride Parents",
+          "value": "श्रीमती. पूजा भट्ट और श्री. महेश कुमार भट्ट की बेटी",
+          "type": "text",
+          "ae_layer": "Page3_BrideParents"
+        },
+        {
+          "field_id": "groom_name",
+          "label": "Groom Name",
+          "value": "रवींद्रन",
+          "type": "text",
+          "ae_layer": "Page3_GroomName"
+        },
+        {
+          "field_id": "groom_parents",
+          "label": "Groom Parents",
+          "value": "श्रीमती निहारिका दुबे और श्री रवि दुबे के पुत्र",
+          "type": "text",
+          "ae_layer": "Page3_GroomParents"
+        },
+        {
+          "field_id": "venue_repeat",
+          "label": "Venue Text",
+          "value": "ग्रैंड हयात होटल, फेज़ 2, अहमदाबाद, गुजरात - 380001",
+          "type": "text",
+          "ae_layer": "Page3_Venue"
+        }
+      ],
+      "media": []
+    },
+
+    {
+      "page_id": "P4",
+      "page_number": 4,
+      "fields": [
+        {
+          "field_id": "event_title",
+          "label": "Haldi Event Title",
+          "value": "हल्दी की कहानियाँ",
+          "type": "text",
+          "ae_layer": "Page4_EventTitle"
+        },
+        {
+          "field_id": "event_date",
+          "label": "Event Date",
+          "value": "सोमवार, 14 अक्टूबर 2025",
+          "type": "text",
+          "ae_layer": "Page4_EventDate"
+        },
+        {
+          "field_id": "event_subtitle",
+          "label": "Event Subtitle",
+          "value": "फूलों की हल्दी",
+          "type": "text",
+          "ae_layer": "Page4_Subtitle"
+        },
+        {
+          "field_id": "event_time",
+          "label": "Event Time",
+          "value": "रात्रि 12:00 बजे से",
+          "type": "text",
+          "ae_layer": "Page4_EventTime"
+        },
+        {
+          "field_id": "event_venue",
+          "label": "Event Venue",
+          "value": "ग्रैंड हयात होटल, फेज़ 2, अहमदाबाद, गुजरात - 380001",
+          "type": "text",
+          "ae_layer": "Page4_EventVenue"
+        }
+      ],
+      "media": []
+    },
+
+    {
+      "page_id": "P9",
+      "page_number": 9,
+      "fields": [
+        { "field_id": "initials_9", "label": "Initials", "value": "SA", "type": "text", "ae_layer": "Page9_Initials" },
+        { "field_id": "guest_title", "label": "Guest Title", "value": "दर्शनाभिलाषी", "type": "text", "ae_layer": "Page9_GuestTitle" },
+        { "field_id": "guest_1", "label": "Guest 1", "value": "Dr. आराध्या और Dr. मुकेश भट्ट", "type": "text", "ae_layer": "Page9_Guest1" },
+        { "field_id": "guest_2", "label": "Guest 2", "value": "श्रीमती. नव्या और Dr. अंगद भट्ट", "type": "text", "ae_layer": "Page9_Guest2" },
+        { "field_id": "guest_3", "label": "Guest 3", "value": "स्वागतकर्ता", "type": "text", "ae_layer": "Page9_Guest3" },
+        { "field_id": "guest_4", "label": "Guest 4", "value": "Dr. मयूरी और पवन आहूजा", "type": "text", "ae_layer": "Page9_Guest4" },
+        { "field_id": "guest_5", "label": "Guest 5", "value": "पूजा और वैभव भट्ट", "type": "text", "ae_layer": "Page9_Guest5" },
+        { "field_id": "guest_6", "label": "Guest 6", "value": "Dr. निमिषा और Dr. करण सिंह", "type": "text", "ae_layer": "Page9_Guest6" }
+      ],
+      "media": []
+    }
+  ]
+}
+
+

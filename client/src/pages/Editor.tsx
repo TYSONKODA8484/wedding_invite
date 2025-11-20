@@ -628,7 +628,12 @@ export default function Editor() {
   };
 
   const getFieldValue = (fieldId: string) => {
-    return fieldValues[`${currentPage.id}_${fieldId}`] || '';
+    const fieldKey = `${currentPage.id}_${fieldId}`;
+    if (fieldValues[fieldKey] !== undefined) {
+      return fieldValues[fieldKey];
+    }
+    const field = currentPage.editableFields.find(f => f.id === fieldId);
+    return field?.defaultValue || '';
   };
 
   const handleImageSelect = (fieldId: string, file: File) => {

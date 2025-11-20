@@ -153,7 +153,7 @@ export default function TemplateDetail() {
     }
   };
 
-  const priceInPaise = Math.round(template.priceInr * 100);
+  const priceInPaise = template.priceInr; // Already in paise from API
   const displayPrice = formatPrice(priceInPaise);
 
   const productSchema = {
@@ -166,7 +166,7 @@ export default function TemplateDetail() {
       "@type": "Offer",
       url: `https://weddinginvite.ai/template/${template.slug}`,
       priceCurrency: "INR",
-      price: template.priceInr.toFixed(2),
+      price: (template.priceInr / 100).toFixed(2), // Convert paise to rupees
       availability: "https://schema.org/InStock",
       seller: {
         "@type": "Organization",
