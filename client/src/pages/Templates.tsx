@@ -202,6 +202,7 @@ export default function Templates() {
                     category={template.category}
                     duration={template.duration}
                     thumbnailUrl={template.thumbnailUrl}
+                    demoVideoUrl={template.demoVideoUrl}
                     priceInr={template.priceInr}
                     isPremium={template.isPremium}
                   />
