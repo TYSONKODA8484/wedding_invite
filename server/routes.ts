@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import * as bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { Client } from "@replit/object-storage";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -227,6 +228,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating instance:", error);
       res.status(500).json({ error: "Failed to update instance" });
+    }
+  });
+
+  // ==================== MEDIA SERVING ENDPOINT ====================
+  
+  app.get("/api/media/Ind/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      // Create Object Storage client (uses default bucket)
+      const client = new Client();
+      
+      // Set appropriate content type based on file extension
+      const contentType = filename.endsWith('.mp4') 
+        ? 'video/mp4' 
+        : filename.endsWith('.png') 
+          ? 'image/png' 
+          : 'application/octet-stream';
+      
+      // For video files, set headers to support video playback and range requests
+      const headers: Record<string, string> = {
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000',
+        'Accept-Ranges': 'bytes', // Important for video seeking
+      };
+      
+      res.set(headers);
+      
+      // Download file as stream from Ind folder and pipe to response
+      const stream = client.downloadAsStream(`Ind/${filename}`);
+      
+      stream.on('error', (error) => {
+        console.error("Stream error for", filename, ":", error);
+        if (!res.headersSent) {
+          res.status(404).json({ error: "File not found" });
+        }
+      });
+      
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving media file:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve media file" });
+      }
     }
   });
 
