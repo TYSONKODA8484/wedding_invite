@@ -2,25 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 
-interface PageField {
-  field_id: string;
-  label: string;
-  type: string;
-  value: string;
-  ae_layer?: string;
-}
-
 interface PageMedia {
-  media_id: string;
+  media_id?: string;
   type: string;
   url: string;
+  position?: string;
   ae_layer?: string;
 }
 
 interface Page {
-  page_id: string;
-  page_number: number;
-  fields: PageField[];
+  id: string;
+  pageNumber: number;
+  pageName?: string;
+  thumbnailUrl?: string;
+  editableFields?: any[];
   media: PageMedia[];
 }
 
@@ -36,8 +31,12 @@ export function PageViewer({ page, className = "" }: PageViewerProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get background image URL from page media
-  const backgroundImage = page.media.find(m => m.type === 'image')?.url || '';
+  // Get background image URL from page media (prefer 'background' position, fallback to first image)
+  const backgroundImage = 
+    page.media.find(m => m.position === 'background')?.url || 
+    page.media.find(m => m.type === 'image')?.url || 
+    page.thumbnailUrl || 
+    '';
 
   // Reset pan when zoom changes to 100%
   useEffect(() => {
@@ -153,7 +152,7 @@ export function PageViewer({ page, className = "" }: PageViewerProps) {
             {backgroundImage ? (
               <img
                 src={backgroundImage}
-                alt={`Page ${page.page_number}`}
+                alt={`Page ${page.pageNumber}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 data-testid="page-background-image"
               />
@@ -172,7 +171,7 @@ export function PageViewer({ page, className = "" }: PageViewerProps) {
       {/* Page Info */}
       <div className="mt-4 text-center">
         <p className="text-sm text-muted-foreground" data-testid="page-info">
-          Page {page.page_number} of {page.page_id}
+          {page.pageName || `Page ${page.pageNumber}`}
           {zoom > 100 && (
             <span className="ml-2 text-xs">
               • Click and drag to pan

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
-import { VideoPlayer } from "@/components/VideoPlayer";
+import { PageViewer } from "@/components/PageViewer";
 
 interface EditableField {
   id: string;
@@ -883,10 +883,10 @@ export default function Editor() {
           </ScrollArea>
         </div>
 
-        {/* Center - Video Preview */}
+        {/* Center - Page Preview */}
         <div className="flex-1 flex flex-col bg-gradient-to-br from-muted/30 via-background to-muted/20">
-          <div className="flex-1 flex items-center justify-center p-6 md:p-8 lg:p-12 overflow-auto">
-            <div className="relative w-full max-w-lg lg:max-w-xl">
+          <div className="flex-1 flex items-center justify-center p-6 md:p-8 lg:p-12">
+            <div className="relative w-full h-full max-w-2xl">
               {/* Template Name Badge */}
               <div className="flex items-center justify-center mb-4">
                 <Badge variant="secondary" className="text-sm font-medium px-4 py-1.5 shadow-sm">
@@ -895,17 +895,16 @@ export default function Editor() {
                 </Badge>
               </div>
               
-              {/* Video Player */}
-              {template.coverImage ? (
-                <VideoPlayer 
-                  videoUrl={template.coverImage}
-                  className="mx-auto"
-                  style={{ maxWidth: '90%' }}
+              {/* Page Viewer with Zoom Controls */}
+              {currentPage ? (
+                <PageViewer 
+                  page={currentPage}
+                  className="h-full"
                 />
               ) : (
-                <div className="relative mx-auto" style={{ maxWidth: '90%' }}>
-                  <div className="aspect-[9/16] bg-muted rounded-xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] flex items-center justify-center">
-                    <p className="text-muted-foreground">No video available</p>
+                <div className="flex items-center justify-center h-full">
+                  <div className="aspect-[9/16] bg-muted rounded-xl shadow-lg flex items-center justify-center max-w-md">
+                    <p className="text-muted-foreground">No page selected</p>
                   </div>
                 </div>
               )}
