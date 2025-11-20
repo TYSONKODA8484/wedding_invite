@@ -98,15 +98,19 @@ export default function TemplateDetail() {
 
   const skipForward = () => {
     if (!videoRef.current) return;
-    videoRef.current.currentTime = Math.min(
-      videoRef.current.currentTime + 10,
-      videoRef.current.duration
+    const video = videoRef.current;
+    if (isNaN(video.duration) || !isFinite(video.duration)) return;
+    video.currentTime = Math.min(
+      video.currentTime + 10,
+      video.duration
     );
   };
 
   const skipBackward = () => {
     if (!videoRef.current) return;
-    videoRef.current.currentTime = Math.max(videoRef.current.currentTime - 10, 0);
+    const video = videoRef.current;
+    if (isNaN(video.duration) || !isFinite(video.duration)) return;
+    video.currentTime = Math.max(video.currentTime - 10, 0);
   };
 
 

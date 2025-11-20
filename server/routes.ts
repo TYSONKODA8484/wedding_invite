@@ -240,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create Object Storage client (uses default bucket)
       const client = new Client();
+      const fileKey = `Ind/${filename}`;
       
       // Set appropriate content type based on file extension
       const contentType = filename.endsWith('.mp4') 
@@ -248,17 +249,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? 'image/png' 
           : 'application/octet-stream';
       
-      // For video files, set headers to support video playback and range requests
-      const headers: Record<string, string> = {
+      // Set headers for video/image streaming
+      res.set({
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000',
-        'Accept-Ranges': 'bytes', // Important for video seeking
-      };
+        'Accept-Ranges': 'bytes',
+      });
       
-      res.set(headers);
-      
-      // Download file as stream from Ind folder and pipe to response
-      const stream = client.downloadAsStream(`Ind/${filename}`);
+      // Stream the file
+      const stream = client.downloadAsStream(fileKey);
       
       stream.on('error', (error) => {
         console.error("Stream error for", filename, ":", error);
