@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Sparkles, User, LogOut } from "lucide-react";
+import { Menu, Sparkles, User, LogOut, Video } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 
 export function Navigation() {
@@ -25,8 +25,8 @@ export function Navigation() {
   // Check localStorage for auth state
   useEffect(() => {
     const checkAuthState = () => {
-      const token = localStorage.getItem("authToken");
-      const userStr = localStorage.getItem("authUser");
+      const token = localStorage.getItem("auth_token");
+      const userStr = localStorage.getItem("user");
       
       if (token && userStr) {
         try {
@@ -35,8 +35,8 @@ export function Navigation() {
           setIsLoggedIn(true);
         } catch (e) {
           // Invalid user data
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("authUser");
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user");
           setIsLoggedIn(false);
           setUser(null);
         }
@@ -62,8 +62,8 @@ export function Navigation() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("authUser");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
   };
@@ -161,6 +161,12 @@ export function Navigation() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild data-testid="menu-item-my-templates">
+                      <Link href="/my-templates">
+                        <Video className="w-4 h-4 mr-2" />
+                        My Templates
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem data-testid="menu-item-profile">
                       <User className="w-4 h-4 mr-2" />
                       Profile
@@ -233,6 +239,18 @@ export function Navigation() {
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="w-full justify-start"
+                      asChild
+                      data-testid="button-my-templates-mobile"
+                    >
+                      <Link href="/my-templates" onClick={() => setMobileMenuOpen(false)}>
+                        <Video className="w-4 h-4 mr-2" />
+                        My Templates
+                      </Link>
+                    </Button>
                     <Button
                       variant="ghost"
                       size="default"
