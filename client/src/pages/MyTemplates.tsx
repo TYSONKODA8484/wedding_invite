@@ -165,35 +165,49 @@ export default function MyTemplates() {
                 data-testid={`img-thumbnail-${project.id}`}
               />
               <div className="absolute bottom-2 left-2 right-2 flex gap-2">
-                {!project.isPaid && (
-                  <Button
-                    size="icon"
-                    variant="default"
-                    className="bg-pink-500 hover:bg-pink-600"
-                    onClick={() => handleEdit(project)}
-                    data-testid={`button-edit-${project.id}`}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                {project.isPaid ? (
+                  <>
+                    <Button
+                      size="icon"
+                      variant="default"
+                      className="bg-blue-500 hover:bg-blue-600"
+                      onClick={() => handleDownload(project)}
+                      data-testid={`button-download-${project.id}`}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="default"
+                      className="bg-green-500 hover:bg-green-600"
+                      onClick={() => handleShare(project)}
+                      data-testid={`button-share-${project.id}`}
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      size="icon"
+                      variant="default"
+                      className="bg-pink-500 hover:bg-pink-600"
+                      onClick={() => handleEdit(project)}
+                      data-testid={`button-edit-${project.id}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="default"
+                      className="bg-blue-500 hover:bg-blue-600"
+                      onClick={() => handleDownload(project)}
+                      data-testid={`button-download-${project.id}`}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
-                <Button
-                  size="icon"
-                  variant="default"
-                  className="bg-blue-500 hover:bg-blue-600"
-                  onClick={() => handleDownload(project)}
-                  data-testid={`button-download-${project.id}`}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="default"
-                  className="bg-green-500 hover:bg-green-600"
-                  onClick={() => handleShare(project)}
-                  data-testid={`button-share-${project.id}`}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
               </div>
             </div>
             
