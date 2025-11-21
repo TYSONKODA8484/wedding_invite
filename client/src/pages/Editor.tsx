@@ -588,7 +588,7 @@ export default function Editor() {
   const { toast } = useToast();
 
   // Fetch project data if editing an existing project
-  const { data: projectData } = useQuery({
+  const { data: projectData, isLoading: projectIsLoading } = useQuery({
     queryKey: ["/api/projects", slug],
     queryFn: async () => {
       const token = localStorage.getItem('auth_token');
@@ -602,7 +602,7 @@ export default function Editor() {
   });
 
   // Fetch template data (either from new template or existing project's template)
-  const { data: templateData, isLoading, error } = useQuery<Template & { pages?: any[] }>({
+  const { data: templateData, isLoading: templateIsLoading, error } = useQuery<Template & { pages?: any[] }>({
     queryKey: ["/api/templates", isEditingProject ? projectData?.templateId : slug],
     queryFn: async () => {
       const templateId = isEditingProject ? projectData?.templateId : slug;
@@ -612,6 +612,9 @@ export default function Editor() {
     },
     enabled: isEditingProject ? !!projectData?.templateId : !!slug,
   });
+
+  // Combined loading state: show loading while waiting for project and template data
+  const isLoading = isEditingProject ? (projectIsLoading || templateIsLoading) : templateIsLoading;
 
   // Load existing project customization data when editing
   useEffect(() => {
