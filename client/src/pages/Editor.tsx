@@ -575,6 +575,7 @@ export default function Editor() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPreview, setPendingPreview] = useState(false);
+  const [isAuthVerifying, setIsAuthVerifying] = useState(false);
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -770,15 +771,35 @@ export default function Editor() {
     return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
   };
 
-  const handlePreview = async () => {
-    // Check if user is logged in
-    if (!user) {
+  const handlePreview = async (verifiedUser?: any) => {
+    console.log("handlePreview called, verifiedUser:", verifiedUser, "user state:", user);
+    
+    // Prevent duplicate preview requests
+    if (saveProjectMutation.isPending) {
+      console.log("Save already in progress, skipping");
+      return;
+    }
+    
+    // Check if user is logged in - use verified user if provided, otherwise check cache
+    const currentUser = verifiedUser || queryClient.getQueryData(["/api/auth/user"]);
+    console.log("Current user data:", currentUser);
+    
+    // Don't show auth modal if we're in the middle of auth verification
+    if (!currentUser && !isAuthVerifying) {
+      console.log("User not logged in, showing auth modal");
       setPendingPreview(true);
       setShowAuthModal(true);
       return;
     }
+    
+    if (!currentUser) {
+      console.log("User not available, waiting for auth verification");
+      return;
+    }
 
     try {
+      console.log("User is logged in, proceeding with preview");
+      
       // IMPORTANT: Save project with customization data to database
       // This must complete successfully before showing generation screen
       const savedProject = await saveProjectMutation.mutateAsync();
@@ -834,20 +855,44 @@ export default function Editor() {
   const handleAuthSuccess = async () => {
     console.log("Auth success - user logged in");
     setShowAuthModal(false);
+    setIsAuthVerifying(true);
     
-    // Invalidate user query to refetch authenticated user data
-    await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    
-    // Wait a brief moment for the query to refetch user data
-    setTimeout(() => {
-      console.log("Checking if preview was pending:", pendingPreview);
-      // If pending preview, trigger it after login
+    try {
+      // Force fetch user data to ensure we have it (don't rely on refetchQueries)
+      console.log("Fetching user data after login...");
+      const freshUserData = await queryClient.fetchQuery({
+        queryKey: ["/api/auth/user"],
+        queryFn: async () => {
+          const response = await fetch("/api/auth/user", { credentials: "include" });
+          if (!response.ok) {
+            throw new Error("Failed to fetch user data");
+          }
+          return response.json();
+        },
+      });
+      console.log("Fresh user data fetched:", freshUserData);
+      
+      // Wait a moment to ensure localStorage has the auth token
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // If pending preview, trigger it with verified user data
       if (pendingPreview) {
+        console.log("Preview was pending, triggering it now with verified user data");
         setPendingPreview(false);
-        console.log("Triggering preview after successful login");
-        handlePreview();
+        // Pass the verified user data directly to handlePreview
+        handlePreview(freshUserData);
       }
-    }, 200);
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      toast({
+        title: "Authentication Error",
+        description: "Please try clicking Preview again.",
+        variant: "destructive",
+      });
+    } finally {
+      // Always reset authVerifying flag
+      setIsAuthVerifying(false);
+    }
   };
 
   const goToNextPage = () => {
