@@ -32,7 +32,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         .then((user) => {
           if (user) {
             // Google sign-in successful - get ID token and send to backend
-            user.getIdToken().then(async (idToken) => {
+            user.getIdToken().then(async (idToken: string) => {
               try {
                 const response = await fetch("/api/auth/google", {
                   method: "POST",

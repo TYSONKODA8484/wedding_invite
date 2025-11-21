@@ -360,20 +360,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/instances", async (req, res) => {
     try {
-      const { template_id, user_id, template_json, currency, amount } = req.body;
-      
-      if (!template_id || !user_id || !template_json) {
-        return res.status(400).json({ error: "template_id, user_id, and template_json are required" });
-      }
-      
       // TODO: Remove - deprecated endpoint
       return res.status(410).json({ 
         error: "This endpoint is deprecated. Please use /api/projects instead."
-      });
-      
-      res.json({
-        instance_id: customization.id,
-        status: customization.status,
       });
     } catch (error) {
       console.error("Error creating instance:", error);
@@ -383,24 +372,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.put("/api/instances/:id", async (req, res) => {
     try {
-      const { template_json } = req.body;
-      
-      if (!template_json) {
-        return res.status(400).json({ error: "template_json is required" });
-      }
-      
       // TODO: Remove - deprecated endpoint
       return res.status(410).json({ 
         error: "This endpoint is deprecated. Please use /api/projects/:id instead."
-      });
-      
-      if (!updated) {
-        return res.status(404).json({ error: "Instance not found" });
-      }
-      
-      res.json({
-        instance_id: updated.id,
-        status: updated.status,
       });
     } catch (error) {
       console.error("Error updating instance:", error);

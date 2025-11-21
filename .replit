@@ -79,3 +79,9 @@ integrations = ["javascript_log_in_with_replit:1.0.0", "javascript_database:1.0.
 
 [objectStorage]
 defaultBucketID = "replit-objstore-81bd4b28-706d-47b5-9ea1-96454611c1a7"
+
+[userenv]
+
+[userenv.shared]
+VITE_FIREBASE_PROJECT_ID = "weddinginvite-18669"
+VITE_FIREBASE_APP_ID = "1:411118688172:web:ee8a29bdd7fe1c8ee4cc09"
