@@ -47,10 +47,22 @@ export function Navigation() {
       }
     };
     
+    // Check immediately on mount
     checkAuthState();
+    
+    // Listen for custom auth state change events (for immediate updates)
+    const handleAuthChange = () => {
+      checkAuthState();
+    };
+    window.addEventListener('authStateChanged', handleAuthChange);
+    
     // Check periodically in case user logs in/out from another tab
     const interval = setInterval(checkAuthState, 1000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthChange);
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -66,6 +78,8 @@ export function Navigation() {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+    // Dispatch auth state change event
+    window.dispatchEvent(new Event('authStateChanged'));
     // Redirect to home page after logout
     window.location.href = "/";
   };

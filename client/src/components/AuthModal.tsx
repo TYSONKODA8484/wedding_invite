@@ -60,6 +60,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
           localStorage.setItem("auth_token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
           
+          // Dispatch custom event to immediately update UI
+          window.dispatchEvent(new Event('authStateChanged'));
+          
           toast({
             title: "Signed in with Google!",
             description: `Welcome, ${data.user.name}`,
@@ -115,6 +118,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       // Store JWT token with correct keys
       localStorage.setItem("auth_token", result.token);
       localStorage.setItem("user", JSON.stringify(result.user));
+
+      // Dispatch custom event to immediately update UI
+      window.dispatchEvent(new Event('authStateChanged'));
 
       toast({
         title: "Signed in successfully!",
@@ -185,6 +191,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       // Store JWT token with correct keys
       localStorage.setItem("auth_token", result.token);
       localStorage.setItem("user", JSON.stringify(result.user));
+
+      // Dispatch custom event to immediately update UI
+      window.dispatchEvent(new Event('authStateChanged'));
 
       toast({
         title: "Account created successfully!",
