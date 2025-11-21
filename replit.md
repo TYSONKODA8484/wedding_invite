@@ -81,13 +81,15 @@ Media files, specifically template images and videos, are stored using Replit Ob
 **Key Features:**
 - Auth-gated preview: Users must be logged in to preview customizations
 - Auto-save: All customization data (field values + image previews) saves to database BEFORE showing generation screen
-- Seamless auth flow: After login, preview automatically proceeds without user needing to click Preview again
+- Seamless auth flow: After signup/login, preview automatically proceeds without user needing to click Preview again
+- State preservation: No page reload after authentication - all user edits remain intact
+- Normalized error detection: Handles multiple authentication error patterns (401 status, "authenticated", "Unauthorized", "Session expired")
 - Race condition handling: Uses `fetchQuery` to guarantee fresh user data before proceeding
-- Error handling: Comprehensive error messages and logging throughout the flow
+- Error handling: Shows auth modal for authentication errors instead of destructive error toasts
 
 **Preview Button Flow:**
 1. User clicks "Preview" → `handlePreview()` called
-2. Check authentication:
+2. Check authentication (verifies both user data AND auth token):
    - If not logged in and not currently verifying → show auth modal, set `pendingPreview=true`
    - If logged in → proceed to step 3
 3. Prevent duplicate requests: Guard with `saveProjectMutation.isPending`
@@ -97,33 +99,45 @@ Media files, specifically template images and videos, are stored using Replit Ob
    - Returns saved project with ID
 5. Show generation loading screen with 0-100% progress
 6. On completion: Show preview modal, enable download button
+7. If authentication error caught: Show auth modal instead of error toast
 
 **Authentication Success Flow:**
-1. User logs in via AuthModal → `handleAuthSuccess()` called
+1. User signs up or logs in via AuthModal → `handleAuthSuccess()` called
 2. Close auth modal, set `isAuthVerifying=true` flag
-3. Force fetch user data using `queryClient.fetchQuery()`:
+3. Wait 200ms for localStorage token persistence
+4. Force fetch user data using `queryClient.fetchQuery()`:
    - Ensures we have actual user data (not undefined from refetch)
-   - Includes credentials in request
-4. Wait 100ms for localStorage token persistence
-5. If `pendingPreview` was set:
+   - Includes Authorization header with Bearer token
+5. Invalidate user query to update navbar and other components
+6. Verify both user data and token exist
+7. If `pendingPreview` was set:
    - Call `handlePreview(freshUserData)` with verified user
    - Reset `pendingPreview=false`
-6. Always reset `isAuthVerifying=false` in finally block
+8. Always reset `isAuthVerifying=false` in finally block
 
 **Critical Implementation Details:**
+- AuthModal does NOT reload page (`window.location.reload()` removed) - preserves all editor state
+- Enhanced auth check verifies BOTH `currentUser` and `authToken` exist in localStorage
+- Normalized authentication error detection checks multiple patterns:
+  - `error.message?.includes("authenticated")`
+  - `error.message?.includes("Unauthorized")`
+  - `error.status === 401`
+  - `error.message?.includes("Session expired")`
 - Uses `queryClient.fetchQuery()` instead of `refetchQueries()` to guarantee user data
 - `isAuthVerifying` state prevents auth modal from reopening during verification
 - `verifiedUser` parameter in `handlePreview()` eliminates stale closure state
-- Token persistence wait ensures `saveProjectMutation` has auth token
+- 200ms token persistence wait ensures `saveProjectMutation` has auth token
 - All state resets in finally blocks to prevent stuck states
+- Backend signup endpoint returns JWT token (matching login endpoint behavior)
+- Backend provides `/api/auth/user` alias for `/api/auth/me` for frontend compatibility
 
 **Database Operations:**
 - POST `/api/projects` - Creates new project if `projectId` is null
 - PUT `/api/projects/:id` - Updates existing project
 - Status flow: `"draft"` → `"preview_requested"` → (future: `"rendering"` → `"completed"`)
 - Customization JSON includes:
-  - `fieldValues`: All text/date inputs keyed by `pageId_fieldId`
-  - `imagePreviews`: All uploaded images as base64 data URLs
+  - `pages`: {[pageId]: {[fieldId]: value}}
+  - `images`: {[pageId_fieldId]: base64DataURL}
 
 **Component State Management:**
 - `showAuthModal`: Controls AuthModal visibility

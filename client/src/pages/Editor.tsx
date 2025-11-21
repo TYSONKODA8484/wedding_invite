@@ -912,12 +912,21 @@ export default function Editor() {
     setIsAuthVerifying(true);
     
     try {
+      // Wait a moment to ensure localStorage has the auth token
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       // Force fetch user data to ensure we have it (don't rely on refetchQueries)
       console.log("Fetching user data after login...");
       const freshUserData = await queryClient.fetchQuery({
         queryKey: ["/api/auth/user"],
         queryFn: async () => {
-          const response = await fetch("/api/auth/user", { credentials: "include" });
+          const token = localStorage.getItem('auth_token');
+          const response = await fetch("/api/auth/user", { 
+            credentials: "include",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          });
           if (!response.ok) {
             throw new Error("Failed to fetch user data");
           }
@@ -926,8 +935,8 @@ export default function Editor() {
       });
       console.log("Fresh user data fetched:", freshUserData);
       
-      // Wait a moment to ensure localStorage has the auth token
-      await new Promise(resolve => setTimeout(resolve, 150));
+      // Invalidate user query to update navbar and other components
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
       // Verify we have the token before proceeding
       const hasToken = !!localStorage.getItem('auth_token');

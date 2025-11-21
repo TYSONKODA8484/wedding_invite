@@ -68,11 +68,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       setSignInEmail("");
       setSignInPassword("");
       
+      // Call success callback which will handle post-auth logic
+      // and refresh the UI without losing component state
       onSuccess?.();
       onClose();
-      
-      // Reload to update nav state
-      window.location.reload();
     } catch (error) {
       toast({
         title: "Login failed",
@@ -142,11 +141,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       setSignUpPassword("");
       setSignUpConfirmPassword("");
 
+      // Call success callback which will handle post-auth logic
+      // and refresh the UI without losing component state
       onSuccess?.();
       onClose();
-      
-      // Reload to update nav state
-      window.location.reload();
     } catch (error) {
       toast({
         title: "Signup failed",

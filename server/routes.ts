@@ -55,10 +55,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         passwordHash,
       });
       
+      // Generate JWT token for the new user
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      
       res.status(201).json({
-        user_id: user.id,
-        name: user.name,
-        email: user.email,
+        token,
+        user: {
+          user_id: user.id,
+          name: user.name,
+          email: user.email,
+        },
       });
     } catch (error) {
       console.error("Signup error:", error);
@@ -105,6 +115,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/me", authMiddleware, async (req: any, res) => {
+    try {
+      const user = await storage.getUserById(req.user.userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json({
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  // Alias for /api/auth/me to support frontend calling /api/auth/user
+  app.get("/api/auth/user", authMiddleware, async (req: any, res) => {
     try {
       const user = await storage.getUserById(req.user.userId);
       
