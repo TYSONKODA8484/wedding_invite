@@ -513,10 +513,11 @@ function PaymentModal({ isOpen, onClose, templateName, price }: PaymentModalProp
                 <span className="text-foreground">Full HD Video</span>
               </div>
               <div className="border-t border-border my-2 pt-2">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-foreground">Total:</span>
-                  <span className="text-xl font-bold text-primary">{price}</span>
+                <div className="flex justify-between items-baseline gap-2">
+                  <span className="font-semibold text-foreground">Template Price:</span>
+                  <span className="text-2xl font-bold text-primary">{price}</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">Final price for downloading this template</p>
               </div>
             </div>
           </div>
