@@ -642,27 +642,36 @@ export default function Editor() {
       customizationData.images = imagePreviews;
 
       if (projectId) {
-        // Update existing project
+        // Update existing project - set status to preview_requested
+        console.log("Updating project:", projectId, "with customization:", customizationData);
         const response = await apiRequest("PUT", `/api/projects/${projectId}`, {
           customization: customizationData,
           status: "preview_requested",
         });
+        console.log("Project updated successfully:", response);
         return response;
       } else {
-        // Create new project
+        // Create new project - initially set to preview_requested status
+        console.log("Creating new project with customization:", customizationData);
         const response: any = await apiRequest("POST", "/api/projects", {
           templateId: templateData!.id,
           customization: customizationData,
-          status: "draft",
+          status: "preview_requested",
         });
         if (response && response.id) {
           setProjectId(response.id);
+          console.log("New project created with ID:", response.id);
         }
         return response;
       }
     },
     onSuccess: (project) => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      console.log("Project saved successfully:", project);
+      toast({
+        title: "Saved",
+        description: "Your customizations have been saved to database.",
+      });
     },
     onError: (error: any) => {
       if (error.message !== "Not authenticated") {
@@ -770,14 +779,18 @@ export default function Editor() {
     }
 
     try {
-      // Save project with customization data
-      await saveProjectMutation.mutateAsync();
+      // IMPORTANT: Save project with customization data to database
+      // This must complete successfully before showing generation screen
+      const savedProject = await saveProjectMutation.mutateAsync();
       
-      // Start preview generation
+      console.log("Project saved to database:", savedProject);
+      
+      // Start preview generation loading screen
       setShowPreviewLoading(true);
       setPreviewProgress(0);
 
-      // Simulate progress (in production, this would track actual video generation)
+      // Simulate progress (in production, this would call After Effects API)
+      // TODO: Replace with actual API call to video generation service
       const progressInterval = setInterval(() => {
         setPreviewProgress(prev => {
           if (prev >= 100) {
@@ -796,11 +809,13 @@ export default function Editor() {
         });
       }, 300);
     } catch (error: any) {
+      console.error("Preview failed:", error);
       toast({
         title: "Preview failed",
-        description: error.message || "Failed to generate preview",
+        description: error.message || "Failed to generate preview. Please try again.",
         variant: "destructive",
       });
+      setShowPreviewLoading(false);
     }
   };
 
