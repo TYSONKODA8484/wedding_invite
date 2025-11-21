@@ -11,9 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Sparkles, User, LogOut, Video, Chrome } from "lucide-react";
+import { Menu, Sparkles, User, LogOut, Video } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
-import { signInWithGoogle } from "@/lib/firebase";
 
 export function Navigation() {
   const [location] = useLocation();
@@ -200,15 +199,6 @@ export function Navigation() {
                 </Button>
                 <Button
                   variant="ghost"
-                  size="icon"
-                  onClick={() => signInWithGoogle()}
-                  data-testid="button-google-signin"
-                  title="Sign in with Google"
-                >
-                  <Chrome className="w-5 h-5" />
-                </Button>
-                <Button
-                  variant="ghost"
                   size="default"
                   onClick={() => setAuthModalOpen(true)}
                   data-testid="button-my-templates"
@@ -310,19 +300,6 @@ export function Navigation() {
                       data-testid="button-login-mobile"
                     >
                       Login
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="default"
-                      className="w-full"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        signInWithGoogle();
-                      }}
-                      data-testid="button-google-signin-mobile"
-                    >
-                      <Chrome className="w-4 h-4 mr-2" />
-                      Sign in with Google
                     </Button>
                     <Button
                       variant="ghost"
