@@ -832,19 +832,22 @@ export default function Editor() {
   };
 
   const handleAuthSuccess = async () => {
+    console.log("Auth success - user logged in");
     setShowAuthModal(false);
     
     // Invalidate user query to refetch authenticated user data
     await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     
-    // Wait a brief moment for the query to refetch
+    // Wait a brief moment for the query to refetch user data
     setTimeout(() => {
+      console.log("Checking if preview was pending:", pendingPreview);
       // If pending preview, trigger it after login
       if (pendingPreview) {
         setPendingPreview(false);
+        console.log("Triggering preview after successful login");
         handlePreview();
       }
-    }, 100);
+    }, 200);
   };
 
   const goToNextPage = () => {
