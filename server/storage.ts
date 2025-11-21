@@ -104,23 +104,30 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(payments, eq(orders.id, payments.orderId))
       .where(eq(projects.userId, userId));
     
-    return userProjects.map(row => ({
-      id: row.project.id,
-      templateId: row.project.templateId,
-      templateName: row.template?.templateName || 'Unknown Template',
-      thumbnailUrl: row.template?.thumbnailUrl || row.template?.previewImageUrl,
-      previewImageUrl: row.template?.previewImageUrl,
-      price: row.template?.price,
-      currency: row.template?.currency || 'INR',
-      status: row.project.status,
-      isPaid: !!row.payment && row.payment.status === 'success',
-      paymentStatus: row.payment?.status || 'pending',
-      previewUrl: row.project.previewUrl,
-      finalUrl: row.project.finalUrl,
-      createdAt: row.project.createdAt,
-      updatedAt: row.project.updatedAt,
-      paidAt: row.project.paidAt,
-    }));
+    return userProjects.map(row => {
+      const isPaid = 
+        (row.order && row.order.status === 'paid') ||
+        (row.payment && row.payment.status === 'success') ||
+        !!row.project.paidAt;
+      
+      return {
+        id: row.project.id,
+        templateId: row.project.templateId,
+        templateName: row.template?.templateName || 'Unknown Template',
+        thumbnailUrl: row.template?.thumbnailUrl || row.template?.previewImageUrl,
+        previewImageUrl: row.template?.previewImageUrl,
+        price: row.template?.price || '0',
+        currency: row.template?.currency || 'INR',
+        status: row.project.status,
+        isPaid,
+        paymentStatus: row.payment?.status || row.order?.status || 'pending',
+        previewUrl: row.project.previewUrl,
+        finalUrl: row.project.finalUrl,
+        createdAt: row.project.createdAt,
+        updatedAt: row.project.updatedAt,
+        paidAt: row.project.paidAt,
+      };
+    });
   }
 
   async getProjectById(id: string): Promise<Project | undefined> {
