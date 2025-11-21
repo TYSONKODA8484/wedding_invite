@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import * as bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Client } from "@replit/object-storage";
+import { adminAuth } from "./firebase-admin";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -89,6 +90,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid email or password" });
       }
       
+      // Check if user has a password (Google auth users don't have passwords)
+      if (!user.passwordHash) {
+        return res.status(401).json({ error: "This account uses Google Sign-In. Please sign in with Google." });
+      }
+      
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
       if (!isValidPassword) {
         return res.status(401).json({ error: "Invalid email or password" });
@@ -111,6 +117,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Failed to login" });
+    }
+  });
+
+  // Google Authentication Route
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { idToken } = req.body;
+      
+      if (!idToken) {
+        return res.status(400).json({ error: "ID token is required" });
+      }
+      
+      // Verify the Firebase ID token
+      const decodedToken = await adminAuth.verifyIdToken(idToken);
+      const { email, name, picture } = decodedToken;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email not provided by Google" });
+      }
+      
+      // Check if user exists
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Create new user with Google auth (no password hash)
+        // Use a safe sentinel value that bcrypt won't try to compare
+        user = await storage.createUser({
+          name: name || email.split('@')[0],
+          email,
+          phone: null,
+          passwordHash: null, // Google auth users don't have password
+        });
+      }
+      
+      // Generate JWT token
+      const token = jwt.sign(
+        { userId: user.id, email: user.email },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+      
+      res.json({
+        token,
+        user: {
+          user_id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } catch (error: any) {
+      console.error("Google auth error:", error);
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/id-token-expired') {
+        return res.status(401).json({ error: "Google token expired. Please sign in again." });
+      }
+      if (error.code === 'auth/argument-error') {
+        return res.status(400).json({ error: "Invalid Google token" });
+      }
+      
+      res.status(500).json({ error: "Failed to authenticate with Google" });
     }
   });
 
