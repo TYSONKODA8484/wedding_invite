@@ -66,6 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({
         token,
         user: {
+          id: user.id,
           user_id: user.id,
           name: user.name,
           email: user.email,
@@ -109,6 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         token,
         user: {
+          id: user.id,
           user_id: user.id,
           name: user.name,
           email: user.email,
@@ -141,15 +143,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = await storage.getUserByEmail(email);
       
       if (!user) {
-        // Create new user with Google auth (no password hash)
-        // Use a safe sentinel value that bcrypt won't try to compare
+        // Create new user with Google auth (empty password hash)
+        // The login route has a guard to prevent password login for Google users
         user = await storage.createUser({
           name: name || email.split('@')[0],
           email,
           phone: null,
-          passwordHash: null, // Google auth users don't have password
+          passwordHash: '', // Google auth users don't have password
         });
       }
+      // Note: Existing users keep their profile data unchanged
+      // TODO: Add updateUser method to storage interface to sync Google profile data
       
       // Generate JWT token
       const token = jwt.sign(
@@ -161,6 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         token,
         user: {
+          id: user.id,
           user_id: user.id,
           name: user.name,
           email: user.email,

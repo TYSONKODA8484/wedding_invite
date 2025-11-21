@@ -1,12 +1,24 @@
 import admin from "firebase-admin";
 
-// Initialize Firebase Admin SDK
-// For ID token verification, we only need the project ID
-// No service account key needed for this use case
+// Initialize Firebase Admin SDK with service account credentials
 if (!admin.apps.length) {
-  admin.initializeApp({
-    projectId: "weddinginvite-18669",
-  });
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  
+  if (!serviceAccount) {
+    throw new Error("FIREBASE_SERVICE_ACCOUNT environment variable is not set");
+  }
+  
+  try {
+    const serviceAccountJson = JSON.parse(serviceAccount);
+    
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountJson),
+      projectId: serviceAccountJson.project_id, // Use project ID from service account JSON
+    });
+  } catch (error) {
+    console.error("Failed to initialize Firebase Admin:", error);
+    throw error;
+  }
 }
 
 export const adminAuth = admin.auth();
