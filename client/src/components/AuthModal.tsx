@@ -68,6 +68,15 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
         })
         .catch((error) => {
           console.error("Redirect handling error:", error);
+          
+          // Handle unauthorized domain error specifically
+          if (error.code === "auth/unauthorized-domain") {
+            toast({
+              title: "Firebase Configuration Required",
+              description: "Please add this domain to Firebase Console → Authentication → Settings → Authorized domains",
+              variant: "destructive",
+            });
+          }
         });
     }
   }, [isOpen]);
@@ -291,7 +300,25 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => signInWithGoogle()}
+                onClick={() => {
+                  try {
+                    signInWithGoogle();
+                  } catch (error: any) {
+                    if (error.code === "auth/unauthorized-domain") {
+                      toast({
+                        title: "Firebase Setup Required",
+                        description: `Add ${window.location.hostname} to Firebase authorized domains`,
+                        variant: "destructive",
+                      });
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: error.message || "Failed to initiate Google sign-in",
+                        variant: "destructive",
+                      });
+                    }
+                  }
+                }}
                 disabled={isLoading}
                 data-testid="button-signin-google"
               >
@@ -398,7 +425,25 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => signInWithGoogle()}
+                onClick={() => {
+                  try {
+                    signInWithGoogle();
+                  } catch (error: any) {
+                    if (error.code === "auth/unauthorized-domain") {
+                      toast({
+                        title: "Firebase Setup Required",
+                        description: `Add ${window.location.hostname} to Firebase authorized domains`,
+                        variant: "destructive",
+                      });
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: error.message || "Failed to initiate Google sign-in",
+                        variant: "destructive",
+                      });
+                    }
+                  }
+                }}
                 disabled={isLoading}
                 data-testid="button-signup-google"
               >
