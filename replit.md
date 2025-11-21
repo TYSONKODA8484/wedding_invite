@@ -74,6 +74,66 @@ Template cards feature an interactive video preview: on hover, a muted, looped v
 ### Media Storage
 Media files, specifically template images and videos, are stored using Replit Object Storage. These files are served via a secured API endpoint (`/api/media/Ind/:filename`), ensuring they are not publicly exposed while still being efficiently streamed with proper content headers, caching, and error handling.
 
+## Preview Workflow - Auth-Gated Preview with Auto-Save (Nov 21, 2024 - COMPLETE)
+
+### ✅ Robust Preview Flow Implementation
+
+**Key Features:**
+- Auth-gated preview: Users must be logged in to preview customizations
+- Auto-save: All customization data (field values + image previews) saves to database BEFORE showing generation screen
+- Seamless auth flow: After login, preview automatically proceeds without user needing to click Preview again
+- Race condition handling: Uses `fetchQuery` to guarantee fresh user data before proceeding
+- Error handling: Comprehensive error messages and logging throughout the flow
+
+**Preview Button Flow:**
+1. User clicks "Preview" → `handlePreview()` called
+2. Check authentication:
+   - If not logged in and not currently verifying → show auth modal, set `pendingPreview=true`
+   - If logged in → proceed to step 3
+3. Prevent duplicate requests: Guard with `saveProjectMutation.isPending`
+4. Save to database: Call `saveProjectMutation.mutateAsync()` (POST/PUT `/api/projects`)
+   - Collects all field values and image previews
+   - Sets project status to `"preview_requested"`
+   - Returns saved project with ID
+5. Show generation loading screen with 0-100% progress
+6. On completion: Show preview modal, enable download button
+
+**Authentication Success Flow:**
+1. User logs in via AuthModal → `handleAuthSuccess()` called
+2. Close auth modal, set `isAuthVerifying=true` flag
+3. Force fetch user data using `queryClient.fetchQuery()`:
+   - Ensures we have actual user data (not undefined from refetch)
+   - Includes credentials in request
+4. Wait 100ms for localStorage token persistence
+5. If `pendingPreview` was set:
+   - Call `handlePreview(freshUserData)` with verified user
+   - Reset `pendingPreview=false`
+6. Always reset `isAuthVerifying=false` in finally block
+
+**Critical Implementation Details:**
+- Uses `queryClient.fetchQuery()` instead of `refetchQueries()` to guarantee user data
+- `isAuthVerifying` state prevents auth modal from reopening during verification
+- `verifiedUser` parameter in `handlePreview()` eliminates stale closure state
+- Token persistence wait ensures `saveProjectMutation` has auth token
+- All state resets in finally blocks to prevent stuck states
+
+**Database Operations:**
+- POST `/api/projects` - Creates new project if `projectId` is null
+- PUT `/api/projects/:id` - Updates existing project
+- Status flow: `"draft"` → `"preview_requested"` → (future: `"rendering"` → `"completed"`)
+- Customization JSON includes:
+  - `fieldValues`: All text/date inputs keyed by `pageId_fieldId`
+  - `imagePreviews`: All uploaded images as base64 data URLs
+
+**Component State Management:**
+- `showAuthModal`: Controls AuthModal visibility
+- `pendingPreview`: Tracks if preview should auto-trigger after login
+- `isAuthVerifying`: Prevents modal reopening during auth verification
+- `showPreviewLoading`: Controls generation loading screen
+- `previewProgress`: 0-100% progress during generation
+- `showPreviewModal`: Controls preview player modal
+- `downloadEnabled`: Enables download button after preview complete
+
 ## External Dependencies
 
 ### UI/UX
