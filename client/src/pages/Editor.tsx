@@ -816,13 +816,20 @@ export default function Editor() {
     setShowPaymentModal(true);
   };
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     setShowAuthModal(false);
-    // If pending preview, trigger it after login
-    if (pendingPreview) {
-      setPendingPreview(false);
-      handlePreview();
-    }
+    
+    // Invalidate user query to refetch authenticated user data
+    await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    
+    // Wait a brief moment for the query to refetch
+    setTimeout(() => {
+      // If pending preview, trigger it after login
+      if (pendingPreview) {
+        setPendingPreview(false);
+        handlePreview();
+      }
+    }, 100);
   };
 
   const goToNextPage = () => {
