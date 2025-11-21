@@ -831,20 +831,16 @@ export default function Editor() {
       return;
     }
     
-    // Check if user is logged in - use verified user if provided, otherwise check cache
-    const currentUser = verifiedUser || queryClient.getQueryData(["/api/auth/user"]);
-    console.log("Current user data:", currentUser);
+    // Check if user is logged in - verify both user data AND auth token
+    const currentUser = verifiedUser || user || queryClient.getQueryData(["/api/auth/user"]);
+    const authToken = localStorage.getItem('auth_token');
+    console.log("Current user data:", currentUser, "Has token:", !!authToken);
     
-    // Don't show auth modal if we're in the middle of auth verification
-    if (!currentUser && !isAuthVerifying) {
+    // Show auth modal if no user OR no token (and not currently verifying)
+    if ((!currentUser || !authToken) && !isAuthVerifying) {
       console.log("User not logged in, showing auth modal");
       setPendingPreview(true);
       setShowAuthModal(true);
-      return;
-    }
-    
-    if (!currentUser) {
-      console.log("User not available, waiting for auth verification");
       return;
     }
 
@@ -882,11 +878,24 @@ export default function Editor() {
       }, 300);
     } catch (error: any) {
       console.error("Preview failed:", error);
-      toast({
-        title: "Preview failed",
-        description: error.message || "Failed to generate preview. Please try again.",
-        variant: "destructive",
-      });
+      
+      // If authentication error (check for common auth error patterns), show auth modal
+      const isAuthError = error.message?.includes("authenticated") || 
+                          error.message?.includes("Unauthorized") ||
+                          error.status === 401 ||
+                          error.message?.includes("Session expired");
+      
+      if (isAuthError) {
+        console.log("Authentication error during preview, showing auth modal");
+        setPendingPreview(true);
+        setShowAuthModal(true);
+      } else {
+        toast({
+          title: "Preview failed",
+          description: error.message || "Failed to generate preview. Please try again.",
+          variant: "destructive",
+        });
+      }
       setShowPreviewLoading(false);
     }
   };
@@ -918,14 +927,29 @@ export default function Editor() {
       console.log("Fresh user data fetched:", freshUserData);
       
       // Wait a moment to ensure localStorage has the auth token
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Verify we have the token before proceeding
+      const hasToken = !!localStorage.getItem('auth_token');
+      console.log("Token available after auth:", hasToken);
       
       // If pending preview, trigger it with verified user data
       if (pendingPreview) {
         console.log("Preview was pending, triggering it now with verified user data");
         setPendingPreview(false);
-        // Pass the verified user data directly to handlePreview
-        handlePreview(freshUserData);
+        
+        // Double-check we have what we need before calling handlePreview
+        if (freshUserData && hasToken) {
+          // Pass the verified user data directly to handlePreview
+          handlePreview(freshUserData);
+        } else {
+          console.error("Missing user data or token after auth, cannot proceed with preview");
+          toast({
+            title: "Authentication Issue",
+            description: "Please try clicking Preview again.",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       console.error("Failed to fetch user data:", error);
