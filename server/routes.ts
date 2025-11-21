@@ -137,6 +137,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/projects", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { templateId, customization } = req.body;
+      
+      if (!templateId || !customization) {
+        return res.status(400).json({ error: "Template ID and customization are required" });
+      }
+      
+      const project = await storage.createProject({
+        userId,
+        templateId,
+        customization,
+        status: "draft",
+      });
+      
+      res.status(201).json(project);
+    } catch (error) {
+      console.error("Create project error:", error);
+      res.status(500).json({ error: "Failed to create project" });
+    }
+  });
+
+  app.put("/api/projects/:id", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const existingProject = await storage.getProjectById(id);
+      if (!existingProject) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      if (existingProject.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to update this project" });
+      }
+      
+      const updatedProject = await storage.updateProject(id, updates);
+      
+      res.json(updatedProject);
+    } catch (error) {
+      console.error("Update project error:", error);
+      res.status(500).json({ error: "Failed to update project" });
+    }
+  });
+
+  app.get("/api/projects/:id", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { id } = req.params;
+      
+      const project = await storage.getProjectById(id);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to view this project" });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Get project error:", error);
+      res.status(500).json({ error: "Failed to fetch project" });
+    }
+  });
+
   // ==================== TEMPLATE ROUTES ====================
   
   app.get("/api/templates", async (req, res) => {
