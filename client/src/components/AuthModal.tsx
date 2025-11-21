@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Chrome } from "lucide-react";
-import { signInWithGoogle, handleGoogleRedirect } from "@/lib/firebase";
+import { Loader2 } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,62 +23,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  // Handle Firebase redirect on modal open
-  useEffect(() => {
-    if (isOpen) {
-      handleGoogleRedirect()
-        .then((user) => {
-          if (user) {
-            // Google sign-in successful - get ID token and send to backend
-            user.getIdToken().then(async (idToken: string) => {
-              try {
-                const response = await fetch("/api/auth/google", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ idToken }),
-                });
-
-                const result = await response.json();
-                if (!response.ok) {
-                  throw new Error(result.error || "Google sign-in failed");
-                }
-
-                localStorage.setItem("auth_token", result.token);
-                localStorage.setItem("user", JSON.stringify(result.user));
-
-                toast({
-                  title: "Signed in successfully!",
-                  description: `Welcome back, ${result.user.name}`,
-                });
-
-                onSuccess?.();
-                onClose();
-                window.location.reload();
-              } catch (error) {
-                toast({
-                  title: "Sign-in failed",
-                  description: error instanceof Error ? error.message : "Please try again",
-                  variant: "destructive",
-                });
-              }
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Redirect handling error:", error);
-          
-          // Handle unauthorized domain error specifically
-          if (error.code === "auth/unauthorized-domain") {
-            toast({
-              title: "Firebase Configuration Required",
-              description: "Please add this domain to Firebase Console → Authentication → Settings → Authorized domains",
-              variant: "destructive",
-            });
-          }
-        });
-    }
-  }, [isOpen]);
 
   // Sign In form state
   const [signInEmail, setSignInEmail] = useState("");
@@ -285,46 +228,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   "Sign In"
                 )}
               </Button>
-
-              {/* Google Sign-In Button */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-muted-foreground/20"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  try {
-                    signInWithGoogle();
-                  } catch (error: any) {
-                    if (error.code === "auth/unauthorized-domain") {
-                      toast({
-                        title: "Firebase Setup Required",
-                        description: `Add ${window.location.hostname} to Firebase authorized domains`,
-                        variant: "destructive",
-                      });
-                    } else {
-                      toast({
-                        title: "Error",
-                        description: error.message || "Failed to initiate Google sign-in",
-                        variant: "destructive",
-                      });
-                    }
-                  }
-                }}
-                disabled={isLoading}
-                data-testid="button-signin-google"
-              >
-                <Chrome className="w-4 h-4 mr-2" />
-                Sign In with Google
-              </Button>
             </form>
           </TabsContent>
 
@@ -409,46 +312,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 ) : (
                   "Create Account"
                 )}
-              </Button>
-
-              {/* Google Sign-In Button */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-muted-foreground/20"></span>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  try {
-                    signInWithGoogle();
-                  } catch (error: any) {
-                    if (error.code === "auth/unauthorized-domain") {
-                      toast({
-                        title: "Firebase Setup Required",
-                        description: `Add ${window.location.hostname} to Firebase authorized domains`,
-                        variant: "destructive",
-                      });
-                    } else {
-                      toast({
-                        title: "Error",
-                        description: error.message || "Failed to initiate Google sign-in",
-                        variant: "destructive",
-                      });
-                    }
-                  }
-                }}
-                disabled={isLoading}
-                data-testid="button-signup-google"
-              >
-                <Chrome className="w-4 h-4 mr-2" />
-                Sign Up with Google
               </Button>
             </form>
           </TabsContent>

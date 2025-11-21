@@ -104,60 +104,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/google", async (req, res) => {
-    try {
-      const { idToken } = req.body;
-      
-      if (!idToken) {
-        return res.status(400).json({ error: "ID token is required" });
-      }
-
-      // Decode Firebase ID token to get user info
-      // In production, verify the token with Firebase Admin SDK
-      // For now, we'll decode it manually
-      const parts = idToken.split('.');
-      const decodedPayload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-      
-      const { email, name } = decodedPayload;
-      
-      if (!email) {
-        return res.status(400).json({ error: "Email not found in token" });
-      }
-
-      // Check if user exists
-      let user = await storage.getUserByEmail(email);
-      
-      // Create new user if doesn't exist
-      if (!user) {
-        user = await storage.createUser({
-          name: name || email.split('@')[0],
-          email,
-          phone: null,
-          passwordHash: "", // No password for Google auth
-        });
-      }
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-
-      res.json({
-        token,
-        user: {
-          user_id: user.id,
-          name: user.name,
-          email: user.email,
-        },
-      });
-    } catch (error) {
-      console.error("Google auth error:", error);
-      res.status(500).json({ error: "Failed to authenticate with Google" });
-    }
-  });
-
   app.get("/api/auth/me", authMiddleware, async (req: any, res) => {
     try {
       const user = await storage.getUserById(req.user.userId);
@@ -360,9 +306,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.post("/api/instances", async (req, res) => {
     try {
+      const { template_id, user_id, template_json, currency, amount } = req.body;
+      
+      if (!template_id || !user_id || !template_json) {
+        return res.status(400).json({ error: "template_id, user_id, and template_json are required" });
+      }
+      
       // TODO: Remove - deprecated endpoint
       return res.status(410).json({ 
         error: "This endpoint is deprecated. Please use /api/projects instead."
+      });
+      
+      res.json({
+        instance_id: customization.id,
+        status: customization.status,
       });
     } catch (error) {
       console.error("Error creating instance:", error);
@@ -372,9 +329,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.put("/api/instances/:id", async (req, res) => {
     try {
+      const { template_json } = req.body;
+      
+      if (!template_json) {
+        return res.status(400).json({ error: "template_json is required" });
+      }
+      
       // TODO: Remove - deprecated endpoint
       return res.status(410).json({ 
         error: "This endpoint is deprecated. Please use /api/projects/:id instead."
+      });
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Instance not found" });
+      }
+      
+      res.json({
+        instance_id: updated.id,
+        status: updated.status,
       });
     } catch (error) {
       console.error("Error updating instance:", error);
