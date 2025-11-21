@@ -571,7 +571,7 @@ export default function Editor() {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
-  const [projectId, setProjectId] = useState<string | null>(isEditingProject ? slug : null);
+  const [projectId, setProjectId] = useState<string | null>((isEditingProject && slug) ? slug : null);
   
   // Preview/Download states
   const [showPreviewLoading, setShowPreviewLoading] = useState(false);
@@ -889,12 +889,6 @@ export default function Editor() {
   };
 
   const handleDownload = () => {
-    // Check if user is logged in (should already be logged in at this point)
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
     // Close preview modal and show payment modal
     setShowPreviewModal(false);
     setShowPaymentModal(true);
