@@ -555,16 +555,23 @@ function PaymentModal({ isOpen, onClose, templateName, price }: PaymentModalProp
   );
 }
 
+// Helper to check if string is a UUID v4
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 export default function Editor() {
   const [, params] = useRoute("/editor/:slug");
   const [, navigate] = useLocation();
   const slug = params?.slug;
+  const isEditingProject = slug ? isUUID(slug) : false;
 
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
-  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(isEditingProject ? slug : null);
   
   // Preview/Download states
   const [showPreviewLoading, setShowPreviewLoading] = useState(false);
@@ -580,15 +587,56 @@ export default function Editor() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: templateData, isLoading, error } = useQuery<Template & { pages?: any[] }>({
-    queryKey: ["/api/templates", slug],
+  // Fetch project data if editing an existing project
+  const { data: projectData } = useQuery({
+    queryKey: ["/api/projects", slug],
     queryFn: async () => {
-      const response = await fetch(`/api/templates/${slug}`);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/projects/${slug}`, {
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Failed to fetch project");
+      return response.json();
+    },
+    enabled: isEditingProject,
+  });
+
+  // Fetch template data (either from new template or existing project's template)
+  const { data: templateData, isLoading, error } = useQuery<Template & { pages?: any[] }>({
+    queryKey: ["/api/templates", isEditingProject ? projectData?.templateId : slug],
+    queryFn: async () => {
+      const templateId = isEditingProject ? projectData?.templateId : slug;
+      const response = await fetch(`/api/templates/${templateId}`);
       if (!response.ok) throw new Error("Failed to fetch template");
       return response.json();
     },
-    enabled: !!slug,
+    enabled: isEditingProject ? !!projectData?.templateId : !!slug,
   });
+
+  // Load existing project customization data when editing
+  useEffect(() => {
+    if (projectData && projectData.customization) {
+      console.log("Loading customization data from project:", projectData.customization);
+      
+      // Load field values from customization.pages
+      const newFieldValues: Record<string, string> = {};
+      if (projectData.customization.pages) {
+        for (const [pageId, fields] of Object.entries(projectData.customization.pages)) {
+          if (typeof fields === 'object') {
+            for (const [fieldId, value] of Object.entries(fields as Record<string, any>)) {
+              newFieldValues[`${pageId}_${fieldId}`] = value || '';
+            }
+          }
+        }
+      }
+      setFieldValues(newFieldValues);
+      
+      // Load image previews
+      if (projectData.customization.images) {
+        setImagePreviews(projectData.customization.images);
+      }
+    }
+  }, [projectData]);
 
   // Preload all page images to eliminate loading delays
   useEffect(() => {
