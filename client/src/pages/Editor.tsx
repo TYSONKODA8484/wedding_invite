@@ -481,6 +481,80 @@ function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: Prev
   );
 }
 
+interface PaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  templateName: string;
+  price: string;
+}
+
+function PaymentModal({ isOpen, onClose, templateName, price }: PaymentModalProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-playfair">Payment</DialogTitle>
+          <DialogDescription>
+            Complete your purchase to download the full video without watermark
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* Order Summary */}
+          <div className="bg-muted rounded-lg p-4">
+            <h3 className="font-semibold text-foreground mb-3">Order Summary</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Template:</span>
+                <span className="font-medium text-foreground">{templateName}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Format:</span>
+                <span className="text-foreground">Full HD Video</span>
+              </div>
+              <div className="border-t border-border my-2 pt-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-foreground">Total:</span>
+                  <span className="text-xl font-bold text-primary">{price}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Integration Notice */}
+          <Card className="border-primary/20 bg-primary/5">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+              </div>
+              <h4 className="font-semibold text-lg mb-2 text-foreground">Payment Integration In Progress</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Razorpay payment gateway integration is currently being set up.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You'll be able to pay securely with Credit/Debit Cards, UPI, Net Banking, and more.
+              </p>
+            </div>
+          </Card>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} data-testid="button-payment-cancel">
+            Cancel
+          </Button>
+          <Button 
+            variant="default" 
+            disabled 
+            data-testid="button-payment-proceed"
+          >
+            Proceed to Payment
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Editor() {
   const [, params] = useRoute("/editor/:slug");
   const [, navigate] = useLocation();
@@ -499,6 +573,7 @@ export default function Editor() {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [downloadEnabled, setDownloadEnabled] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPreview, setPendingPreview] = useState(false);
   
   const [, setLocation] = useLocation();
@@ -728,24 +803,15 @@ export default function Editor() {
   };
 
   const handleDownload = () => {
-    // Check if user is logged in
+    // Check if user is logged in (should already be logged in at this point)
     if (!user) {
       setShowAuthModal(true);
       return;
     }
 
-    // Proceed with download
-    toast({
-      title: "Download started",
-      description: "Your video is being downloaded...",
-    });
-    
-    // Enable download button in editor
-    setDownloadEnabled(true);
-    
-    // TODO: Implement actual download logic
-    // For now, just close the modal
+    // Close preview modal and show payment modal
     setShowPreviewModal(false);
+    setShowPaymentModal(true);
   };
 
   const handleAuthSuccess = () => {
@@ -794,6 +860,14 @@ export default function Editor() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
+      />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        templateName={template.templateName || template.name}
+        price={`₹${(parseFloat(template.price) / 100).toFixed(2)}`}
       />
 
       {/* Header */}
