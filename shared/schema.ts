@@ -9,6 +9,7 @@ import {
   index,
   decimal,
   integer,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -24,12 +25,12 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Users table for custom authentication
+// Users table
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name").notNull(),
   email: varchar("email").unique().notNull(),
   phone: varchar("phone"),
+  name: varchar("name").notNull(),
   passwordHash: varchar("password_hash").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -44,24 +45,24 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Templates table - stores template metadata and full JSON structure
+// Templates table
 export const templates = pgTable("templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name").notNull(),
   slug: varchar("slug").notNull().unique(),
-  type: varchar("type").notNull(), // 'wedding', 'engagement', 'reception', etc.
-  orientation: varchar("orientation").notNull(), // 'portrait' or 'landscape'
-  photoOption: varchar("photo_option").notNull(), // 'with_photo' or 'without_photo'
-  tags: jsonb("tags").notNull().default([]), // array of strings
-  coverImage: varchar("cover_image").notNull(), // S3 key or URL
-  thumbnailUrl: varchar("thumbnail_url").notNull(), // thumbnail for gallery
-  duration: integer("duration").notNull().default(30), // duration in seconds
+  templateName: varchar("template_name").notNull(),
+  templateType: varchar("template_type").notNull(),
   currency: varchar("currency").notNull().default("INR"),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // e.g., 199.00
-  templateJson: jsonb("template_json").notNull(), // Full template structure (pages[], fields[], media[])
-  createdBy: varchar("created_by").references(() => users.id, { onDelete: "set null" }),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  durationSec: integer("duration_sec").notNull().default(30),
+  previewImageUrl: varchar("preview_image_url").notNull(),
+  previewVideoUrl: varchar("preview_video_url").notNull(),
+  templateJson: jsonb("template_json").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  orientation: varchar("orientation").notNull(),
+  photoOption: varchar("photo_option").notNull(),
+  templateTags: jsonb("template_tags").notNull().default([]),
+  thumbnailUrl: varchar("thumbnail_url").notNull(),
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).omit({
@@ -73,50 +74,149 @@ export const insertTemplateSchema = createInsertSchema(templates).omit({
 export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
 export type Template = typeof templates.$inferSelect;
 
-// User Customizations - saved template edits
-export const customizations = pgTable("customizations", {
+// Projects table - user's customized templates
+export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
-  templateJson: jsonb("template_json").notNull(), // Full edited template JSON
-  currency: varchar("currency").notNull().default("INR"),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  status: varchar("status").notNull().default("draft"), // draft, preview_requested, paid
+  customization: jsonb("customization").notNull(),
+  status: varchar("status").notNull().default("draft"), // draft, preview_requested, rendering, completed
+  previewUrl: varchar("preview_url"),
+  finalUrl: varchar("final_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  paidAt: timestamp("paid_at"),
 });
 
-export const insertCustomizationSchema = createInsertSchema(customizations).omit({
+export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export type InsertCustomization = z.infer<typeof insertCustomizationSchema>;
-export type Customization = typeof customizations.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Project = typeof projects.$inferSelect;
+
+// User Templates - purchase records
+export const userTemplates = pgTable("user_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  purchaseAmount: decimal("purchase_amount", { precision: 10, scale: 2 }).notNull(),
+  razorpayOrderId: varchar("razorpay_order_id"),
+  razorpayPaymentId: varchar("razorpay_payment_id"),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+});
+
+export const insertUserTemplateSchema = createInsertSchema(userTemplates).omit({
+  id: true,
+  purchasedAt: true,
+});
+
+export type InsertUserTemplate = z.infer<typeof insertUserTemplateSchema>;
+export type UserTemplate = typeof userTemplates.$inferSelect;
+
+// Orders table
+export const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderNumber: varchar("order_number").notNull().unique(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  projectId: varchar("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency").notNull().default("INR"),
+  status: varchar("status").notNull().default("pending"), // pending, paid, failed
+  paymentProvider: varchar("payment_provider").notNull().default("razorpay"),
+  providerOrderId: varchar("provider_order_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
+
+// Payments table
+export const payments = pgTable("payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  provider: varchar("provider").notNull().default("razorpay"),
+  status: varchar("status").notNull(), // success, failed
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency").notNull().default("INR"),
+  payload: jsonb("payload").notNull(),
+  receivedAt: timestamp("received_at").defaultNow(),
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  receivedAt: true,
+});
+
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  templates: many(templates),
-  customizations: many(customizations),
+  projects: many(projects),
+  userTemplates: many(userTemplates),
+  orders: many(orders),
 }));
 
-export const templatesRelations = relations(templates, ({ one, many }) => ({
-  createdBy: one(users, {
-    fields: [templates.createdBy],
-    references: [users.id],
-  }),
-  customizations: many(customizations),
+export const templatesRelations = relations(templates, ({ many }) => ({
+  projects: many(projects),
+  orders: many(orders),
 }));
 
-export const customizationsRelations = relations(customizations, ({ one }) => ({
+export const projectsRelations = relations(projects, ({ one, many }) => ({
   user: one(users, {
-    fields: [customizations.userId],
+    fields: [projects.userId],
     references: [users.id],
   }),
   template: one(templates, {
-    fields: [customizations.templateId],
+    fields: [projects.templateId],
     references: [templates.id],
+  }),
+  userTemplates: many(userTemplates),
+  orders: many(orders),
+}));
+
+export const userTemplatesRelations = relations(userTemplates, ({ one }) => ({
+  user: one(users, {
+    fields: [userTemplates.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [userTemplates.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [orders.projectId],
+    references: [projects.id],
+  }),
+  template: one(templates, {
+    fields: [orders.templateId],
+    references: [templates.id],
+  }),
+  payments: many(payments),
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  order: one(orders, {
+    fields: [payments.orderId],
+    references: [orders.id],
   }),
 }));
 

@@ -3,13 +3,13 @@ import { eq } from "drizzle-orm";
 import {
   users,
   templates,
-  customizations,
+  projects,
   type User,
   type InsertUser,
   type Template,
   type InsertTemplate,
-  type Customization,
-  type InsertCustomization,
+  type Project,
+  type InsertProject,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -27,11 +27,11 @@ export interface IStorage {
   getTemplateBySlug(slug: string): Promise<Template | undefined>;
   createTemplate(template: InsertTemplate): Promise<Template>;
   
-  // Customization operations
-  getUserCustomizations(userId: string): Promise<Customization[]>;
-  getCustomizationById(id: string): Promise<Customization | undefined>;
-  createCustomization(customization: InsertCustomization): Promise<Customization>;
-  updateCustomization(id: string, updates: Partial<Customization>): Promise<Customization | undefined>;
+  // Project operations (user's customized templates)
+  getUserProjects(userId: string): Promise<Project[]>;
+  getProjectById(id: string): Promise<Project | undefined>;
+  createProject(project: InsertProject): Promise<Project>;
+  updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -59,8 +59,6 @@ export class DatabaseStorage implements IStorage {
     type?: string;
     tags?: string[];
   }): Promise<Template[]> {
-    // For now, return all templates
-    // TODO: Implement filtering by type and tags
     const allTemplates = await db.select().from(templates);
     return allTemplates;
   }
@@ -83,38 +81,38 @@ export class DatabaseStorage implements IStorage {
     return template;
   }
 
-  // Customization operations
-  async getUserCustomizations(userId: string): Promise<Customization[]> {
+  // Project operations (renamed from Customization)
+  async getUserProjects(userId: string): Promise<Project[]> {
     return db
       .select()
-      .from(customizations)
-      .where(eq(customizations.userId, userId));
+      .from(projects)
+      .where(eq(projects.userId, userId));
   }
 
-  async getCustomizationById(id: string): Promise<Customization | undefined> {
-    const [customization] = await db
+  async getProjectById(id: string): Promise<Project | undefined> {
+    const [project] = await db
       .select()
-      .from(customizations)
-      .where(eq(customizations.id, id));
-    return customization || undefined;
+      .from(projects)
+      .where(eq(projects.id, id));
+    return project || undefined;
   }
 
-  async createCustomization(customizationData: InsertCustomization): Promise<Customization> {
-    const [customization] = await db
-      .insert(customizations)
-      .values(customizationData)
+  async createProject(projectData: InsertProject): Promise<Project> {
+    const [project] = await db
+      .insert(projects)
+      .values(projectData)
       .returning();
-    return customization;
+    return project;
   }
 
-  async updateCustomization(id: string, updates: Partial<Customization>): Promise<Customization | undefined> {
+  async updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined> {
     const [updated] = await db
-      .update(customizations)
+      .update(projects)
       .set({
         ...updates,
         updatedAt: new Date(),
       })
-      .where(eq(customizations.id, id))
+      .where(eq(projects.id, id))
       .returning();
     return updated || undefined;
   }
