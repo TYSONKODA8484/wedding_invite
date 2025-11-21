@@ -490,7 +490,7 @@ export default function Editor() {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
-  const [customizationId, setCustomizationId] = useState<string | null>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
   
   // Preview/Download states
   const [showPreviewLoading, setShowPreviewLoading] = useState(false);
@@ -499,6 +499,7 @@ export default function Editor() {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [downloadEnabled, setDownloadEnabled] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingPreview, setPendingPreview] = useState(false);
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -537,33 +538,21 @@ export default function Editor() {
     queryKey: ["/api/auth/user"],
   });
 
-  // Save customization mutation
-  const saveCustomizationMutation = useMutation({
+  // Save project mutation
+  const saveProjectMutation = useMutation({
     mutationFn: async () => {
-      let customizId = customizationId;
-      if (!customizId) {
-        const response = await fetch("/api/customizations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            templateId: templateData!.id,
-            customizationName: `${templateData!.name} Customization`,
-            status: "draft",
-          }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to create customization: ${errorText}`);
-        }
-
-        const customization = await response.json();
-        customizId = customization.id;
-        setCustomizationId(customizId);
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        throw new Error("Not authenticated");
       }
 
+      // Collect all customization data from all pages
       const pages = templateData!.pages || [];
+      const customizationData: Record<string, any> = {
+        pages: {},
+        images: {},
+      };
+
       for (const page of pages) {
         const pageFieldValues: Record<string, string> = {};
         for (const field of page.editableFields) {
@@ -571,34 +560,38 @@ export default function Editor() {
           const value = fieldValues[fieldKey] || field.defaultValue || '';
           pageFieldValues[field.id] = value;
         }
-
-        const pageResponse = await fetch(`/api/customizations/${customizId}/pages`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            templatePageId: page.id,
-            pageNumber: page.pageNumber,
-            fieldValues: pageFieldValues,
-          }),
-        });
-
-        if (!pageResponse.ok) {
-          const errorText = await pageResponse.text();
-          throw new Error(`Failed to save page ${page.pageNumber}: ${errorText}`);
-        }
+        customizationData.pages[page.id] = pageFieldValues;
       }
 
-      return customizId;
+      // Add image file data
+      customizationData.images = imagePreviews;
+
+      if (projectId) {
+        // Update existing project
+        const response = await apiRequest("PUT", `/api/projects/${projectId}`, {
+          customization: customizationData,
+          status: "preview_requested",
+        });
+        return response;
+      } else {
+        // Create new project
+        const response = await apiRequest("POST", "/api/projects", {
+          templateId: templateData!.id,
+          customization: customizationData,
+          status: "draft",
+        });
+        setProjectId(response.id);
+        return response;
+      }
     },
-    onSuccess: (id) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/customizations"] });
+    onSuccess: (project) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
     },
     onError: (error: any) => {
       if (error.message !== "Not authenticated") {
         toast({
           title: "Save failed",
-          description: error.message || "Failed to save customization",
+          description: error.message || "Failed to save project",
           variant: "destructive",
         });
       }
@@ -691,32 +684,47 @@ export default function Editor() {
     return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
   };
 
-  const handlePreview = () => {
-    // For now, skip saving and go directly to preview (frontend testing mode)
-    // In production, this would save first, then trigger video generation
-    
-    // Start preview generation immediately
-    setShowPreviewLoading(true);
-    setPreviewProgress(0);
+  const handlePreview = async () => {
+    // Check if user is logged in
+    if (!user) {
+      setPendingPreview(true);
+      setShowAuthModal(true);
+      return;
+    }
 
-    // Simulate progress (in production, this would track actual video generation)
-    const progressInterval = setInterval(() => {
-      setPreviewProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          // Show preview modal when complete
-          setTimeout(() => {
-            setShowPreviewLoading(false);
-            setPreviewUrl(currentPage.thumbnailUrl); // Mock preview URL
-            setShowPreviewModal(true);
-            // Enable download button once preview is generated
-            setDownloadEnabled(true);
-          }, 500);
-          return 100;
-        }
-        return prev + 10;
+    try {
+      // Save project with customization data
+      await saveProjectMutation.mutateAsync();
+      
+      // Start preview generation
+      setShowPreviewLoading(true);
+      setPreviewProgress(0);
+
+      // Simulate progress (in production, this would track actual video generation)
+      const progressInterval = setInterval(() => {
+        setPreviewProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(progressInterval);
+            // Show preview modal when complete
+            setTimeout(() => {
+              setShowPreviewLoading(false);
+              setPreviewUrl(currentPage.thumbnailUrl); // Mock preview URL
+              setShowPreviewModal(true);
+              // Enable download button once preview is generated
+              setDownloadEnabled(true);
+            }, 500);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 300);
+    } catch (error: any) {
+      toast({
+        title: "Preview failed",
+        description: error.message || "Failed to generate preview",
+        variant: "destructive",
       });
-    }, 300);
+    }
   };
 
   const handleDownload = () => {
@@ -742,8 +750,11 @@ export default function Editor() {
 
   const handleAuthSuccess = () => {
     setShowAuthModal(false);
-    // Retry download after login
-    handleDownload();
+    // If pending preview, trigger it after login
+    if (pendingPreview) {
+      setPendingPreview(false);
+      handlePreview();
+    }
   };
 
   const goToNextPage = () => {
