@@ -39,38 +39,55 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: signInEmail,
+          password: signInPassword,
+        }),
+      });
 
-    // Demo mode: Store fake auth data in localStorage
-    const fakeToken = `demo-token-${Date.now()}`;
-    const fakeUser = {
-      id: "demo-user-1",
-      email: signInEmail,
-      name: signInEmail.split('@')[0],
-    };
+      const result = await response.json();
 
-    localStorage.setItem("authToken", fakeToken);
-    localStorage.setItem("authUser", JSON.stringify(fakeUser));
+      if (!response.ok) {
+        throw new Error(result.error || "Login failed");
+      }
 
-    setIsLoading(false);
-    toast({
-      title: "Signed in successfully!",
-      description: `Welcome back, ${fakeUser.name}`,
-    });
+      // Store JWT token with correct keys
+      localStorage.setItem("auth_token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
 
-    // Reset form
-    setSignInEmail("");
-    setSignInPassword("");
-    
-    onSuccess?.();
-    onClose();
+      toast({
+        title: "Signed in successfully!",
+        description: `Welcome back, ${result.user.name}`,
+      });
+
+      // Reset form
+      setSignInEmail("");
+      setSignInPassword("");
+      
+      onSuccess?.();
+      onClose();
+      
+      // Reload to update nav state
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
+    // Client-side validation
     if (signUpPassword !== signUpConfirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -91,36 +108,54 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
     setIsLoading(true);
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: signUpName,
+          email: signUpEmail,
+          phone: signUpPhone || undefined,
+          password: signUpPassword,
+        }),
+      });
 
-    // Demo mode: Store fake auth data in localStorage
-    const fakeToken = `demo-token-${Date.now()}`;
-    const fakeUser = {
-      id: "demo-user-1",
-      email: signUpEmail,
-      name: signUpName,
-      phone: signUpPhone,
-    };
+      const result = await response.json();
 
-    localStorage.setItem("authToken", fakeToken);
-    localStorage.setItem("authUser", JSON.stringify(fakeUser));
+      if (!response.ok) {
+        throw new Error(result.error || "Signup failed");
+      }
 
-    setIsLoading(false);
-    toast({
-      title: "Account created successfully!",
-      description: `Welcome, ${signUpName}!`,
-    });
+      // Store JWT token with correct keys
+      localStorage.setItem("auth_token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
 
-    // Reset form
-    setSignUpName("");
-    setSignUpEmail("");
-    setSignUpPhone("");
-    setSignUpPassword("");
-    setSignUpConfirmPassword("");
+      toast({
+        title: "Account created successfully!",
+        description: `Welcome, ${signUpName}!`,
+      });
 
-    onSuccess?.();
-    onClose();
+      // Reset form
+      setSignUpName("");
+      setSignUpEmail("");
+      setSignUpPhone("");
+      setSignUpPassword("");
+      setSignUpConfirmPassword("");
+
+      onSuccess?.();
+      onClose();
+      
+      // Reload to update nav state
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Signup failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClose = () => {
