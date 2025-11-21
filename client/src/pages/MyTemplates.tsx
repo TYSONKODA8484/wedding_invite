@@ -166,11 +166,11 @@ export default function MyTemplates() {
               />
               <div className="absolute top-2 right-2">
                 {project.isPaid ? (
-                  <Badge className="bg-green-600 text-white" data-testid={`badge-paid-${project.id}`}>
+                  <Badge variant="default" className="bg-green-600 dark:bg-green-700 text-white" data-testid={`badge-paid-${project.id}`}>
                     Paid
                   </Badge>
                 ) : (
-                  <Badge className="bg-yellow-600 text-white" data-testid={`badge-preview-${project.id}`}>
+                  <Badge variant="secondary" data-testid={`badge-preview-${project.id}`}>
                     Preview
                   </Badge>
                 )}
@@ -181,7 +181,6 @@ export default function MyTemplates() {
                     <Button
                       size="icon"
                       variant="default"
-                      className="bg-blue-500 hover:bg-blue-600"
                       onClick={() => handleDownload(project)}
                       data-testid={`button-download-${project.id}`}
                     >
@@ -189,8 +188,7 @@ export default function MyTemplates() {
                     </Button>
                     <Button
                       size="icon"
-                      variant="default"
-                      className="bg-green-500 hover:bg-green-600"
+                      variant="secondary"
                       onClick={() => handleShare(project)}
                       data-testid={`button-share-${project.id}`}
                     >
@@ -202,7 +200,6 @@ export default function MyTemplates() {
                     <Button
                       size="icon"
                       variant="default"
-                      className="bg-pink-500 hover:bg-pink-600"
                       onClick={() => handleEdit(project)}
                       data-testid={`button-edit-${project.id}`}
                     >
@@ -210,8 +207,7 @@ export default function MyTemplates() {
                     </Button>
                     <Button
                       size="icon"
-                      variant="default"
-                      className="bg-blue-500 hover:bg-blue-600"
+                      variant="secondary"
                       onClick={() => handleDownload(project)}
                       data-testid={`button-download-${project.id}`}
                     >
