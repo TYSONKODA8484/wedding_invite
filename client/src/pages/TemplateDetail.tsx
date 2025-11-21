@@ -149,12 +149,12 @@ export default function TemplateDetail() {
   const videoSchema = {
     "@context": "https://schema.org",
     "@type": "VideoObject",
-    name: template.title,
-    description: template.description,
+    name: template.templateName,
+    description: `${template.templateName} - ${templateType} video invitation`,
     thumbnailUrl: template.thumbnailUrl,
     uploadDate: "2024-11-19",
-    duration: `PT${template.duration}S`,
-    contentUrl: template.demoVideoUrl,
+    duration: `PT${template.durationSec}S`,
+    contentUrl: template.previewVideoUrl,
     embedUrl: `https://weddinginvite.ai/template/${template.slug}`,
     author: {
       "@type": "Organization",
@@ -170,20 +170,20 @@ export default function TemplateDetail() {
     }
   };
 
-  const priceInPaise = template.priceInr; // Already in paise from API
-  const displayPrice = formatPrice(priceInPaise);
+  const priceInRupees = parseFloat(template.price || "0");
+  const displayPrice = formatPrice(Math.round(priceInRupees * 100)); // Convert to paise for formatter
 
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: template.title,
-    description: template.description,
+    name: template.templateName,
+    description: `${template.templateName} - ${templateType} video invitation`,
     image: template.thumbnailUrl,
     offers: {
       "@type": "Offer",
       url: `https://weddinginvite.ai/template/${template.slug}`,
-      priceCurrency: "INR",
-      price: (template.priceInr / 100).toFixed(2), // Convert paise to rupees
+      priceCurrency: template.currency || "INR",
+      price: priceInRupees.toFixed(2),
       availability: "https://schema.org/InStock",
       seller: {
         "@type": "Organization",
@@ -208,8 +208,8 @@ export default function TemplateDetail() {
   return (
     <>
       <SEOHead
-        title={`${template.templateName || template.title} | ${templateType} Video Invitation WhatsApp`}
-        description={`${template.description || `Beautiful ${templateType} video invitation template`}. Perfect for WhatsApp sharing. Download in HD/4K. ${formatPrice(priceInPaise)}. Free preview available.`}
+        title={`${template.templateName} | ${templateType} Video Invitation WhatsApp`}
+        description={`${template.templateName} - Beautiful ${templateType} video invitation template. Perfect for WhatsApp sharing. Download in HD/4K. ${displayPrice}. Free preview available.`}
         keywords={dynamicKeywords}
         schema={[videoSchema, productSchema]}
         locale={locale}
@@ -234,7 +234,7 @@ export default function TemplateDetail() {
           onPause={() => setIsPlaying(false)}
           data-testid="video-demo"
         >
-          <source src={template.demoVideoUrl} type="video/mp4" />
+          <source src={template.previewVideoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
 
@@ -317,7 +317,7 @@ export default function TemplateDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <h1 className="font-playfair text-4xl lg:text-5xl font-bold text-foreground mb-4" data-testid="text-template-title">
-              {template.title}
+              {template.templateName}
             </h1>
             <div className="flex flex-wrap gap-3 mb-4">
               <Badge variant="secondary" className="text-sm capitalize">{templateType}</Badge>
@@ -336,7 +336,7 @@ export default function TemplateDetail() {
               </p>
             </div>
             <p className="text-muted-foreground text-lg lg:text-xl mb-8 leading-relaxed">
-              {template.description}
+              Beautiful {templateType} video invitation template. Customize with your details and download in high quality.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
