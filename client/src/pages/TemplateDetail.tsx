@@ -131,15 +131,16 @@ export default function TemplateDetail() {
     "saudi-arabia": "saudi wedding video, riyadh wedding invitation, jeddah wedding video, saudi royal wedding, islamic wedding video saudi",
   };
 
-  const categoryLower = template.category.toLowerCase();
-  const countryLower = template.country.toLowerCase();
+  const templateType = template.templateType || template.templateName || "wedding";
+  const categoryLower = templateType.toLowerCase();
+  const countryLower = "india"; // Default to India as primary market
   const ceremonyKey = Object.keys(ceremonyKeywords).find(key => categoryLower.includes(key)) || "wedding";
   
   const dynamicKeywords = [
     ceremonyKeywords[ceremonyKey] || ceremonyKeywords.wedding,
     countryKeywords[countryLower] || "",
-    `${template.style} wedding video`,
-    `${template.category} video invitation maker`,
+    `${template.style || "elegant"} wedding video`,
+    `${templateType} video invitation maker`,
     "whatsapp video invitation",
     "digital wedding invitation",
     template.isPremium ? "premium wedding video" : "affordable wedding video",
@@ -193,7 +194,7 @@ export default function TemplateDetail() {
       "@type": "Brand",
       name: "WeddingInvite.ai"
     },
-    category: template.category,
+    category: templateType,
     aggregateRating: template.isPremium ? {
       "@type": "AggregateRating",
       ratingValue: "4.8",
@@ -207,8 +208,8 @@ export default function TemplateDetail() {
   return (
     <>
       <SEOHead
-        title={`${template.title} | ${template.category} Video Invitation WhatsApp`}
-        description={`${template.description} Perfect for WhatsApp sharing. Download in HD/4K. ${formatPrice(priceInPaise)}. Free preview available.`}
+        title={`${template.templateName || template.title} | ${templateType} Video Invitation WhatsApp`}
+        description={`${template.description || `Beautiful ${templateType} video invitation template`}. Perfect for WhatsApp sharing. Download in HD/4K. ${formatPrice(priceInPaise)}. Free preview available.`}
         keywords={dynamicKeywords}
         schema={[videoSchema, productSchema]}
         locale={locale}
@@ -319,14 +320,15 @@ export default function TemplateDetail() {
               {template.title}
             </h1>
             <div className="flex flex-wrap gap-3 mb-4">
-              <Badge variant="secondary" className="text-sm capitalize">{template.category}</Badge>
-              <Badge variant="secondary" className="text-sm capitalize">{template.culture.replace(/-/g, ' ')}</Badge>
-              <Badge variant="secondary" className="text-sm capitalize">{template.style}</Badge>
+              <Badge variant="secondary" className="text-sm capitalize">{templateType}</Badge>
+              <Badge variant="secondary" className="text-sm">{template.orientation || 'portrait'}</Badge>
               <Badge variant="secondary" className="text-sm">
                 <Clock className="w-4 h-4 mr-1" />
-                {formatDuration(template.duration)}
+                {formatDuration(template.durationSec || 30)}
               </Badge>
-              <Badge variant="secondary" className="text-sm">{template.pageCount} Pages</Badge>
+              {template.pages && template.pages.length > 0 && (
+                <Badge variant="secondary" className="text-sm">{template.pages.length} Pages</Badge>
+              )}
             </div>
             <div className="mb-6">
               <p className="text-3xl font-bold text-primary" data-testid="text-template-price">
