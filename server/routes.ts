@@ -39,6 +39,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "User with this email already exists" });
       }
       
+      if (phone) {
+        const existingPhoneUser = await storage.getUserByPhone(phone);
+        if (existingPhoneUser) {
+          return res.status(400).json({ error: "User with this phone number already exists" });
+        }
+      }
+      
       const passwordHash = await bcrypt.hash(password, 10);
       
       const user = await storage.createUser({
