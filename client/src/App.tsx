@@ -25,6 +25,7 @@ import Contact from "@/pages/Contact";
 import FAQ from "@/pages/FAQ";
 import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
+import MyTemplates from "@/pages/MyTemplates";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
+      <Route path="/my-templates" component={MyTemplates} />
       <Route path="/templates" component={Templates} />
       <Route path="/template/:slug" component={TemplateDetail} />
       <Route path="/editor/:slug" component={Editor} />
