@@ -87,7 +87,6 @@ function App() {
   const isEditorMode = location.startsWith('/editor');
   const isAuthPage = location.startsWith('/signup') || location.startsWith('/login');
   const { toast } = useToast();
-  const [isProcessingAuth, setIsProcessingAuth] = useState(true);
 
   // Handle Google redirect result at app level
   // This runs on every app mount to check if user just returned from Google auth
@@ -143,8 +142,6 @@ function App() {
             variant: "destructive",
           });
         }
-      } finally {
-        setIsProcessingAuth(false);
       }
     };
 

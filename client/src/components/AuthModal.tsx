@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { signInWithRedirect } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 
 interface AuthModalProps {
