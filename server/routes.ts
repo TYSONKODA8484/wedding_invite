@@ -7,6 +7,22 @@ import { Client } from "@replit/object-storage";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
+const authMiddleware = (req: any, res: any, next: any) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    return res.status(401).json({ error: "No token provided" });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; email: string };
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== AUTH ROUTES ====================
   
@@ -78,6 +94,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ error: "Failed to login" });
+    }
+  });
+
+  app.get("/api/auth/me", authMiddleware, async (req: any, res) => {
+    try {
+      const user = await storage.getUserById(req.user.userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json({
+        user_id: user.id,
+        name: user.name,
+        email: user.email,
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ error: "Failed to get user" });
+    }
+  });
+
+  // ==================== PROJECT ROUTES ====================
+  
+  app.get("/api/projects/mine", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const projects = await storage.getUserProjects(userId);
+      
+      res.json(projects);
+    } catch (error) {
+      console.error("Get user projects error:", error);
+      res.status(500).json({ error: "Failed to fetch projects" });
     }
   });
 

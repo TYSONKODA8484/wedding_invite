@@ -4,6 +4,8 @@ import {
   users,
   templates,
   projects,
+  orders,
+  payments,
   type User,
   type InsertUser,
   type Template,
@@ -15,6 +17,7 @@ import {
 export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
@@ -37,6 +40,11 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
@@ -82,11 +90,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Project operations (renamed from Customization)
-  async getUserProjects(userId: string): Promise<Project[]> {
-    return db
-      .select()
+  async getUserProjects(userId: string): Promise<any[]> {
+    const userProjects = await db
+      .select({
+        project: projects,
+        template: templates,
+        order: orders,
+        payment: payments,
+      })
       .from(projects)
+      .leftJoin(templates, eq(projects.templateId, templates.id))
+      .leftJoin(orders, eq(projects.id, orders.projectId))
+      .leftJoin(payments, eq(orders.id, payments.orderId))
       .where(eq(projects.userId, userId));
+    
+    return userProjects.map(row => ({
+      id: row.project.id,
+      templateId: row.project.templateId,
+      templateName: row.template?.templateName || 'Unknown Template',
+      thumbnailUrl: row.template?.thumbnailUrl || row.template?.previewImageUrl,
+      previewImageUrl: row.template?.previewImageUrl,
+      price: row.template?.price,
+      currency: row.template?.currency || 'INR',
+      status: row.project.status,
+      isPaid: !!row.payment && row.payment.status === 'success',
+      paymentStatus: row.payment?.status || 'pending',
+      previewUrl: row.project.previewUrl,
+      finalUrl: row.project.finalUrl,
+      createdAt: row.project.createdAt,
+      updatedAt: row.project.updatedAt,
+      paidAt: row.project.paidAt,
+    }));
   }
 
   async getProjectById(id: string): Promise<Project | undefined> {
