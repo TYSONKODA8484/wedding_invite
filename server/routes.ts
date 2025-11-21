@@ -213,13 +213,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const templateList = templates.map(t => ({
         id: t.id,
-        title: t.name,
+        title: t.templateName,
         slug: t.slug,
-        category: t.type,
-        duration: t.duration,
+        category: t.templateType,
+        duration: t.durationSec,
         thumbnailUrl: t.thumbnailUrl,
         priceInr: Math.floor(parseFloat(t.price) * 100), // Convert rupees to paise
-        tags: t.tags,
+        tags: t.templateTags,
         orientation: t.orientation,
         isPremium: parseFloat(t.price) >= 2000, // Templates >= ₹2000 are premium
       }));
@@ -270,29 +270,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         id: template.id,
-        name: template.name,
-        title: template.name, // Add title alias for TemplateDetail compatibility
+        templateName: template.templateName,
+        name: template.templateName, // Add name alias for compatibility
         slug: template.slug,
-        type: template.type,
-        category: template.type, // Add category alias for TemplateDetail compatibility
+        templateType: template.templateType,
+        category: template.templateType, // Add category alias for compatibility
         orientation: template.orientation,
         photoOption: template.photoOption,
-        tags: template.tags,
-        coverImage: template.coverImage,
+        templateTags: template.templateTags,
+        tags: template.templateTags, // Alias
         thumbnailUrl: template.thumbnailUrl,
-        demoVideoUrl: template.coverImage, // Use coverImage which contains video URL
-        duration: template.duration,
+        previewVideoUrl: template.previewVideoUrl,
+        demoVideoUrl: template.previewVideoUrl, // Use previewVideoUrl
+        durationSec: template.durationSec,
+        duration: template.durationSec, // Alias
         currency: template.currency,
-        price: priceInr,
-        priceInr: Math.floor(priceInr * 100), // Price in paise for compatibility
+        price: template.price,
+        priceInr: Math.floor(parseFloat(template.price) * 100), // Price in paise for compatibility
         isPremium: priceInr >= 2000,
-        description: `Create beautiful ${template.name} with customizable pages and send via WhatsApp`,
+        description: `Create beautiful ${template.templateName} with customizable pages and send via WhatsApp`,
         country: "india", // Default country
         culture: "hindu", // Default culture from tags
         style: "traditional", // Default style
         pageCount: pages.length,
         templateJson: template.templateJson,
-        createdBy: template.createdBy,
         pages: pages, // Add pages array for editor
       });
     } catch (error) {
@@ -311,13 +312,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "template_id, user_id, and template_json are required" });
       }
       
-      const customization = await storage.createCustomization({
-        userId: user_id,
-        templateId: template_id,
-        templateJson: template_json,
-        currency: currency || "INR",
-        amount: amount || "0",
-        status: "draft",
+      // TODO: Remove - deprecated endpoint
+      return res.status(410).json({ 
+        error: "This endpoint is deprecated. Please use /api/projects instead."
       });
       
       res.json({
@@ -338,8 +335,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "template_json is required" });
       }
       
-      const updated = await storage.updateCustomization(req.params.id, {
-        templateJson: template_json,
+      // TODO: Remove - deprecated endpoint
+      return res.status(410).json({ 
+        error: "This endpoint is deprecated. Please use /api/projects/:id instead."
       });
       
       if (!updated) {

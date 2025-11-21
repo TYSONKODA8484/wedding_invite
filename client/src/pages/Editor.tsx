@@ -650,12 +650,14 @@ export default function Editor() {
         return response;
       } else {
         // Create new project
-        const response = await apiRequest("POST", "/api/projects", {
+        const response: any = await apiRequest("POST", "/api/projects", {
           templateId: templateData!.id,
           customization: customizationData,
           status: "draft",
         });
-        setProjectId(response.id);
+        if (response && response.id) {
+          setProjectId(response.id);
+        }
         return response;
       }
     },
@@ -866,7 +868,7 @@ export default function Editor() {
       <PaymentModal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        templateName={template.templateName || template.name}
+        templateName={template.templateName}
         price={`₹${(parseFloat(template.price) / 100).toFixed(2)}`}
       />
 
@@ -884,7 +886,7 @@ export default function Editor() {
             </Button>
             <div>
               <h1 className="font-semibold text-foreground text-lg line-clamp-1" data-testid="text-template-title">
-                {template.name}
+                {template.templateName}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Page {currentPageIndex + 1} of {pages.length}
@@ -896,10 +898,10 @@ export default function Editor() {
               variant="outline" 
               size="sm" 
               onClick={handlePreview}
-              disabled={saveCustomizationMutation.isPending}
+              disabled={saveProjectMutation.isPending}
               data-testid="button-preview"
             >
-              {saveCustomizationMutation.isPending ? (
+              {saveProjectMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Saving...
@@ -975,7 +977,7 @@ export default function Editor() {
               {/* Template Name Badge */}
               <div className="flex items-center justify-center mb-4">
                 <Badge variant="secondary" className="text-sm font-medium px-4 py-1.5 shadow-sm">
-                  {template.name}
+                  {template.templateName}
                   {currentPage && <span className="ml-2">• Page {currentPage.pageNumber} of {pages.length}</span>}
                 </Badge>
               </div>
