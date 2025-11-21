@@ -66,6 +66,8 @@ export function Navigation() {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+    // Redirect to home page after logout
+    window.location.href = "/";
   };
 
   const getUserInitials = () => {
@@ -127,6 +129,16 @@ export function Navigation() {
             {isLoggedIn && user ? (
               <>
                 <Button
+                  variant="ghost"
+                  size="default"
+                  asChild
+                  data-testid="button-my-templates"
+                >
+                  <Link href="/my-templates" className="font-medium">
+                    My Templates
+                  </Link>
+                </Button>
+                <Button
                   variant="default"
                   size="default"
                   asChild
@@ -161,12 +173,6 @@ export function Navigation() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild data-testid="menu-item-my-templates">
-                      <Link href="/my-templates">
-                        <Video className="w-4 h-4 mr-2" />
-                        My Templates
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem data-testid="menu-item-profile">
                       <User className="w-4 h-4 mr-2" />
                       Profile
@@ -190,6 +196,14 @@ export function Navigation() {
                   data-testid="button-login"
                 >
                   Login
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="default"
+                  onClick={() => setAuthModalOpen(true)}
+                  data-testid="button-my-templates"
+                >
+                  My Templates
                 </Button>
                 <Button
                   variant="default"
@@ -286,6 +300,18 @@ export function Navigation() {
                       data-testid="button-login-mobile"
                     >
                       Login
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="default"
+                      className="w-full"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setAuthModalOpen(true);
+                      }}
+                      data-testid="button-my-templates-mobile"
+                    >
+                      My Templates
                     </Button>
                     <Button
                       variant="default"
