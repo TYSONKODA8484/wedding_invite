@@ -31,62 +31,8 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
 
-  // Handle Google redirect result when component mounts
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          setIsLoading(true);
-          const user = result.user;
-          
-          // Get Firebase ID token
-          const idToken = await user.getIdToken();
-          
-          // Send ID token to backend for verification and user creation/login
-          const response = await fetch("/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken }),
-          });
-          
-          const data = await response.json();
-          
-          if (!response.ok) {
-            throw new Error(data.error || "Google sign-in failed");
-          }
-          
-          // Store JWT token
-          localStorage.setItem("auth_token", data.token);
-          localStorage.setItem("user", JSON.stringify(data.user));
-          
-          // Dispatch custom event to immediately update UI
-          window.dispatchEvent(new Event('authStateChanged'));
-          
-          toast({
-            title: "Signed in with Google!",
-            description: `Welcome, ${data.user.name}`,
-          });
-          
-          // Call success callback
-          onSuccess?.();
-          onClose();
-        }
-      } catch (error: any) {
-        if (error.code && error.code !== 'auth/no-auth-event') {
-          toast({
-            title: "Google sign-in failed",
-            description: error.message || "Please try again",
-            variant: "destructive",
-          });
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    handleRedirectResult();
-  }, [onSuccess, onClose, toast]);
+  // Note: Google redirect result is now handled in App.tsx
+  // This ensures it processes even when the modal is closed after redirect
 
   // Sign Up form state
   const [signUpName, setSignUpName] = useState("");

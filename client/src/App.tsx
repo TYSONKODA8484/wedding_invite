@@ -90,6 +90,7 @@ function App() {
   const [isProcessingAuth, setIsProcessingAuth] = useState(true);
 
   // Handle Google redirect result at app level
+  // This runs on every app mount to check if user just returned from Google auth
   useEffect(() => {
     const handleGoogleRedirect = async () => {
       try {
@@ -113,7 +114,7 @@ function App() {
             throw new Error(data.error || "Google sign-in failed");
           }
           
-          // Store JWT token
+          // Store JWT token and user data
           localStorage.setItem("auth_token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
           
@@ -126,10 +127,19 @@ function App() {
           });
         }
       } catch (error: any) {
+        // Show error for Firebase auth errors (except no-auth-event which is normal)
         if (error.code && error.code !== 'auth/no-auth-event') {
           toast({
             title: "Google sign-in failed",
             description: error.message || "Please try again",
+            variant: "destructive",
+          });
+        } 
+        // Show error for network/backend failures
+        else if (!error.code && error.message) {
+          toast({
+            title: "Authentication failed",
+            description: error.message,
             variant: "destructive",
           });
         }
