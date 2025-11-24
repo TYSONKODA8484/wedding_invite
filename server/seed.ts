@@ -317,7 +317,7 @@ export async function seed() {
         orientation: "portrait",
         photoOption: "with_photo",
         templateTags: ["hindu", "marathi", "indian", "wedding", "save-the-date"],
-        thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+        thumbnailUrl: "/api/media/Ind/IndWedpho_a9.png",
       })
       .onConflictDoNothing()
       .returning();
@@ -420,7 +420,7 @@ export async function seed() {
         orientation: "portrait",
         photoOption: "with_photo",
         templateTags: ["hindu", "indian", "wedding", "elegant"],
-        thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+        thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       })
       .onConflictDoNothing()
       .returning();
@@ -442,7 +442,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["wedding", "card", "simple", "hindi"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "शादी", value: "शुभ विवाह", ae_layer: "Title", field_id: "title" }] }] }
     }).onConflictDoNothing();
 
@@ -459,7 +459,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["wedding", "card", "elegant", "marathi"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a2.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Title", value: "लग्न निमंत्रण", ae_layer: "Title", field_id: "title" }] }, { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Details", value: "सादर आमंत्रण", ae_layer: "Details", field_id: "details" }] }] }
     }).onConflictDoNothing();
 
@@ -476,7 +476,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["birthday", "card", "cute", "celebration"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a4.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Birthday", value: "जन्मदिन मुबारक हो", ae_layer: "Title", field_id: "title" }] }] }
     }).onConflictDoNothing();
 
@@ -493,7 +493,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["birthday", "card", "fun", "party"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a9.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Title", value: "पार्टी में आइए", ae_layer: "Title", field_id: "title" }] }, { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Details", value: "मस्ती करेंगे", ae_layer: "Details", field_id: "details" }] }] }
     }).onConflictDoNothing();
 
@@ -510,7 +510,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["anniversary", "card", "romantic", "celebration"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Anniversary", value: "वर्षगांठ की शुभकामनाएं", ae_layer: "Title", field_id: "title" }] }] }
     }).onConflictDoNothing();
 
@@ -527,7 +527,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["anniversary", "card", "elegant", "love"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a4.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Title", value: "प्यार का जश्न", ae_layer: "Title", field_id: "title" }] }, { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Message", value: "हमारे साथ मनाइए", ae_layer: "Message", field_id: "message" }] }] }
     }).onConflictDoNothing();
 
@@ -544,7 +544,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "premium", "cinematic"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a2.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Title", value: "शादी", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Mantra", value: "|| श्री गणेशाय नमः ||", ae_layer: "Mantra", field_id: "mantra" }] },
@@ -570,7 +570,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "royal", "grand"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a3.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Royal", value: "राजसी विवाह", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Names", value: "वर और वधु", ae_layer: "Names", field_id: "names" }] },
@@ -594,7 +594,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "traditional", "hindu"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a4.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Welcome", value: "स्वागत है", ae_layer: "Welcome", field_id: "welcome" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Blessing", value: "आशीर्वाद", ae_layer: "Blessing", field_id: "blessing" }] },
@@ -617,7 +617,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "modern", "contemporary"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a9.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Modern", value: "मॉडर्न विवाह", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Us", value: "हम दोनों", ae_layer: "Us", field_id: "us" }] },
@@ -639,7 +639,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["birthday", "video", "grand", "celebration"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Birthday", value: "जन्मदिन की पार्टी", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Name", value: "मुख्य अतिथि", ae_layer: "Name", field_id: "name" }] },
@@ -664,7 +664,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["birthday", "video", "kids", "fun"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a2.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Fun", value: "मस्ती का दिन", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Child", value: "बच्चे का नाम", ae_layer: "Child", field_id: "child" }] },
@@ -687,7 +687,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["birthday", "video", "adult", "elegant"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a3.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Celebration", value: "जश्न मनाएं", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Person", value: "जन्मदिन मनाने वाले", ae_layer: "Person", field_id: "person" }] },
@@ -708,7 +708,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["anniversary", "video", "golden", "premium"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a4.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Golden", value: "50 साल पूरे", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Couple", value: "प्यारा जोड़ा", ae_layer: "Couple", field_id: "couple" }] },
@@ -732,7 +732,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["anniversary", "video", "silver", "celebration"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a9.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Silver", value: "25 साल का प्यार", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Together", value: "साथ-साथ", ae_layer: "Together", field_id: "together" }] },
@@ -754,7 +754,7 @@ export async function seed() {
       orientation: "portrait",
       photoOption: "with_photo",
       templateTags: ["anniversary", "video", "love", "romantic"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Love", value: "प्यार का जश्न", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Us", value: "हम दोनों", ae_layer: "Us", field_id: "us" }] },
@@ -779,7 +779,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["wedding", "card", "landscape", "wide"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a2.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Title", value: "विवाह समारोह", ae_layer: "Title", field_id: "title" }] }] }
     }).onConflictDoNothing();
 
@@ -796,7 +796,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["birthday", "card", "landscape", "party"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a3.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Birthday", value: "जन्मदिन पार्टी", ae_layer: "Title", field_id: "title" }] }] }
     }).onConflictDoNothing();
 
@@ -809,11 +809,11 @@ export async function seed() {
       price: "1050.00",
       durationSec: 15,
       previewImageUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
-      previewVideoUrl: "/api/media/Ind/IndWedVid_a.mp4",
+      previewVideoUrl: "/api/media/Ind/IndWedpho_a.mp4",
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["anniversary", "card", "landscape", "celebration"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a4.png",
       templateJson: { pages: [{ page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Anniversary", value: "सालगिरह मुबारक", ae_layer: "Title", field_id: "title" }] }] }
     }).onConflictDoNothing();
 
@@ -830,7 +830,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["wedding", "card", "landscape", "simple"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a9.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Welcome", value: "स्वागत", ae_layer: "Welcome", field_id: "welcome" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Details", value: "विवरण", ae_layer: "Details", field_id: "details" }] }
@@ -850,7 +850,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "landscape", "cinematic"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Opening", value: "शुभारंभ", ae_layer: "Opening", field_id: "opening" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Story", value: "हमारी कहानी", ae_layer: "Story", field_id: "story" }] },
@@ -873,7 +873,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "landscape", "grand"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a2.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Grand", value: "भव्य विवाह", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Couple", value: "वर-वधू", ae_layer: "Couple", field_id: "couple" }] },
@@ -895,7 +895,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["wedding", "video", "landscape", "traditional"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a3.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Traditional", value: "पारंपरिक रस्म", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Family", value: "परिवार", ae_layer: "Family", field_id: "family" }] },
@@ -916,7 +916,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["birthday", "video", "landscape", "party"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a4.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Party", value: "पार्टी टाइम", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Birthday", value: "जन्मदिन", ae_layer: "Birthday", field_id: "birthday" }] },
@@ -940,7 +940,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["birthday", "video", "landscape", "kids"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a9.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Kids", value: "बच्चों की पार्टी", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Child", value: "बच्चा", ae_layer: "Child", field_id: "child" }] },
@@ -962,7 +962,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["anniversary", "video", "landscape", "celebration"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a1.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Anniversary", value: "सालगिरह", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a4.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Years", value: "साल", ae_layer: "Years", field_id: "years" }] },
@@ -985,7 +985,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["anniversary", "video", "landscape", "romantic"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a2.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a2.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Romance", value: "रोमांस", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a3.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Together", value: "साथ", ae_layer: "Together", field_id: "together" }] },
@@ -1006,7 +1006,7 @@ export async function seed() {
       orientation: "landscape",
       photoOption: "with_photo",
       templateTags: ["anniversary", "video", "landscape", "special"],
-      thumbnailUrl: "/attached_assets/Traditional-Indian-Wedding-Invitation-with-Couple-Portrait-Marigold-Garlands-Red-Gold-Theme_1763619463803.jpg",
+      thumbnailUrl: "/api/media/Ind/IndWedpho_a3.png",
       templateJson: { pages: [
         { page_id: "P1", page_number: 1, media: [{ url: "/api/media/Ind/IndWedpho_a9.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Special", value: "विशेष दिन", ae_layer: "Title", field_id: "title" }] },
         { page_id: "P2", page_number: 2, media: [{ url: "/api/media/Ind/IndWedpho_a1.png", type: "image", position: "background" }], fields: [{ type: "text", label: "Milestone", value: "मील का पत्थर", ae_layer: "Milestone", field_id: "milestone" }] },

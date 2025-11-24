@@ -94,7 +94,7 @@ export class DatabaseStorage implements IStorage {
     type?: string;
     tags?: string[];
   }): Promise<Template[]> {
-    const allTemplates = await db.select().from(templates);
+    const allTemplates = await db.select().from(templates).orderBy(templates.slug);
     return allTemplates;
   }
 
