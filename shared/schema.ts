@@ -31,7 +31,9 @@ export const users = pgTable("users", {
   email: varchar("email").unique().notNull(),
   phone: varchar("phone"),
   name: varchar("name").notNull(),
-  passwordHash: varchar("password_hash").notNull(),
+  passwordHash: varchar("password_hash"),
+  googleId: varchar("google_id").unique(),
+  authProvider: varchar("auth_provider").notNull().default("password"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
