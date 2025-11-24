@@ -23,6 +23,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
 import { PageViewer } from "@/components/PageViewer";
+import { PaymentModal as PaymentModalComponent } from "@/components/PaymentModal";
 
 interface EditableField {
   id: string;
@@ -474,81 +475,6 @@ function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: Prev
         <DialogFooter>
           <Button variant="outline" onClick={onClose} data-testid="button-modal-close">
             Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-interface PaymentModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  templateName: string;
-  price: string;
-}
-
-function PaymentModal({ isOpen, onClose, templateName, price }: PaymentModalProps) {
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-playfair">Payment</DialogTitle>
-          <DialogDescription>
-            Complete your purchase to download the full video without watermark
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-6 py-4">
-          {/* Order Summary */}
-          <div className="bg-muted rounded-lg p-4">
-            <h3 className="font-semibold text-foreground mb-3">Order Summary</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Template:</span>
-                <span className="font-medium text-foreground">{templateName}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Format:</span>
-                <span className="text-foreground">Full HD Video</span>
-              </div>
-              <div className="border-t border-border my-2 pt-2">
-                <div className="flex justify-between items-baseline gap-2">
-                  <span className="font-semibold text-foreground">Template Price:</span>
-                  <span className="text-2xl font-bold text-primary">{price}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Final price for downloading this template</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Integration Notice */}
-          <Card className="border-primary/20 bg-primary/5">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-              </div>
-              <h4 className="font-semibold text-lg mb-2 text-foreground">Payment Integration In Progress</h4>
-              <p className="text-sm text-muted-foreground mb-4">
-                Razorpay payment gateway integration is currently being set up.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                You'll be able to pay securely with Credit/Debit Cards, UPI, Net Banking, and more.
-              </p>
-            </div>
-          </Card>
-        </div>
-
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose} data-testid="button-payment-cancel">
-            Cancel
-          </Button>
-          <Button 
-            variant="default" 
-            disabled 
-            data-testid="button-payment-proceed"
-          >
-            Proceed to Payment
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1014,12 +940,23 @@ export default function Editor() {
       />
 
       {/* Payment Modal */}
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => setShowPaymentModal(false)}
-        templateName={template.templateName}
-        price={`₹${(parseFloat(template.price) / 100).toFixed(2)}`}
-      />
+      {projectId && (
+        <PaymentModalComponent
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          projectId={projectId}
+          templateName={template.templateName}
+          amount={template.price}
+          currency={template.currency}
+          onSuccess={() => {
+            toast({
+              title: "Payment Successful!",
+              description: "Your video is now ready to download.",
+            });
+            setDownloadEnabled(true);
+          }}
+        />
+      )}
 
       {/* Header */}
       <div className="border-b bg-card">
