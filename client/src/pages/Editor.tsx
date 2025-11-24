@@ -828,7 +828,19 @@ export default function Editor() {
   };
 
   const handleDownload = () => {
-    // Close preview modal and show payment modal
+    // Check if project is already paid
+    if (projectData?.paidAt) {
+      // Project is paid, allow download
+      toast({
+        title: "Downloading",
+        description: "Your video is ready to download.",
+      });
+      // TODO: Implement actual download logic for paid projects
+      setShowPreviewModal(false);
+      return;
+    }
+    
+    // Close preview modal and show payment modal for unpaid projects
     setShowPreviewModal(false);
     setShowPaymentModal(true);
   };
