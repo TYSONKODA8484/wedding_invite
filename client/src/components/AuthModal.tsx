@@ -170,10 +170,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log("[Google Auth] Button clicked - initiating redirect to Google...");
       // Use redirect flow instead of popup to avoid COOP errors
       await signInWithRedirect(auth, googleProvider);
-      // User will be redirected and result handled in useEffect
+      console.log("[Google Auth] Redirect initiated successfully");
+      // User will be redirected and result handled in App.tsx useEffect
     } catch (error: any) {
+      console.error("[Google Auth] Failed to initiate redirect:", error);
       toast({
         title: "Google sign-in failed",
         description: error.message || "Please try again",

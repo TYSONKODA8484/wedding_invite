@@ -92,13 +92,22 @@ function App() {
   // This runs on every app mount to check if user just returned from Google auth
   useEffect(() => {
     const handleGoogleRedirect = async () => {
+      console.log("[Google Auth] Checking for redirect result...");
       try {
         const result = await getRedirectResult(auth);
+        console.log("[Google Auth] getRedirectResult returned:", result ? "User found" : "No result");
+        
         if (result) {
           const user = result.user;
+          console.log("[Google Auth] User details:", {
+            email: user.email,
+            displayName: user.displayName,
+            uid: user.uid
+          });
           
           // Get Firebase ID token
           const idToken = await user.getIdToken();
+          console.log("[Google Auth] Got Firebase ID token, sending to backend...");
           
           // Send ID token to backend for verification
           const response = await fetch("/api/auth/google", {
@@ -108,6 +117,7 @@ function App() {
           });
           
           const data = await response.json();
+          console.log("[Google Auth] Backend response:", { ok: response.ok, data });
           
           if (!response.ok) {
             throw new Error(data.error || "Google sign-in failed");
@@ -116,9 +126,14 @@ function App() {
           // Store JWT token and user data
           localStorage.setItem("auth_token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
+          console.log("[Google Auth] Saved to localStorage:", {
+            token: data.token.substring(0, 20) + "...",
+            user: data.user
+          });
           
           // Dispatch custom event to immediately update UI
           window.dispatchEvent(new Event('authStateChanged'));
+          console.log("[Google Auth] Dispatched authStateChanged event");
           
           toast({
             title: "Signed in with Google!",
@@ -126,8 +141,10 @@ function App() {
           });
         }
       } catch (error: any) {
+        console.error("[Google Auth] Error:", error);
         // Show error for Firebase auth errors (except no-auth-event which is normal)
         if (error.code && error.code !== 'auth/no-auth-event') {
+          console.error("[Google Auth] Firebase error:", error.code, error.message);
           toast({
             title: "Google sign-in failed",
             description: error.message || "Please try again",
@@ -136,6 +153,7 @@ function App() {
         } 
         // Show error for network/backend failures
         else if (!error.code && error.message) {
+          console.error("[Google Auth] Network/Backend error:", error.message);
           toast({
             title: "Authentication failed",
             description: error.message,
