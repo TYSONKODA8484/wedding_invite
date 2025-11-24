@@ -2,9 +2,20 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 
 // Initialize Razorpay instance
+const keyId = process.env.RAZORPAY_KEY_ID;
+const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+console.log("Razorpay Key ID exists:", !!keyId);
+console.log("Razorpay Key ID starts with:", keyId?.substring(0, 8));
+console.log("Razorpay Key Secret exists:", !!keySecret);
+
+if (!keyId || !keySecret) {
+  throw new Error("Razorpay credentials not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Replit Secrets.");
+}
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  key_id: keyId,
+  key_secret: keySecret,
 });
 
 /**
