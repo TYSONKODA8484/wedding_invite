@@ -632,16 +632,17 @@ export default function Editor() {
       } else {
         // Create new project - initially set to preview_requested status
         console.log("Creating new project with customization:", customizationData);
-        const response: any = await apiRequest("POST", "/api/projects", {
+        const response = await apiRequest("POST", "/api/projects", {
           templateId: templateData!.id,
           customization: customizationData,
           status: "preview_requested",
         });
-        if (response && response.id) {
-          setProjectId(response.id);
-          console.log("New project created with ID:", response.id);
+        const projectData = await response.json();
+        if (projectData && projectData.id) {
+          setProjectId(projectData.id);
+          console.log("New project created with ID:", projectData.id);
         }
-        return response;
+        return projectData;
       }
     },
     onSuccess: (project) => {
