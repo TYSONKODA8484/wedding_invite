@@ -456,6 +456,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== PAYMENT ROUTES ====================
+  
+  app.post("/api/payment/create-order", authMiddleware, async (req: any, res) => {
+    try {
+      const { projectId } = req.body;
+      const userId = req.user.userId;
+      
+      if (!projectId) {
+        return res.status(400).json({ error: "Project ID is required" });
+      }
+      
+      // Get project details
+      const project = await storage.getProjectById(projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      // Verify project belongs to user
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to access this project" });
+      }
+      
+      // Check if project is already paid
+      if (project.paidAt) {
+        return res.status(400).json({ error: "Project already paid for" });
+      }
+      
+      // Get template details for pricing
+      const template = await storage.getTemplateById(project.templateId);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      
+      // Create order in database
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
+      const order = await storage.createOrder({
+        orderNumber,
+        userId,
+        projectId,
+        templateId: template.id,
+        amount: template.price,
+        currency: template.currency,
+        status: "pending",
+        paymentProvider: "razorpay",
+      });
+      
+      // Create Razorpay order
+      const { createRazorpayOrder } = await import("./razorpay");
+      const rzpOrder = await createRazorpayOrder(
+        parseFloat(template.price),
+        template.currency,
+        orderNumber
+      );
+      
+      // Update order with Razorpay order ID
+      await storage.updateOrder(order.id, {
+        providerOrderId: rzpOrder.id,
+      });
+      
+      res.json({
+        orderId: order.id,
+        razorpayOrderId: rzpOrder.id,
+        amount: template.price,
+        currency: template.currency,
+        keyId: process.env.RAZORPAY_KEY_ID,
+      });
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).json({ error: "Failed to create payment order" });
+    }
+  });
+  
+  app.post("/api/payment/verify", authMiddleware, async (req: any, res) => {
+    try {
+      const { orderId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+      const userId = req.user.userId;
+      
+      if (!orderId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        return res.status(400).json({ error: "Missing required payment details" });
+      }
+      
+      // Get order
+      const order = await storage.getOrderById(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      
+      // Verify order belongs to user
+      if (order.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+      
+      // Verify payment signature
+      const { verifyRazorpaySignature } = await import("./razorpay");
+      const isValid = verifyRazorpaySignature(
+        razorpayOrderId,
+        razorpayPaymentId,
+        razorpaySignature
+      );
+      
+      if (!isValid) {
+        return res.status(400).json({ error: "Invalid payment signature" });
+      }
+      
+      // Update order status to paid
+      await storage.updateOrder(orderId, {
+        status: "paid",
+      });
+      
+      // Update project as paid
+      await storage.updateProject(order.projectId, {
+        paidAt: new Date(),
+        status: "completed",
+      });
+      
+      // Create payment record
+      await storage.createPayment({
+        orderId,
+        provider: "razorpay",
+        status: "success",
+        amount: order.amount,
+        currency: order.currency,
+        payload: {
+          razorpayOrderId,
+          razorpayPaymentId,
+          razorpaySignature,
+        },
+      });
+      
+      // Create user template record (purchase record)
+      await storage.createUserTemplate({
+        userId,
+        projectId: order.projectId,
+        purchaseAmount: order.amount,
+        razorpayOrderId,
+        razorpayPaymentId,
+      });
+      
+      res.json({
+        success: true,
+        message: "Payment verified successfully",
+        projectId: order.projectId,
+      });
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ error: "Failed to verify payment" });
+    }
+  });
+
   // ==================== MEDIA SERVING ENDPOINT ====================
   
   app.get("/api/media/Ind/:filename", async (req, res) => {

@@ -6,12 +6,19 @@ import {
   projects,
   orders,
   payments,
+  userTemplates,
   type User,
   type InsertUser,
   type Template,
   type InsertTemplate,
   type Project,
   type InsertProject,
+  type Order,
+  type InsertOrder,
+  type Payment,
+  type InsertPayment,
+  type UserTemplate,
+  type InsertUserTemplate,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -36,6 +43,17 @@ export interface IStorage {
   getProjectById(id: string): Promise<Project | undefined>;
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
+  
+  // Order operations
+  createOrder(order: InsertOrder): Promise<Order>;
+  getOrderById(id: string): Promise<Order | undefined>;
+  updateOrder(id: string, updates: Partial<Order>): Promise<Order | undefined>;
+  
+  // Payment operations
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  
+  // User Template operations (purchase records)
+  createUserTemplate(userTemplate: InsertUserTemplate): Promise<UserTemplate>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -165,6 +183,53 @@ export class DatabaseStorage implements IStorage {
       .where(eq(projects.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  // Order operations
+  async createOrder(orderData: InsertOrder): Promise<Order> {
+    const [order] = await db
+      .insert(orders)
+      .values(orderData)
+      .returning();
+    return order;
+  }
+
+  async getOrderById(id: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async updateOrder(id: string, updates: Partial<Order>): Promise<Order | undefined> {
+    const [updated] = await db
+      .update(orders)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  // Payment operations
+  async createPayment(paymentData: InsertPayment): Promise<Payment> {
+    const [payment] = await db
+      .insert(payments)
+      .values(paymentData)
+      .returning();
+    return payment;
+  }
+
+  // User Template operations (purchase records)
+  async createUserTemplate(userTemplateData: InsertUserTemplate): Promise<UserTemplate> {
+    const [userTemplate] = await db
+      .insert(userTemplates)
+      .values(userTemplateData)
+      .returning();
+    return userTemplate;
   }
 }
 
