@@ -54,6 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         phone: phone || null,
         passwordHash,
+        authProvider: "password",
       });
       
       // Generate JWT token for the new user
@@ -133,27 +134,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Verify the Firebase ID token
       const decodedToken = await adminAuth.verifyIdToken(idToken);
-      const { email, name, picture } = decodedToken;
+      const { uid: googleId, email, name, picture } = decodedToken;
       
       if (!email) {
         return res.status(400).json({ error: "Email not provided by Google" });
       }
       
-      // Check if user exists
-      let user = await storage.getUserByEmail(email);
+      // First, check if user exists by Google ID
+      let user = await storage.getUserByGoogleId(googleId);
       
       if (!user) {
-        // Create new user with Google auth (empty password hash)
-        // The login route has a guard to prevent password login for Google users
-        user = await storage.createUser({
-          name: name || email.split('@')[0],
-          email,
-          phone: null,
-          passwordHash: '', // Google auth users don't have password
-        });
+        // Check if user exists by email (account linking)
+        const existingUser = await storage.getUserByEmail(email);
+        
+        if (existingUser) {
+          // Existing user signing in with Google for the first time
+          // Link their Google account by updating their record
+          const updatedUser = await storage.updateUser(existingUser.id, {
+            googleId,
+            authProvider: "google",
+          });
+          user = updatedUser!;
+        } else {
+          // New user - create account with Google auth
+          user = await storage.createUser({
+            name: name || email.split('@')[0],
+            email,
+            phone: null,
+            passwordHash: null,
+            googleId,
+            authProvider: "google",
+          });
+        }
       }
-      // Note: Existing users keep their profile data unchanged
-      // TODO: Add updateUser method to storage interface to sync Google profile data
       
       // Generate JWT token
       const token = jwt.sign(
