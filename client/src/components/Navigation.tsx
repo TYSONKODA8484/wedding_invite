@@ -187,10 +187,6 @@ export function Navigation() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem data-testid="menu-item-profile">
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleLogout}
                     data-testid="menu-item-logout"
