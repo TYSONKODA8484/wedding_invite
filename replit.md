@@ -20,6 +20,29 @@ The project uses Drizzle ORM with PostgreSQL, featuring schemas for `templates`,
 ### Authentication
 A dual authentication system supports traditional email/password (JWT-based with bcrypt) and Google Sign-In using Firebase Auth with a redirect flow. Firebase Admin SDK verifies Google tokens server-side. The system ensures consistent user payload structures across all authentication methods and handles auth-gated previews with auto-save functionality.
 
+### Template Filtering System
+The Templates page (`/templates`, `/templates/wedding`, `/templates/birthday`) features a comprehensive filtering system inspired by 247invites.com:
+
+**Quick Filter Chips:**
+- Wedding page: Save the Date, Engagement Ceremony, Hindu Wedding, South Indian, Marathi, Rajasthani, Jain, Punjabi, Muslim, Christian, Bengali
+- Birthday page: Birthday Invites, Kids Birthday, Adult Milestones
+
+**Filter Sheet Panel (left-side slide-out):**
+- Type: Video, Card
+- Sort by: Popular, Newest, Low to High, High to Low
+- Photo: With Photo, Without Photo
+- Card Orientation: Portrait, Landscape
+
+**Features:**
+- URL state sync for shareable filtered views
+- Active filters display with individual remove buttons
+- Clear all functionality
+- Server-side filtering via API query params
+
+**Database Columns:**
+- `subcategory`: Primary subcategory for quick chip filtering
+- `popularityScore`: Numeric score for Popular sort
+
 ### My Templates Page
 The My Templates page (`/my-templates`) displays user's projects in two sections:
 - **Paid Templates**: Sorted by `paidAt` (newest first), shows View/Download/Share buttons
