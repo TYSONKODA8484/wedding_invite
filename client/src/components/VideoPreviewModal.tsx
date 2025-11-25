@@ -1,6 +1,7 @@
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -32,6 +33,7 @@ export function VideoPreviewModal({
       <DialogContent className="max-w-4xl bg-black border-0" data-testid="modal-video-preview">
         <DialogHeader>
           <DialogTitle className="text-white">{templateName}</DialogTitle>
+          <DialogDescription className="sr-only">Video preview for {templateName}</DialogDescription>
         </DialogHeader>
         <div className={`${videoContainerClass} bg-black rounded-lg overflow-hidden`}>
           <video

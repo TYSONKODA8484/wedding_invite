@@ -318,12 +318,12 @@ export default function MyTemplates() {
           <DialogHeader>
             <DialogTitle>Payment Required</DialogTitle>
             <DialogDescription className="pt-4">
-              <p className="text-center text-lg mb-4">
+              <span className="block text-center text-lg mb-4">
                 Working on Payment page
-              </p>
-              <p className="text-center text-sm text-muted-foreground">
+              </span>
+              <span className="block text-center text-sm text-muted-foreground">
                 Payment integration is coming soon. You'll be able to purchase and download your video once payment is set up.
-              </p>
+              </span>
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setShowPaymentModal(false)} data-testid="button-close-payment-modal">
