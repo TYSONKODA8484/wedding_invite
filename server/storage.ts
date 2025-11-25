@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import {
   users,
   templates,
@@ -56,6 +56,10 @@ export interface IStorage {
   
   // User Template operations (purchase records)
   createUserTemplate(userTemplate: InsertUserTemplate): Promise<UserTemplate>;
+  
+  // Popularity tracking operations
+  incrementTemplateGeneration(templateId: string): Promise<Template | undefined>;
+  incrementTemplatePurchase(templateId: string): Promise<Template | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -278,6 +282,37 @@ export class DatabaseStorage implements IStorage {
       .values(userTemplateData)
       .returning();
     return userTemplate;
+  }
+
+  // Popularity tracking operations
+  async incrementTemplateGeneration(templateId: string): Promise<Template | undefined> {
+    // Increment totalGenerations and recalculate popularityScore
+    // popularityScore = floor(totalGenerations / 10) + totalPurchases
+    const [updated] = await db
+      .update(templates)
+      .set({
+        totalGenerations: sql`${templates.totalGenerations} + 1`,
+        popularityScore: sql`FLOOR((${templates.totalGenerations} + 1) / 10) + ${templates.totalPurchases}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(templates.id, templateId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async incrementTemplatePurchase(templateId: string): Promise<Template | undefined> {
+    // Increment totalPurchases and recalculate popularityScore
+    // popularityScore = floor(totalGenerations / 10) + totalPurchases
+    const [updated] = await db
+      .update(templates)
+      .set({
+        totalPurchases: sql`${templates.totalPurchases} + 1`,
+        popularityScore: sql`FLOOR(${templates.totalGenerations} / 10) + ${templates.totalPurchases} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(templates.id, templateId))
+      .returning();
+    return updated || undefined;
   }
 }
 
