@@ -324,13 +324,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/templates", async (req, res) => {
     try {
+      const { category } = req.query;
       const templates = await storage.getTemplates();
       
-      const templateList = templates.map(t => ({
+      // Filter by category if provided (wedding/birthday)
+      const filteredTemplates = category 
+        ? templates.filter(t => t.category === category)
+        : templates;
+      
+      const templateList = filteredTemplates.map(t => ({
         id: t.id,
         title: t.templateName,
         slug: t.slug,
-        category: t.templateType,
+        templateType: t.templateType,
+        category: t.category,
         duration: t.durationSec,
         thumbnailUrl: t.thumbnailUrl,
         priceInr: Math.floor(parseFloat(t.price) * 100), // Convert rupees to paise
@@ -389,7 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: template.templateName, // Add name alias for compatibility
         slug: template.slug,
         templateType: template.templateType,
-        category: template.templateType, // Add category alias for compatibility
+        category: template.category, // wedding or birthday
         orientation: template.orientation,
         photoOption: template.photoOption,
         templateTags: template.templateTags,
