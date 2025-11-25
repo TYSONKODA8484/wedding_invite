@@ -342,7 +342,7 @@ export default function MyTemplates() {
       {generatedProjects.length > 0 && (
         <section data-testid="section-generated-templates">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-generated-templates">
-            <span>Generated Templates</span>
+            <span className="text-[#16a34a]">Generated Templates</span>
             <Badge variant="secondary">
               {generatedProjects.length}
             </Badge>
