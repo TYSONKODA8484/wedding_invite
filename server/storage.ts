@@ -150,7 +150,26 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(payments, eq(orders.id, payments.orderId))
       .where(eq(projects.userId, userId));
     
-    return userProjects.map(row => {
+    // Deduplicate projects by ID (in case of multiple orders/payments)
+    const projectMap = new Map<string, typeof userProjects[0]>();
+    for (const row of userProjects) {
+      const existing = projectMap.get(row.project.id);
+      // Prefer rows with successful payments or paid orders
+      const currentIsPaid = (row.order?.status === 'paid') || 
+                            (row.payment?.status === 'success') || 
+                            !!row.project.paidAt;
+      const existingIsPaid = existing && (
+        (existing.order?.status === 'paid') || 
+        (existing.payment?.status === 'success') || 
+        !!existing.project.paidAt
+      );
+      
+      if (!existing || (currentIsPaid && !existingIsPaid)) {
+        projectMap.set(row.project.id, row);
+      }
+    }
+    
+    return Array.from(projectMap.values()).map(row => {
       const isPaid = 
         (row.order && row.order.status === 'paid') ||
         (row.payment && row.payment.status === 'success') ||
