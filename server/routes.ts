@@ -324,13 +324,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/templates", async (req, res) => {
     try {
-      const { category } = req.query;
-      const templates = await storage.getTemplates();
+      const { 
+        category, 
+        subcategory, 
+        type, 
+        orientation, 
+        photo,
+        sort 
+      } = req.query;
       
-      // Filter by category if provided (wedding/birthday)
-      const filteredTemplates = category 
-        ? templates.filter(t => t.category === category)
-        : templates;
+      const allTemplates = await storage.getTemplates();
+      
+      // Apply filters
+      let filteredTemplates = allTemplates;
+      
+      // Filter by category (wedding/birthday)
+      if (category) {
+        filteredTemplates = filteredTemplates.filter(t => t.category === category);
+      }
+      
+      // Filter by subcategory
+      if (subcategory) {
+        filteredTemplates = filteredTemplates.filter(t => t.subcategory === subcategory);
+      }
+      
+      // Filter by type (video/card)
+      if (type) {
+        filteredTemplates = filteredTemplates.filter(t => t.templateType === type);
+      }
+      
+      // Filter by orientation (portrait/landscape)
+      if (orientation) {
+        filteredTemplates = filteredTemplates.filter(t => t.orientation === orientation);
+      }
+      
+      // Filter by photo option (with_photo/without_photo)
+      if (photo) {
+        filteredTemplates = filteredTemplates.filter(t => t.photoOption === photo);
+      }
+      
+      // Apply sorting
+      if (sort === 'popular') {
+        filteredTemplates.sort((a, b) => (b.popularityScore || 0) - (a.popularityScore || 0));
+      } else if (sort === 'newest') {
+        filteredTemplates.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
+      } else if (sort === 'price_low') {
+        filteredTemplates.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+      } else if (sort === 'price_high') {
+        filteredTemplates.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+      }
       
       const templateList = filteredTemplates.map(t => ({
         id: t.id,
@@ -338,12 +384,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slug: t.slug,
         templateType: t.templateType,
         category: t.category,
+        subcategory: t.subcategory,
         duration: t.durationSec,
         thumbnailUrl: t.thumbnailUrl,
-        priceInr: Math.floor(parseFloat(t.price) * 100), // Convert rupees to paise
+        priceInr: Math.floor(parseFloat(t.price) * 100),
         tags: t.templateTags,
         orientation: t.orientation,
-        isPremium: parseFloat(t.price) >= 2000, // Templates >= ₹2000 are premium
+        photoOption: t.photoOption,
+        isPremium: parseFloat(t.price) >= 2000,
+        popularityScore: t.popularityScore || 0,
       }));
       
       res.json(templateList);

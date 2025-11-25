@@ -54,6 +54,7 @@ export const templates = pgTable("templates", {
   templateName: varchar("template_name").notNull(),
   templateType: varchar("template_type").notNull(),
   category: varchar("category").notNull().default("wedding"),
+  subcategory: varchar("subcategory").notNull().default("general"),
   currency: varchar("currency").notNull().default("INR"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   durationSec: integer("duration_sec").notNull().default(30),
@@ -66,6 +67,7 @@ export const templates = pgTable("templates", {
   photoOption: varchar("photo_option").notNull(),
   templateTags: jsonb("template_tags").notNull().default([]),
   thumbnailUrl: varchar("thumbnail_url").notNull(),
+  popularityScore: integer("popularity_score").notNull().default(0),
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).omit({
