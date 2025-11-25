@@ -189,18 +189,18 @@ export default function TemplateDetail() {
         ogImage={template.thumbnailUrl}
       />
 
-      <section className="py-6 lg:py-10 bg-background">
+      <section className="py-4 lg:py-6 bg-background border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <div 
-              className="relative bg-muted rounded-lg overflow-hidden w-full lg:w-[380px] flex-shrink-0"
+              className="w-full lg:w-[420px] flex-shrink-0"
               data-testid="template-preview"
             >
               {youtubeVideoId ? (
-                <div className="aspect-[3/4]">
+                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
                   <iframe
                     className="w-full h-full"
-                    src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
+                    src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0`}
                     title={template.templateName}
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -209,7 +209,7 @@ export default function TemplateDetail() {
                   />
                 </div>
               ) : (
-                <div className="aspect-[3/4]">
+                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
                   <img
                     src={template.thumbnailUrl}
                     alt={template.templateName}
@@ -217,23 +217,39 @@ export default function TemplateDetail() {
                   />
                 </div>
               )}
+              
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground">
+                  This {template.templateName} video will best fit & visible on every screen. Easy to share, Try this new, elegant, and unique style of invitation.
+                </p>
+                <button 
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  className="text-primary text-sm font-medium mt-2 hover:underline"
+                  data-testid="button-show-more"
+                >
+                  {showFullDescription ? 'Show Less' : 'Show More'}
+                </button>
+                {showFullDescription && (
+                  <p className="text-sm text-muted-foreground mt-2">{description}</p>
+                )}
+              </div>
             </div>
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1">
               <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2" data-testid="text-template-title">
                 {template.templateName}
               </h1>
               
-              <div className="flex items-center gap-3 mb-4">
-                <Badge variant="secondary" className="capitalize text-xs">{templateType}</Badge>
-                <span className="text-xl font-bold text-foreground" data-testid="text-template-price">
+              <div className="flex items-center gap-4 mb-4">
+                <span className="text-sm text-muted-foreground capitalize">{templateType}</span>
+                <span className="text-xl font-bold text-primary" data-testid="text-template-price">
                   {displayPrice}
                 </span>
               </div>
 
               <Button
                 size="lg"
-                className="w-full mb-5 h-11 text-sm font-semibold"
+                className="w-full mb-5 h-11 text-sm font-semibold rounded-full"
                 onClick={() => navigate(`/editor/${template.slug}`)}
                 data-testid="button-customize-template"
               >
@@ -241,89 +257,72 @@ export default function TemplateDetail() {
                 Start Free Customization
               </Button>
 
-              <div className="space-y-2 mb-5">
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+              <div className="space-y-3 mb-5">
+                <div className="flex items-start gap-3">
+                  <Globe className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground">
                     Create In : <span className="text-muted-foreground">English , हिन्दी , मराठी , ગુજરાતી , தமிழ் , తెలుగు</span>
                   </span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3">
+                  <Palette className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground">Change your card's text, style, envelope, backdrop and more</span>
                 </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3">
+                  <Download className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground">Download high quality video.</span>
                 </div>
               </div>
 
-              <Card className="p-4 border-primary/20 bg-primary/5">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-foreground text-sm">Prefer to let the experts handle it?</span>
-                  <span className="text-foreground font-bold">{expertPrice}</span>
+              <Card className="p-4 border rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-foreground text-sm italic">Prefer to let the experts handle it?</span>
+                  <span className="text-primary font-bold">{expertPrice}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3">
+                <p className="text-xs text-muted-foreground mb-4">
                   Our expert graphic design team is ready to help! Contact us, and we'll craft it perfectly for you.
                 </p>
                 <Button 
                   variant="outline" 
-                  size="sm"
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   data-testid="button-expert-create"
                 >
-                  <Phone className="w-3 h-3 mr-2" />
+                  <Phone className="w-4 h-4 mr-2" />
                   Expert Create
                 </Button>
               </Card>
             </div>
           </div>
-
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground">
-              Create beautiful <span className="text-primary font-medium">{template.templateName}</span> with customizable pages and send via WhatsApp
-            </p>
-            <button 
-              onClick={() => setShowFullDescription(!showFullDescription)}
-              className="text-primary text-sm font-medium mt-1 hover:underline"
-              data-testid="button-show-more"
-            >
-              {showFullDescription ? 'Show Less' : 'Show More'}
-            </button>
-            {showFullDescription && (
-              <p className="text-sm text-muted-foreground mt-2">{description}</p>
-            )}
-          </div>
         </div>
       </section>
 
-      <section className="py-8 lg:py-12 bg-background border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-semibold text-foreground mb-6">What to do next ?</h2>
-          <div className="space-y-4">
+      <section className="py-6 lg:py-8 bg-background">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">What to do next ?</h2>
+          <div className="space-y-3">
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-white" />
               </div>
-              <p className="text-foreground">Click on "Start Free Customization" to edit video yourself.</p>
+              <p className="text-sm text-foreground">Click on "Customize by myself video" to edit video yourself.</p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-white" />
               </div>
-              <p className="text-foreground">Upload your event details, photos and music and click on "Preview video" to create video.</p>
+              <p className="text-sm text-foreground">Upload your event details, photos and music and click on "Preview video" to create video.</p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-white" />
               </div>
-              <p className="text-foreground">System will create the video in minutes and provide an instant preview.</p>
+              <p className="text-sm text-foreground">System will create the video in minutes and provide an instant preview.</p>
             </div>
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-white" />
               </div>
-              <p className="text-foreground">Click on "Expert Create" to request our team to create video for you with additional customization.</p>
+              <p className="text-sm text-foreground">Click on "Expert create" to request 247Invites team to create video for you with additional customization.</p>
             </div>
           </div>
         </div>
