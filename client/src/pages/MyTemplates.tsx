@@ -106,16 +106,34 @@ export default function MyTemplates() {
     }
   };
 
-  const handlePaymentSuccess = () => {
-    // Refresh the projects list
-    queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
+  const handlePaymentSuccess = async () => {
+    // Refresh the projects list and wait for it
+    await queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
     
-    // Auto-download after payment
+    // Auto-download after payment - fetch fresh project data
     if (selectedProject) {
-      setTimeout(() => {
-        // Fetch updated project to get the finalUrl
+      try {
+        const token = localStorage.getItem("auth_token");
+        const response = await fetch("/api/projects/mine", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const freshProjects: Project[] = await response.json();
+          const updatedProject = freshProjects.find(p => p.id === selectedProject.id);
+          
+          if (updatedProject && updatedProject.isPaid) {
+            // Use fresh data with finalUrl for download
+            triggerDownload(updatedProject);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch updated project for download:", error);
+        // Fallback to original project data
         triggerDownload(selectedProject);
-      }, 1000);
+      }
     }
   };
 
