@@ -70,7 +70,7 @@ export default function MyTemplates() {
   });
 
   const handleEdit = (project: Project) => {
-    navigate(`/editor/${project.id}`);
+    navigate(`/editor/${project.id}?from=my-templates`);
   };
 
   const triggerDownload = (project: Project) => {

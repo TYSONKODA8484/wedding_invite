@@ -240,7 +240,7 @@ export default function TemplateDetail() {
               <Button
                 size="lg"
                 className="w-full mb-5 h-11 text-sm font-semibold rounded-full"
-                onClick={() => navigate(`/editor/${template.slug}`)}
+                onClick={() => navigate(`/editor/${template.slug}?from=template`)}
                 data-testid="button-customize-template"
               >
                 <Heart className="w-4 h-4 mr-2 fill-current" />

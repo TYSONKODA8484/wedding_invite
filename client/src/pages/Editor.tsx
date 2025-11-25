@@ -490,9 +490,13 @@ function isUUID(str: string): boolean {
 
 export default function Editor() {
   const [, params] = useRoute("/editor/:slug");
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const slug = params?.slug;
   const isEditingProject = slug ? isUUID(slug) : false;
+  
+  // Get the 'from' query parameter to know where to navigate back
+  const searchParams = new URLSearchParams(window.location.search);
+  const fromPage = searchParams.get('from');
 
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -978,7 +982,13 @@ export default function Editor() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate(`/template/${template.slug}`)}
+              onClick={() => {
+                if (fromPage === 'my-templates') {
+                  navigate('/my-templates');
+                } else {
+                  navigate(`/template/${template.slug}`);
+                }
+              }}
               data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
