@@ -8,13 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger,
-  DialogDescription 
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SlidersHorizontal, X, Loader2, Sparkles } from "lucide-react";
 import templatesHubHero from "@assets/generated_images/Templates_hub_hero_image_bf0e94da.png";
 
@@ -59,8 +56,8 @@ const SORT_OPTIONS = [
 ];
 
 const PHOTO_OPTIONS = [
-  { value: "with_photo", label: "With Photo" },
-  { value: "without_photo", label: "Without Photo" },
+  { value: "with_photo", label: "WithPhoto" },
+  { value: "without_photo", label: "WithoutPhoto" },
 ];
 
 const ORIENTATION_OPTIONS = [
@@ -72,7 +69,7 @@ export default function Templates() {
   const [, params] = useRoute("/templates/:category");
   const categoryFromUrl = params?.category?.toLowerCase();
   const [location, setLocation] = useLocation();
-  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [filters, setFilters] = useState<FilterState>({
     subcategory: null,
@@ -203,7 +200,7 @@ export default function Templates() {
     </button>
   );
 
-  const FilterOptionButton = ({ 
+  const FilterOption = ({ 
     label, 
     isSelected, 
     onClick,
@@ -216,10 +213,10 @@ export default function Templates() {
   }) => (
     <button
       onClick={onClick}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
         isSelected
-          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-          : "bg-card text-foreground border-border hover:border-primary/40 hover:bg-accent/20"
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-background text-foreground border-border hover:border-primary/40"
       }`}
       data-testid={testId}
     >
@@ -264,139 +261,142 @@ export default function Templates() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex items-start gap-3 mb-4">
-            <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
-              <DialogTrigger asChild>
+            <div className="flex items-center gap-3 text-muted-foreground flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{templates.length} designs</span>
+            </div>
+
+            {subcategories.length > 0 && (
+              <div className="flex flex-wrap gap-2 flex-1">
+                {subcategories.map((sub) => (
+                  <FilterChip
+                    key={sub.value}
+                    label={sub.label}
+                    isSelected={filters.subcategory === sub.value}
+                    onClick={() => updateFilters({ 
+                      subcategory: filters.subcategory === sub.value ? null : sub.value 
+                    })}
+                  />
+                ))}
+              </div>
+            )}
+
+            <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <PopoverTrigger asChild>
                 <button
-                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-medium text-sm transition-all flex-shrink-0"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-card hover:bg-accent/50 border border-border text-foreground font-medium text-sm transition-all flex-shrink-0"
                   data-testid="button-open-filters"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
-                  <span className="hidden sm:inline">Filters</span>
+                  <span>Filters</span>
                   {activeFiltersCount > 0 && (
                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
                       {activeFiltersCount}
                     </span>
                   )}
                 </button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[500px] p-0 gap-0">
-                <DialogHeader className="p-5 pb-4 border-b">
-                  <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-                    <SlidersHorizontal className="w-5 h-5 text-primary" />
-                    Filter Templates
-                  </DialogTitle>
-                  <DialogDescription className="text-sm text-muted-foreground">
-                    Refine your search to find the perfect template
-                  </DialogDescription>
-                </DialogHeader>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-72 p-4 rounded-xl border bg-card shadow-lg" 
+                align="end"
+                sideOffset={8}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <SlidersHorizontal className="w-4 h-4" />
+                    Filters
+                  </div>
+                  <button 
+                    onClick={() => setIsFilterOpen(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-                <div className="p-5 space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-foreground">Type</label>
-                      <div className="flex flex-wrap gap-2">
-                        {TEMPLATE_TYPES.map((option) => (
-                          <FilterOptionButton
-                            key={option.value}
-                            label={option.label}
-                            isSelected={filters.type === option.value}
-                            onClick={() => updateFilters({ type: filters.type === option.value ? null : option.value })}
-                            testId={`filter-type-${option.value}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-foreground">Sort by</label>
-                      <div className="flex flex-wrap gap-2">
-                        {SORT_OPTIONS.map((option) => (
-                          <FilterOptionButton
-                            key={option.value}
-                            label={option.label}
-                            isSelected={filters.sort === option.value}
-                            onClick={() => updateFilters({ sort: filters.sort === option.value ? null : option.value })}
-                            testId={`filter-sort-by-${option.value}`}
-                          />
-                        ))}
-                      </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Type</label>
+                    <div className="flex flex-wrap gap-2">
+                      {TEMPLATE_TYPES.map((option) => (
+                        <FilterOption
+                          key={option.value}
+                          label={option.label}
+                          isSelected={filters.type === option.value}
+                          onClick={() => updateFilters({ type: filters.type === option.value ? null : option.value })}
+                          testId={`filter-type-${option.value}`}
+                        />
+                      ))}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-foreground">Photo</label>
-                      <div className="flex flex-wrap gap-2">
-                        {PHOTO_OPTIONS.map((option) => (
-                          <FilterOptionButton
-                            key={option.value}
-                            label={option.label}
-                            isSelected={filters.photo === option.value}
-                            onClick={() => updateFilters({ photo: filters.photo === option.value ? null : option.value })}
-                            testId={`filter-photo-${option.value}`}
-                          />
-                        ))}
-                      </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Sort by</label>
+                    <div className="flex flex-wrap gap-2">
+                      {SORT_OPTIONS.map((option) => (
+                        <FilterOption
+                          key={option.value}
+                          label={option.label}
+                          isSelected={filters.sort === option.value}
+                          onClick={() => updateFilters({ sort: filters.sort === option.value ? null : option.value })}
+                          testId={`filter-sort-by-${option.value}`}
+                        />
+                      ))}
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-foreground">Orientation</label>
-                      <div className="flex flex-wrap gap-2">
-                        {ORIENTATION_OPTIONS.map((option) => (
-                          <FilterOptionButton
-                            key={option.value}
-                            label={option.label}
-                            isSelected={filters.orientation === option.value}
-                            onClick={() => updateFilters({ orientation: filters.orientation === option.value ? null : option.value })}
-                            testId={`filter-card-orientation-${option.value}`}
-                          />
-                        ))}
-                      </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Photo</label>
+                    <div className="flex flex-wrap gap-2">
+                      {PHOTO_OPTIONS.map((option) => (
+                        <FilterOption
+                          key={option.value}
+                          label={option.label}
+                          isSelected={filters.photo === option.value}
+                          onClick={() => updateFilters({ photo: filters.photo === option.value ? null : option.value })}
+                          testId={`filter-photo-${option.value}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-2 block">Card Orientation</label>
+                    <div className="flex flex-wrap gap-2">
+                      {ORIENTATION_OPTIONS.map((option) => (
+                        <FilterOption
+                          key={option.value}
+                          label={option.label}
+                          isSelected={filters.orientation === option.value}
+                          onClick={() => updateFilters({ orientation: filters.orientation === option.value ? null : option.value })}
+                          testId={`filter-card-orientation-${option.value}`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3 p-5 pt-4 border-t bg-muted/30">
+                <div className="flex gap-2 mt-5 pt-4 border-t">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    size="sm"
+                    className="flex-1 rounded-full"
                     onClick={clearAllFilters}
                     data-testid="button-clear-all-filters"
                   >
                     Clear All
                   </Button>
                   <Button
-                    className="flex-1"
-                    onClick={() => setIsFilterDialogOpen(false)}
+                    size="sm"
+                    className="flex-1 rounded-full"
+                    onClick={() => setIsFilterOpen(false)}
                     data-testid="button-apply-filters"
                   >
-                    Apply Filters
+                    Apply
                   </Button>
                 </div>
-              </DialogContent>
-            </Dialog>
-
-            <div className="flex-1">
-              {subcategories.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {subcategories.map((sub) => (
-                    <FilterChip
-                      key={sub.value}
-                      label={sub.label}
-                      isSelected={filters.subcategory === sub.value}
-                      onClick={() => updateFilters({ 
-                        subcategory: filters.subcategory === sub.value ? null : sub.value 
-                      })}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{templates.length} designs</span>
-            </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {(filters.subcategory || activeFiltersCount > 0) && (
