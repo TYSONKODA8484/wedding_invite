@@ -338,6 +338,12 @@ export default function MyTemplates() {
           </div>
         </section>
       )}
+      
+      {/* Separator between sections */}
+      {paidProjects.length > 0 && generatedProjects.length > 0 && (
+        <hr className="border-t border-border mb-10" />
+      )}
+      
       {/* Generated Templates Section - Only show if there are generated templates */}
       {generatedProjects.length > 0 && (
         <section data-testid="section-generated-templates">
