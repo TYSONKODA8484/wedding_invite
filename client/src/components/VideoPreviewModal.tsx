@@ -21,8 +21,6 @@ export function VideoPreviewModal({
   templateName,
   orientation,
 }: VideoPreviewModalProps) {
-  if (!videoUrl) return null;
-
   const isPortrait = orientation === "portrait";
   const videoContainerClass = isPortrait
     ? "aspect-[9/16] max-w-sm mx-auto"
@@ -36,13 +34,19 @@ export function VideoPreviewModal({
           <DialogDescription className="sr-only">Video preview for {templateName}</DialogDescription>
         </DialogHeader>
         <div className={`${videoContainerClass} bg-black rounded-lg overflow-hidden`}>
-          <video
-            src={videoUrl}
-            controls
-            autoPlay
-            className="w-full h-full object-contain"
-            data-testid="video-preview"
-          />
+          {videoUrl ? (
+            <video
+              src={videoUrl}
+              controls
+              autoPlay
+              className="w-full h-full object-contain"
+              data-testid="video-preview"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-white/60" data-testid="video-unavailable">
+              <p className="text-center">Video preview not available yet</p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

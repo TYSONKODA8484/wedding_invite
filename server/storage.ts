@@ -156,13 +156,16 @@ export class DatabaseStorage implements IStorage {
         (row.payment && row.payment.status === 'success') ||
         !!row.project.paidAt;
       
+      // Use project-specific URLs if available, fall back to template video
+      const videoUrl = row.project.previewUrl || row.project.finalUrl || row.template?.previewVideoUrl;
+      
       return {
         id: row.project.id,
         templateId: row.project.templateId,
         templateName: row.template?.templateName || 'Unknown Template',
         thumbnailUrl: row.template?.thumbnailUrl || row.template?.previewImageUrl,
         previewImageUrl: row.template?.previewImageUrl,
-        previewVideoUrl: row.template?.previewVideoUrl,
+        previewVideoUrl: videoUrl,
         orientation: row.template?.orientation || 'portrait',
         price: row.template?.price || '0',
         currency: row.template?.currency || 'INR',

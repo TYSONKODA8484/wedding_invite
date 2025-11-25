@@ -20,6 +20,16 @@ The project uses Drizzle ORM with PostgreSQL, featuring schemas for `templates`,
 ### Authentication
 A dual authentication system supports traditional email/password (JWT-based with bcrypt) and Google Sign-In using Firebase Auth with a redirect flow. Firebase Admin SDK verifies Google tokens server-side. The system ensures consistent user payload structures across all authentication methods and handles auth-gated previews with auto-save functionality.
 
+### My Templates Page
+The My Templates page (`/my-templates`) displays user's projects in two sections:
+- **Paid Templates**: Sorted by `paidAt` (newest first), shows View/Download/Share buttons
+- **Generated Templates**: Sorted by `updatedAt` (newest first), shows Edit/View/Download buttons
+
+Features:
+- **VideoPreviewModal**: Responsive video preview adapting to portrait/landscape orientation
+- **Actual File Download**: Uses `finalUrl` or `previewUrl` for paid template downloads
+- **Cross-Platform Share**: Web Share API with clipboard fallback for all devices
+
 ### Design System & SEO
 The design emphasizes a premium, cinematic aesthetic with generous whitespace, elegant animations, and video-centric layouts optimized for mobile. Culturally authentic elements are incorporated. SEO targets India, UAE, and Saudi Arabia with an enhanced `SEOHead` component, WhatsApp-optimized Open Graph tags, mobile-first meta tags, `hreflang`, and comprehensive schema markup.
 
