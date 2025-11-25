@@ -3,22 +3,18 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Download, Edit, Share2, Eye } from "lucide-react";
+import { Download, Edit, Share2, Eye, FileImage, Film } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VideoPreviewModal } from "@/components/VideoPreviewModal";
+import { PaymentModal } from "@/components/PaymentModal";
+import { queryClient } from "@/lib/queryClient";
 
 interface Project {
   id: string;
   templateId: string;
   templateName: string;
+  templateType: "card" | "video";
   thumbnailUrl: string;
   previewImageUrl: string;
   previewVideoUrl: string;
@@ -77,26 +73,49 @@ export default function MyTemplates() {
     navigate(`/editor/${project.id}`);
   };
 
+  const triggerDownload = (project: Project) => {
+    const urlToDownload = project.finalUrl || project.previewUrl || project.previewVideoUrl;
+    if (urlToDownload) {
+      const link = document.createElement("a");
+      link.href = urlToDownload;
+      // For cards, download as image; for videos, download as mp4
+      const extension = project.templateType === "card" ? "jpg" : "mp4";
+      link.download = `${project.templateName}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({
+        title: "Download Started",
+        description: `Your ${project.templateType === "card" ? "card" : "video"} is downloading...`,
+      });
+    } else {
+      toast({
+        title: "File not ready",
+        description: "Your file is still being processed",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDownload = (project: Project) => {
     if (!project.isPaid) {
       setSelectedProject(project);
       setShowPaymentModal(true);
     } else {
-      const urlToDownload = project.finalUrl || project.previewUrl;
-      if (urlToDownload) {
-        const link = document.createElement("a");
-        link.href = urlToDownload;
-        link.download = `${project.templateName}.mp4`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        toast({
-          title: "Video not ready",
-          description: "Your video is still being processed",
-          variant: "destructive",
-        });
-      }
+      triggerDownload(project);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    // Refresh the projects list
+    queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
+    
+    // Auto-download after payment
+    if (selectedProject) {
+      setTimeout(() => {
+        // Fetch updated project to get the finalUrl
+        triggerDownload(selectedProject);
+      }, 1000);
     }
   };
 
@@ -182,7 +201,7 @@ export default function MyTemplates() {
           className="w-full h-full object-cover"
           data-testid={`img-thumbnail-${project.id}`}
         />
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
           {project.isPaid ? (
             <Badge variant="default" className="bg-green-600 dark:bg-green-700 text-white" data-testid={`badge-paid-${project.id}`}>
               Paid
@@ -192,6 +211,17 @@ export default function MyTemplates() {
               Preview
             </Badge>
           )}
+          <Badge 
+            variant="outline" 
+            className="bg-black/50 backdrop-blur-sm text-white border-white/30"
+            data-testid={`badge-type-${project.id}`}
+          >
+            {project.templateType === "card" ? (
+              <><FileImage className="h-3 w-3 mr-1" /> Card</>
+            ) : (
+              <><Film className="h-3 w-3 mr-1" /> Video</>
+            )}
+          </Badge>
         </div>
         <div className="absolute bottom-2 left-2 right-2 flex gap-2">
           {project.isPaid ? (
@@ -313,24 +343,20 @@ export default function MyTemplates() {
         orientation={selectedVideoProject?.orientation || "portrait"}
       />
 
-      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-        <DialogContent data-testid="modal-payment">
-          <DialogHeader>
-            <DialogTitle>Payment Required</DialogTitle>
-            <DialogDescription className="pt-4">
-              <span className="block text-center text-lg mb-4">
-                Working on Payment page
-              </span>
-              <span className="block text-center text-sm text-muted-foreground">
-                Payment integration is coming soon. You'll be able to purchase and download your video once payment is set up.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={() => setShowPaymentModal(false)} data-testid="button-close-payment-modal">
-            Close
-          </Button>
-        </DialogContent>
-      </Dialog>
+      {selectedProject && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedProject(null);
+          }}
+          projectId={selectedProject.id}
+          templateName={selectedProject.templateName}
+          amount={selectedProject.price}
+          currency={selectedProject.currency}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }
