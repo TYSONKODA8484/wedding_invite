@@ -268,6 +268,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "draft",
       });
       
+      // Increment template generation count for popularity tracking
+      await storage.incrementTemplateGeneration(templateId);
+      
       res.status(201).json(project);
     } catch (error) {
       console.error("Create project error:", error);
@@ -662,6 +665,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         razorpayOrderId,
         razorpayPaymentId,
       });
+      
+      // Increment template purchase count for popularity tracking
+      await storage.incrementTemplatePurchase(order.templateId);
       
       res.json({
         success: true,
