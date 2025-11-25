@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Sparkles, User, LogOut, Video } from "lucide-react";
+import { Menu, Sparkles, User, LogOut, Heart, Cake } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 
 export function Navigation() {
@@ -22,7 +22,6 @@ export function Navigation() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
-  // Check localStorage for auth state
   useEffect(() => {
     const checkAuthState = () => {
       const token = localStorage.getItem("auth_token");
@@ -34,29 +33,24 @@ export function Navigation() {
           setUser(userData);
           setIsLoggedIn(true);
         } catch (e) {
-          // Invalid user data
           localStorage.removeItem("auth_token");
           localStorage.removeItem("user");
           setIsLoggedIn(false);
           setUser(null);
         }
       } else {
-        // No auth data - ensure logged out state (for cross-tab logout)
         setIsLoggedIn(false);
         setUser(null);
       }
     };
     
-    // Check immediately on mount
     checkAuthState();
     
-    // Listen for custom auth state change events (for immediate updates)
     const handleAuthChange = () => {
       checkAuthState();
     };
     window.addEventListener('authStateChanged', handleAuthChange);
     
-    // Check periodically in case user logs in/out from another tab
     const interval = setInterval(checkAuthState, 1000);
     
     return () => {
@@ -78,9 +72,7 @@ export function Navigation() {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
-    // Dispatch auth state change event
     window.dispatchEvent(new Event('authStateChanged'));
-    // Redirect to home page after logout
     window.location.href = "/";
   };
 
@@ -94,8 +86,9 @@ export function Navigation() {
       .slice(0, 2);
   };
 
-  const navLinks = [
-    { label: "Templates", href: "/templates" },
+  const centerNavLinks = [
+    { label: "Wedding", href: "/templates/wedding", icon: Heart },
+    { label: "Birthday", href: "/templates/birthday", icon: Cake },
     { label: "How It Works", href: "/#how-it-works" },
     { label: "Contact", href: "/contact" },
   ];
@@ -110,10 +103,11 @@ export function Navigation() {
       data-testid="header-navigation"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between h-16 md:h-20 gap-4">
+          {/* Left: Logo + Company Name */}
           <Link 
             href="/" 
-            className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3 transition-all"
+            className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3 transition-all flex-shrink-0"
             data-testid="link-home"
           >
             <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary" />
@@ -122,117 +116,103 @@ export function Navigation() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2" data-testid="nav-desktop">
-            {navLinks.map((link) => (
+          {/* Middle: Navigation Links (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-1" data-testid="nav-desktop">
+            {centerNavLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href}
-                className={`px-3 lg:px-4 py-2 rounded-md text-sm lg:text-base font-medium transition-all hover-elevate active-elevate-2 ${
-                  location === link.href
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-1.5 ${
+                  location === link.href || location.startsWith(link.href.split('?')[0])
                     ? "bg-accent/10 text-accent-foreground"
                     : "text-foreground/80 hover:text-foreground"
                 }`}
                 data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
+                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
-            {isLoggedIn && user ? (
-              <>
-                <Button
-                  variant="ghost"
-                  size="default"
-                  asChild
-                  data-testid="button-my-templates"
-                >
-                  <Link href="/my-templates" className="font-medium">
-                    My Templates
-                  </Link>
-                </Button>
-                <Button
-                  variant="default"
-                  size="default"
-                  asChild
-                  data-testid="button-create-invite"
-                >
-                  <Link href="/templates" className="font-medium">
-                    Create Invite
-                  </Link>
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="rounded-full"
-                      data-testid="button-user-menu"
-                    >
-                      <Avatar className="w-9 h-9">
-                        <AvatarFallback className="text-sm font-semibold">
-                          {getUserInitials()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem data-testid="menu-item-profile">
-                      <User className="w-4 h-4 mr-2" />
-                      Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={handleLogout}
-                      data-testid="menu-item-logout"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={() => setAuthModalOpen(true)}
-                  data-testid="button-login"
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="default"
-                  onClick={() => setAuthModalOpen(true)}
-                  data-testid="button-my-templates"
-                >
+          {/* Right: My Templates + Login/Avatar (Desktop) */}
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            {/* My Templates - always visible, primary style */}
+            {isLoggedIn ? (
+              <Button
+                variant="default"
+                size="default"
+                asChild
+                data-testid="button-my-templates"
+              >
+                <Link href="/my-templates" className="font-medium">
                   My Templates
-                </Button>
-                <Button
-                  variant="default"
-                  size="default"
-                  asChild
-                  data-testid="button-create-invite"
-                >
-                  <Link href="/templates" className="font-medium">
-                    Create Invite
-                  </Link>
-                </Button>
-              </>
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                size="default"
+                onClick={() => setAuthModalOpen(true)}
+                data-testid="button-my-templates"
+              >
+                My Templates
+              </Button>
+            )}
+            
+            {/* Login/Avatar - always on the right */}
+            {isLoggedIn && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full"
+                    data-testid="button-user-menu"
+                  >
+                    <Avatar className="w-9 h-9">
+                      <AvatarFallback className="text-sm font-semibold">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem data-testid="menu-item-profile">
+                    <User className="w-4 h-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    data-testid="menu-item-logout"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="ghost"
+                size="default"
+                onClick={() => setAuthModalOpen(true)}
+                data-testid="button-login"
+              >
+                Login
+              </Button>
             )}
           </div>
 
+          {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button
@@ -245,37 +225,40 @@ export function Navigation() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <nav className="flex flex-col gap-2 mt-8" data-testid="nav-mobile">
-                {navLinks.map((link) => (
+                {/* Category Links */}
+                {centerNavLinks.map((link) => (
                   <Link 
                     key={link.href} 
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-3 rounded-md text-base font-medium transition-all hover-elevate active-elevate-2 ${
-                      location === link.href
+                    className={`px-4 py-3 rounded-md text-base font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-2 ${
+                      location === link.href || location.startsWith(link.href.split('?')[0])
                         ? "bg-accent/10 text-accent-foreground"
                         : "text-foreground/80"
                     }`}
                     data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
+                    {link.icon && <link.icon className="w-4 h-4" />}
                     {link.label}
                   </Link>
                 ))}
                 
+                <div className="border-t border-border my-4" />
+                
                 {isLoggedIn && user ? (
                   <>
-                    <div className="mt-4 px-4 py-3 bg-accent/10 rounded-md">
+                    <div className="px-4 py-3 bg-accent/10 rounded-md">
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                     <Button
-                      variant="ghost"
+                      variant="default"
                       size="default"
-                      className="w-full justify-start"
+                      className="w-full"
                       asChild
                       data-testid="button-my-templates-mobile"
                     >
                       <Link href="/my-templates" onClick={() => setMobileMenuOpen(false)}>
-                        <Video className="w-4 h-4 mr-2" />
                         My Templates
                       </Link>
                     </Button>
@@ -283,40 +266,20 @@ export function Navigation() {
                       variant="ghost"
                       size="default"
                       className="w-full justify-start"
-                      onClick={handleLogout}
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleLogout();
+                      }}
                       data-testid="button-logout-mobile"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Logout
                     </Button>
-                    <Button
-                      variant="default"
-                      size="default"
-                      className="w-full"
-                      asChild
-                      data-testid="button-create-invite-mobile"
-                    >
-                      <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
-                        Create Invite
-                      </Link>
-                    </Button>
                   </>
                 ) : (
                   <>
                     <Button
-                      variant="ghost"
-                      size="default"
-                      className="mt-4 w-full"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setAuthModalOpen(true);
-                      }}
-                      data-testid="button-login-mobile"
-                    >
-                      Login
-                    </Button>
-                    <Button
-                      variant="ghost"
+                      variant="default"
                       size="default"
                       className="w-full"
                       onClick={() => {
@@ -328,15 +291,16 @@ export function Navigation() {
                       My Templates
                     </Button>
                     <Button
-                      variant="default"
+                      variant="ghost"
                       size="default"
                       className="w-full"
-                      asChild
-                      data-testid="button-create-invite-mobile"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        setAuthModalOpen(true);
+                      }}
+                      data-testid="button-login-mobile"
                     >
-                      <Link href="/templates" onClick={() => setMobileMenuOpen(false)}>
-                        Create Invite
-                      </Link>
+                      Login
                     </Button>
                   </>
                 )}
@@ -346,13 +310,10 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Auth Modal */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        onSuccess={() => {
-          // Auth state will be updated by the useEffect polling
-        }}
+        onSuccess={() => {}}
       />
     </header>
   );

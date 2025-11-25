@@ -39,6 +39,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/my-templates" component={MyTemplates} />
       <Route path="/templates" component={Templates} />
+      <Route path="/templates/:category" component={Templates} />
       <Route path="/template/:slug" component={TemplateDetail} />
       <Route path="/editor/:slug" component={Editor} />
       

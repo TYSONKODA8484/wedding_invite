@@ -1,29 +1,40 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRoute, Link } from "wouter";
 import type { Template } from "@shared/schema";
 import { SEOHead } from "@/components/SEOHead";
 import { TemplateCard } from "@/components/TemplateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { SlidersHorizontal, X, Loader2 } from "lucide-react";
+import { SlidersHorizontal, X, Loader2, Heart, Cake, ArrowLeft } from "lucide-react";
 import templatesHubHero from "@assets/generated_images/Templates_hub_hero_image_bf0e94da.png";
 
 export default function Templates() {
+  const [, params] = useRoute("/templates/:category");
+  const categoryFromUrl = params?.category?.toLowerCase();
+  
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedOrientation, setSelectedOrientation] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const types = ["All", "Wedding", "Engagement", "Reception", "Pre-Wedding"];
-  const orientations = ["All", "Portrait", "Landscape", "Square"];
+  const templateTypes = ["All", "Card", "Video"];
+  const orientations = ["All", "Portrait", "Landscape"];
 
   const { data: templates = [], isLoading, error } = useQuery<Template[]>({
-    queryKey: ["/api/templates"],
+    queryKey: ["/api/templates", categoryFromUrl ? { category: categoryFromUrl } : {}],
+    queryFn: async () => {
+      const url = categoryFromUrl 
+        ? `/api/templates?category=${categoryFromUrl}` 
+        : "/api/templates";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch templates");
+      return response.json();
+    },
   });
 
-  // Filter templates on the client side
   const filteredTemplates = templates.filter((template: any) => {
-    if (selectedType && selectedType !== "All" && template.category !== selectedType.toLowerCase()) {
+    if (selectedType && selectedType !== "All" && template.templateType !== selectedType.toLowerCase()) {
       return false;
     }
     if (selectedOrientation && selectedOrientation !== "All" && template.orientation !== selectedOrientation.toLowerCase()) {
@@ -39,15 +50,39 @@ export default function Templates() {
     setSelectedOrientation(null);
   };
 
+  const getPageTitle = () => {
+    if (categoryFromUrl === "wedding") return "Wedding Invitations";
+    if (categoryFromUrl === "birthday") return "Birthday Invitations";
+    return "All Templates";
+  };
+
+  const getPageDescription = () => {
+    if (categoryFromUrl === "wedding") return "Beautiful video invitations for your special wedding day";
+    if (categoryFromUrl === "birthday") return "Fun and festive birthday video invitations";
+    return "Cinematic video invitation templates designed for every culture and celebration";
+  };
+
+  const getHeroTitle = () => {
+    if (categoryFromUrl === "wedding") return "Wedding Invitations";
+    if (categoryFromUrl === "birthday") return "Birthday Invitations";
+    return "Explore Our Templates";
+  };
+
+  const getCategoryIcon = () => {
+    if (categoryFromUrl === "wedding") return <Heart className="w-8 h-8 text-pink-400" />;
+    if (categoryFromUrl === "birthday") return <Cake className="w-8 h-8 text-amber-400" />;
+    return null;
+  };
+
   return (
     <>
       <SEOHead
-        title="Video Invitation Templates - Cinematic Wedding Designs"
-        description="Browse our collection of premium video invitation templates for weddings, engagements, and special events. Customizable, culturally accurate, and ready to share."
-        keywords="wedding video templates, invitation templates, video creator, wedding invitation designs, indian wedding video, arabic wedding invitation"
+        title={`${getPageTitle()} - Video Invitation Templates`}
+        description={getPageDescription()}
+        keywords={`${categoryFromUrl || 'wedding birthday'} video templates, invitation templates, video creator, wedding invitation designs, indian wedding video, arabic wedding invitation`}
       />
 
-      <div className="relative min-h-[60vh] flex items-center justify-center overflow-hidden" data-testid="hero-templates">
+      <div className="relative min-h-[50vh] flex items-center justify-center overflow-hidden" data-testid="hero-templates">
         <div className="absolute inset-0 z-0">
           <img
             src={templatesHubHero}
@@ -57,13 +92,27 @@ export default function Templates() {
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 text-center">
-          <h1 className="font-playfair text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            Explore Our Templates
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            {getCategoryIcon()}
+          </div>
+          <h1 className="font-playfair text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
+            {getHeroTitle()}
           </h1>
-          <p className="text-white/90 text-lg lg:text-xl max-w-3xl mx-auto mb-8 leading-relaxed">
-            Cinematic video invitation templates designed for every culture and celebration
+          <p className="text-white/90 text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed">
+            {getPageDescription()}
           </p>
+          
+          {categoryFromUrl && (
+            <div className="mt-6">
+              <Link href="/templates">
+                <Button variant="outline" className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  View All Templates
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
@@ -110,9 +159,9 @@ export default function Templates() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-3 block">Event Type</label>
+                  <label className="text-sm font-medium text-foreground mb-3 block">Template Type</label>
                   <div className="flex flex-wrap gap-2">
-                    {types.map((type) => (
+                    {templateTypes.map((type) => (
                       <Badge
                         key={type}
                         className={`cursor-pointer hover-elevate active-elevate-2 ${
@@ -199,7 +248,7 @@ export default function Templates() {
                     id={template.id}
                     title={template.title}
                     slug={template.slug}
-                    category={template.category}
+                    category={template.templateType}
                     duration={template.duration}
                     thumbnailUrl={template.thumbnailUrl}
                     demoVideoUrl={template.demoVideoUrl}
