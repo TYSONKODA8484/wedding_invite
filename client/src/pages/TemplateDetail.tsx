@@ -1,6 +1,6 @@
 import { useRoute, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,15 +12,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { 
-  Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize, 
   Loader2, 
   X, 
-  SkipForward, 
-  SkipBack,
   Check,
   Heart,
   Sparkles,
@@ -31,16 +24,34 @@ import {
 } from "lucide-react";
 import type { Template } from "@shared/schema";
 
+// Helper function to extract YouTube video ID from various URL formats
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+  
+  // Handle different YouTube URL formats:
+  // - https://www.youtube.com/watch?v=VIDEO_ID
+  // - https://youtu.be/VIDEO_ID
+  // - https://www.youtube.com/embed/VIDEO_ID
+  // - https://youtube.com/shorts/VIDEO_ID
+  
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return null;
+}
+
 export default function TemplateDetail() {
   const [, params] = useRoute("/template/:slug");
   const [, navigate] = useLocation();
   const slug = params?.slug;
   const [showFullDescription, setShowFullDescription] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showControls, setShowControls] = useState(false);
 
   const { data: template, isLoading, error } = useQuery<any>({
     queryKey: ["/api/templates", slug],
@@ -103,44 +114,10 @@ export default function TemplateDetail() {
     return `₹${rupees.toLocaleString('en-IN')}`;
   };
 
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (isPlaying) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
-    }
-    setIsPlaying(!isPlaying);
-  };
-
-  const toggleMute = () => {
-    if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
-  };
-
-  const toggleFullscreen = () => {
-    if (!videoRef.current) return;
-    if (videoRef.current.requestFullscreen) {
-      videoRef.current.requestFullscreen();
-    }
-  };
-
-  const skipForward = () => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
-    if (isNaN(video.duration) || !isFinite(video.duration)) return;
-    video.currentTime = Math.min(video.currentTime + 10, video.duration);
-  };
-
-  const skipBackward = () => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
-    if (isNaN(video.duration) || !isFinite(video.duration)) return;
-    video.currentTime = Math.max(video.currentTime - 10, 0);
-  };
-
   const templateType = template.templateType || template.category || "wedding";
+  
+  // Extract YouTube video ID from previewVideoUrl if it's a YouTube link
+  const youtubeVideoId = getYouTubeVideoId(template.previewVideoUrl || "");
   const priceInRupees = parseFloat(template.price || "0");
   const displayPrice = formatPrice(Math.round(priceInRupees * 100));
   const expertPrice = "₹1,999";
@@ -216,60 +193,26 @@ export default function TemplateDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             <div 
-              className="relative bg-black rounded-xl overflow-hidden aspect-[9/16] max-w-md mx-auto lg:mx-0 group"
-              onMouseEnter={() => setShowControls(true)}
-              onMouseLeave={() => setShowControls(false)}
+              className="relative bg-black rounded-xl overflow-hidden aspect-[9/16] max-w-md mx-auto lg:mx-0"
               data-testid="template-preview"
             >
-              <video
-                ref={videoRef}
-                className="w-full h-full object-contain"
-                poster={template.thumbnailUrl}
-                preload="metadata"
-                muted={isMuted}
-                loop
-                playsInline
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                data-testid="video-demo"
-              >
-                <source src={template.previewVideoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-
-              {!isPlaying && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30">
-                  <Button
-                    size="lg"
-                    onClick={togglePlay}
-                    className="w-16 h-16 rounded-full bg-primary/90 backdrop-blur-sm hover:bg-primary shadow-xl"
-                    data-testid="button-play-video"
-                  >
-                    <Play className="w-8 h-8 text-primary-foreground fill-current ml-1" />
-                  </Button>
-                </div>
-              )}
-
-              {isPlaying && showControls && (
-                <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-3">
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white hover:bg-white/20 h-8 w-8">
-                      <Pause className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={skipBackward} className="text-white hover:bg-white/20 h-8 w-8">
-                      <SkipBack className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={skipForward} className="text-white hover:bg-white/20 h-8 w-8">
-                      <SkipForward className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white hover:bg-white/20 h-8 w-8">
-                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                    </Button>
-                    <div className="flex-1" />
-                    <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white hover:bg-white/20 h-8 w-8">
-                      <Maximize className="w-4 h-4" />
-                    </Button>
-                  </div>
+              {youtubeVideoId ? (
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
+                  title={template.templateName}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  data-testid="youtube-video"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img
+                    src={template.thumbnailUrl}
+                    alt={template.templateName}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
             </div>
