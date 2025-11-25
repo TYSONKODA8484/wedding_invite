@@ -279,7 +279,9 @@ export default function Templates() {
               <PopoverContent 
                 className="w-72 p-4 rounded-xl border bg-card shadow-lg" 
                 align="start"
+                side="bottom"
                 sideOffset={8}
+                avoidCollisions={false}
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2 text-sm font-semibold">
