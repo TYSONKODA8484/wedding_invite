@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Sparkles, User, LogOut, Heart, Cake } from "lucide-react";
+import { Menu, Sparkles, User, LogOut, Search, Play } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 
 export function Navigation() {
@@ -86,9 +86,9 @@ export function Navigation() {
       .slice(0, 2);
   };
 
-  const centerNavLinks = [
-    { label: "Wedding", href: "/templates/wedding", icon: Heart },
-    { label: "Birthday", href: "/templates/birthday", icon: Cake },
+  const navLinks = [
+    { label: "Wedding", href: "/templates/wedding" },
+    { label: "Birthday", href: "/templates/birthday" },
     { label: "How It Works", href: "/#how-it-works" },
     { label: "Contact", href: "/contact" },
   ];
@@ -98,80 +98,87 @@ export function Navigation() {
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
         isScrolled
           ? "bg-background/95 backdrop-blur-md border-b border-border shadow-sm"
-          : "bg-transparent"
+          : "bg-background border-b border-border/50"
       }`}
       data-testid="header-navigation"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20 gap-4">
+        <div className="flex items-center justify-between h-16 gap-6">
           {/* Left: Logo + Company Name */}
           <Link 
             href="/" 
-            className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3 transition-all flex-shrink-0"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0"
             data-testid="link-home"
           >
-            <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary" />
-            <span className="font-playfair text-xl md:text-2xl font-bold text-foreground">
-              WeddingInvite.ai
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Play className="w-4 h-4 text-white fill-white" />
+            </div>
+            <span className="font-semibold text-xl text-foreground">
+              WeddingInvite<span className="text-primary">.ai</span>
             </span>
           </Link>
 
           {/* Middle: Navigation Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-1" data-testid="nav-desktop">
-            {centerNavLinks.map((link) => (
+          <nav className="hidden lg:flex items-center gap-6" data-testid="nav-desktop">
+            {navLinks.map((link) => (
               <Link 
                 key={link.href} 
                 href={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-1.5 ${
+                className={`text-sm font-medium transition-colors hover:text-primary ${
                   location === link.href || location.startsWith(link.href.split('?')[0])
-                    ? "bg-accent/10 text-accent-foreground"
-                    : "text-foreground/80 hover:text-foreground"
+                    ? "text-primary"
+                    : "text-foreground/70"
                 }`}
                 data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
-                {link.icon && <link.icon className="w-4 h-4" />}
                 {link.label}
               </Link>
             ))}
+            <button 
+              className="text-foreground/70 hover:text-primary transition-colors"
+              data-testid="button-search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
           </nav>
 
-          {/* Right: My Templates + Login/Avatar (Desktop) */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            {/* My Templates - always visible, primary style */}
+          {/* Right: My Templates + Profile Avatar (Desktop) */}
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+            {/* My Templates - coral/pink solid button like 247invites "My Videos" */}
             {isLoggedIn ? (
               <Button
-                variant="default"
-                size="default"
                 asChild
+                className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-medium rounded-full px-5"
                 data-testid="button-my-templates"
               >
-                <Link href="/my-templates" className="font-medium">
+                <Link href="/my-templates" className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
                   My Templates
                 </Link>
               </Button>
             ) : (
               <Button
-                variant="default"
-                size="default"
+                className="bg-[#FF6B6B] hover:bg-[#FF5252] text-white font-medium rounded-full px-5"
                 onClick={() => setAuthModalOpen(true)}
                 data-testid="button-my-templates"
               >
+                <User className="w-4 h-4 mr-2" />
                 My Templates
               </Button>
             )}
             
-            {/* Login/Avatar - always on the right */}
+            {/* Profile Avatar - always on the right */}
             {isLoggedIn && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full"
+                    className="rounded-full w-10 h-10 p-0"
                     data-testid="button-user-menu"
                   >
-                    <Avatar className="w-9 h-9">
-                      <AvatarFallback className="text-sm font-semibold">
+                    <Avatar className="w-10 h-10 border-2 border-primary/20">
+                      <AvatarFallback className="text-sm font-semibold bg-primary/10 text-primary">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -201,13 +208,18 @@ export function Navigation() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button
-                variant="ghost"
-                size="default"
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full w-10 h-10 p-0"
                 onClick={() => setAuthModalOpen(true)}
                 data-testid="button-login"
               >
-                Login
+                <Avatar className="w-10 h-10 border-2 border-border">
+                  <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                    <User className="w-5 h-5" />
+                  </AvatarFallback>
+                </Avatar>
               </Button>
             )}
           </div>
@@ -225,20 +237,19 @@ export function Navigation() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <nav className="flex flex-col gap-2 mt-8" data-testid="nav-mobile">
-                {/* Category Links */}
-                {centerNavLinks.map((link) => (
+                {/* Navigation Links */}
+                {navLinks.map((link) => (
                   <Link 
                     key={link.href} 
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-3 rounded-md text-base font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-2 ${
+                    className={`px-4 py-3 rounded-md text-base font-medium transition-colors ${
                       location === link.href || location.startsWith(link.href.split('?')[0])
-                        ? "bg-accent/10 text-accent-foreground"
-                        : "text-foreground/80"
+                        ? "text-primary bg-primary/5"
+                        : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
                     }`}
                     data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    {link.icon && <link.icon className="w-4 h-4" />}
                     {link.label}
                   </Link>
                 ))}
@@ -247,24 +258,22 @@ export function Navigation() {
                 
                 {isLoggedIn && user ? (
                   <>
-                    <div className="px-4 py-3 bg-accent/10 rounded-md">
+                    <div className="px-4 py-3 bg-muted/50 rounded-md">
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                     <Button
-                      variant="default"
-                      size="default"
-                      className="w-full"
+                      className="w-full bg-[#FF6B6B] hover:bg-[#FF5252] text-white rounded-full"
                       asChild
                       data-testid="button-my-templates-mobile"
                     >
                       <Link href="/my-templates" onClick={() => setMobileMenuOpen(false)}>
+                        <User className="w-4 h-4 mr-2" />
                         My Templates
                       </Link>
                     </Button>
                     <Button
                       variant="ghost"
-                      size="default"
                       className="w-full justify-start"
                       onClick={() => {
                         setMobileMenuOpen(false);
@@ -279,20 +288,18 @@ export function Navigation() {
                 ) : (
                   <>
                     <Button
-                      variant="default"
-                      size="default"
-                      className="w-full"
+                      className="w-full bg-[#FF6B6B] hover:bg-[#FF5252] text-white rounded-full"
                       onClick={() => {
                         setMobileMenuOpen(false);
                         setAuthModalOpen(true);
                       }}
                       data-testid="button-my-templates-mobile"
                     >
+                      <User className="w-4 h-4 mr-2" />
                       My Templates
                     </Button>
                     <Button
                       variant="ghost"
-                      size="default"
                       className="w-full"
                       onClick={() => {
                         setMobileMenuOpen(false);
