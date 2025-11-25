@@ -396,16 +396,14 @@ export default function TemplateDetail() {
       <section className="py-6 lg:py-8 bg-background border-t">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h3 className="text-sm font-medium text-foreground mb-3">Tags</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-testid="seo-tags">
             {tags.map((tag) => (
-              <Badge 
+              <span 
                 key={tag} 
-                variant="secondary" 
-                className="cursor-pointer hover:bg-accent"
-                onClick={() => navigate(`/templates?tag=${tag}`)}
+                className="text-sm text-muted-foreground px-3 py-1 bg-muted rounded-full"
               >
                 {tag}
-              </Badge>
+              </span>
             ))}
           </div>
         </div>
