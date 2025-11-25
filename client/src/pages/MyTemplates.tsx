@@ -132,6 +132,23 @@ export default function MyTemplates() {
     );
   }
 
+  // Partition projects into Paid and Generated sections
+  const paidProjects = projects
+    ?.filter((p) => p.isPaid)
+    .sort((a, b) => {
+      const dateA = a.paidAt ? new Date(a.paidAt).getTime() : 0;
+      const dateB = b.paidAt ? new Date(b.paidAt).getTime() : 0;
+      return dateB - dateA; // Newest paid first
+    }) || [];
+
+  const generatedProjects = projects
+    ?.filter((p) => !p.isPaid)
+    .sort((a, b) => {
+      const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return dateB - dateA; // Newest updated first
+    }) || [];
+
   if (!projects || projects.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -146,104 +163,132 @@ export default function MyTemplates() {
     );
   }
 
+  const renderProjectCard = (project: Project) => (
+    <Card 
+      key={project.id} 
+      className="overflow-hidden hover-elevate"
+      data-testid={`card-project-${project.id}`}
+    >
+      <div className="relative aspect-[9/16]">
+        <img
+          src={project.thumbnailUrl || project.previewImageUrl}
+          alt={project.templateName}
+          className="w-full h-full object-cover"
+          data-testid={`img-thumbnail-${project.id}`}
+        />
+        <div className="absolute top-2 right-2">
+          {project.isPaid ? (
+            <Badge variant="default" className="bg-green-600 dark:bg-green-700 text-white" data-testid={`badge-paid-${project.id}`}>
+              Paid
+            </Badge>
+          ) : (
+            <Badge variant="secondary" data-testid={`badge-preview-${project.id}`}>
+              Preview
+            </Badge>
+          )}
+        </div>
+        <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+          {project.isPaid ? (
+            <>
+              <Button
+                size="icon"
+                variant="default"
+                onClick={() => handleDownload(project)}
+                data-testid={`button-download-${project.id}`}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
+                onClick={() => handleShare(project)}
+                data-testid={`button-share-${project.id}`}
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                size="icon"
+                variant="default"
+                onClick={() => handleEdit(project)}
+                data-testid={`button-edit-${project.id}`}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
+                onClick={() => handleDownload(project)}
+                data-testid={`button-download-${project.id}`}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-1 mb-2">
+          <h3 className="font-medium text-sm line-clamp-2" data-testid={`text-name-${project.id}`}>
+            {project.templateName}
+          </h3>
+          <span className="text-sm font-bold text-pink-500 ml-2" data-testid={`text-price-${project.id}`}>
+            {formatPrice(project.price, project.currency)}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between gap-1">
+          <p className="text-xs text-muted-foreground" data-testid={`text-preview-${project.id}`}>
+            {project.isPaid ? "Your video is ready!" : "Preview of your video is ready."}
+          </p>
+          {getStatusBadge(project)}
+        </div>
+        
+        {project.paidAt && (
+          <p className="text-xs text-green-600 mt-2" data-testid={`text-date-${project.id}`}>
+            Purchased: {new Date(project.paidAt).toLocaleDateString()}
+          </p>
+        )}
+      </div>
+    </Card>
+  );
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="font-playfair text-3xl font-bold mb-8" data-testid="heading-my-videos">My Videos</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {projects.map((project) => (
-          <Card 
-            key={project.id} 
-            className="overflow-hidden hover-elevate"
-            data-testid={`card-project-${project.id}`}
-          >
-            <div className="relative aspect-[9/16]">
-              <img
-                src={project.thumbnailUrl || project.previewImageUrl}
-                alt={project.templateName}
-                className="w-full h-full object-cover"
-                data-testid={`img-thumbnail-${project.id}`}
-              />
-              <div className="absolute top-2 right-2">
-                {project.isPaid ? (
-                  <Badge variant="default" className="bg-green-600 dark:bg-green-700 text-white" data-testid={`badge-paid-${project.id}`}>
-                    Paid
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary" data-testid={`badge-preview-${project.id}`}>
-                    Preview
-                  </Badge>
-                )}
-              </div>
-              <div className="absolute bottom-2 left-2 right-2 flex gap-2">
-                {project.isPaid ? (
-                  <>
-                    <Button
-                      size="icon"
-                      variant="default"
-                      onClick={() => handleDownload(project)}
-                      data-testid={`button-download-${project.id}`}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      onClick={() => handleShare(project)}
-                      data-testid={`button-share-${project.id}`}
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      size="icon"
-                      variant="default"
-                      onClick={() => handleEdit(project)}
-                      data-testid={`button-edit-${project.id}`}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      onClick={() => handleDownload(project)}
-                      data-testid={`button-download-${project.id}`}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-sm line-clamp-2" data-testid={`text-name-${project.id}`}>
-                  {project.templateName}
-                </h3>
-                <span className="text-sm font-bold text-pink-500 ml-2" data-testid={`text-price-${project.id}`}>
-                  {formatPrice(project.price, project.currency)}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground" data-testid={`text-preview-${project.id}`}>
-                  Preview of your video is ready.
-                </p>
-                {getStatusBadge(project)}
-              </div>
-              
-              {project.paidAt && (
-                <p className="text-xs text-green-600 mt-2" data-testid={`text-date-${project.id}`}>
-                  DT: {new Date(project.paidAt).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          </Card>
-        ))}
-      </div>
+      {/* Paid Templates Section - Only show if there are paid templates */}
+      {paidProjects.length > 0 && (
+        <section className="mb-10" data-testid="section-paid-templates">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-paid-templates">
+            <span className="text-green-600">Paid Templates</span>
+            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+              {paidProjects.length}
+            </Badge>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {paidProjects.map(renderProjectCard)}
+          </div>
+        </section>
+      )}
+
+      {/* Generated Templates Section - Only show if there are generated templates */}
+      {generatedProjects.length > 0 && (
+        <section data-testid="section-generated-templates">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-generated-templates">
+            <span>Generated Templates</span>
+            <Badge variant="secondary">
+              {generatedProjects.length}
+            </Badge>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {generatedProjects.map(renderProjectCard)}
+          </div>
+        </section>
+      )}
 
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
         <DialogContent data-testid="modal-payment">
