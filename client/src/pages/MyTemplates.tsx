@@ -321,8 +321,7 @@ export default function MyTemplates() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="font-playfair text-3xl font-bold mb-8" data-testid="heading-my-videos">My Videos</h1>
-      
+      <h1 className="font-playfair text-3xl font-bold mb-8" data-testid="heading-my-videos">My Templates</h1>
       {/* Paid Templates Section - Only show if there are paid templates */}
       {paidProjects.length > 0 && (
         <section className="mb-10" data-testid="section-paid-templates">
@@ -337,7 +336,6 @@ export default function MyTemplates() {
           </div>
         </section>
       )}
-
       {/* Generated Templates Section - Only show if there are generated templates */}
       {generatedProjects.length > 0 && (
         <section data-testid="section-generated-templates">
@@ -352,7 +350,6 @@ export default function MyTemplates() {
           </div>
         </section>
       )}
-
       <VideoPreviewModal
         open={showVideoModal}
         onOpenChange={setShowVideoModal}
@@ -360,7 +357,6 @@ export default function MyTemplates() {
         templateName={selectedVideoProject?.templateName || ""}
         orientation={selectedVideoProject?.orientation || "portrait"}
       />
-
       {selectedProject && (
         <PaymentModal
           isOpen={showPaymentModal}
