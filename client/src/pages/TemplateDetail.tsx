@@ -193,30 +193,20 @@ export default function TemplateDetail() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <div 
-              className="w-full lg:w-[420px] flex-shrink-0"
+              className="w-full lg:flex-[2] lg:max-w-[550px]"
               data-testid="template-preview"
             >
-              {youtubeVideoId ? (
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
-                  <iframe
-                    className="w-full h-full"
-                    src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0`}
-                    title={template.templateName}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    data-testid="youtube-video"
-                  />
-                </div>
-              ) : (
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg">
-                  <img
-                    src={template.thumbnailUrl}
-                    alt={template.templateName}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg bg-black">
+                <iframe
+                  className="w-full h-full"
+                  src="https://www.youtube.com/embed/WvfNvhFcjK8?rel=0"
+                  title={template.templateName}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  data-testid="youtube-video"
+                />
+              </div>
               
               <div className="mt-4">
                 <p className="text-sm text-muted-foreground">
@@ -235,7 +225,7 @@ export default function TemplateDetail() {
               </div>
             </div>
 
-            <div className="flex-1">
+            <div className="lg:flex-1">
               <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2" data-testid="text-template-title">
                 {template.templateName}
               </h1>
