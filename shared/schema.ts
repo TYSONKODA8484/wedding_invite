@@ -68,6 +68,8 @@ export const templates = pgTable("templates", {
   templateTags: jsonb("template_tags").notNull().default([]),
   thumbnailUrl: varchar("thumbnail_url").notNull(),
   popularityScore: integer("popularity_score").notNull().default(0),
+  totalGenerations: integer("total_generations").notNull().default(0),
+  totalPurchases: integer("total_purchases").notNull().default(0),
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).omit({
