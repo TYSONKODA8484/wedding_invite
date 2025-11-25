@@ -159,10 +159,15 @@ export class DatabaseStorage implements IStorage {
       // Use project-specific URLs if available, fall back to template video
       const videoUrl = row.project.previewUrl || row.project.finalUrl || row.template?.previewVideoUrl;
       
+      // Determine template type (card or video)
+      const rawType = row.template?.templateType || 'video';
+      const templateType = rawType === 'card' ? 'card' : 'video';
+      
       return {
         id: row.project.id,
         templateId: row.project.templateId,
         templateName: row.template?.templateName || 'Unknown Template',
+        templateType,
         thumbnailUrl: row.template?.thumbnailUrl || row.template?.previewImageUrl,
         previewImageUrl: row.template?.previewImageUrl,
         previewVideoUrl: videoUrl,
