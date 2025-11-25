@@ -230,7 +230,7 @@ export default function MyTemplates() {
             </Badge>
           )}
         </div>
-        <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2">
+        <div className="absolute bottom-2 right-2">
           <Badge 
             variant="outline" 
             className="bg-black/50 backdrop-blur-sm text-white border-white/30"
@@ -242,6 +242,8 @@ export default function MyTemplates() {
               <><Film className="h-3 w-3 mr-1" /> Video</>
             )}
           </Badge>
+        </div>
+        <div className="absolute bottom-2 left-2 flex items-center gap-2">
           {project.isPaid ? (
             <>
               <Button
