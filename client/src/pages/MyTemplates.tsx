@@ -219,7 +219,7 @@ export default function MyTemplates() {
           className="w-full h-full object-cover"
           data-testid={`img-thumbnail-${project.id}`}
         />
-        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+        <div className="absolute top-2 right-2">
           {project.isPaid ? (
             <Badge variant="default" className="bg-green-600 dark:bg-green-700 text-white" data-testid={`badge-paid-${project.id}`}>
               Paid
@@ -229,6 +229,8 @@ export default function MyTemplates() {
               Preview
             </Badge>
           )}
+        </div>
+        <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2">
           <Badge 
             variant="outline" 
             className="bg-black/50 backdrop-blur-sm text-white border-white/30"
@@ -240,8 +242,6 @@ export default function MyTemplates() {
               <><Film className="h-3 w-3 mr-1" /> Video</>
             )}
           </Badge>
-        </div>
-        <div className="absolute bottom-2 left-2 right-2 flex gap-2">
           {project.isPaid ? (
             <>
               <Button
