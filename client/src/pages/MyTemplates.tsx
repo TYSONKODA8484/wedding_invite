@@ -10,9 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Download, Edit, Share2 } from "lucide-react";
+import { Download, Edit, Share2, Eye } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { VideoPreviewModal } from "@/components/VideoPreviewModal";
 
 interface Project {
   id: string;
@@ -20,6 +21,8 @@ interface Project {
   templateName: string;
   thumbnailUrl: string;
   previewImageUrl: string;
+  previewVideoUrl: string;
+  orientation: "portrait" | "landscape";
   price: string;
   currency: string;
   status: string;
@@ -37,6 +40,8 @@ export default function MyTemplates() {
   const { toast } = useToast();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedVideoProject, setSelectedVideoProject] = useState<Project | null>(null);
   
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects/mine"],
@@ -77,8 +82,14 @@ export default function MyTemplates() {
       setSelectedProject(project);
       setShowPaymentModal(true);
     } else {
-      if (project.finalUrl) {
-        window.open(project.finalUrl, "_blank");
+      const urlToDownload = project.finalUrl || project.previewUrl;
+      if (urlToDownload) {
+        const link = document.createElement("a");
+        link.href = urlToDownload;
+        link.download = `${project.templateName}.mp4`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       } else {
         toast({
           title: "Video not ready",
@@ -87,6 +98,11 @@ export default function MyTemplates() {
         });
       }
     }
+  };
+
+  const handleViewVideo = (project: Project) => {
+    setSelectedVideoProject(project);
+    setShowVideoModal(true);
   };
 
   const handleShare = (project: Project) => {
@@ -112,16 +128,6 @@ export default function MyTemplates() {
       return `₹${parseFloat(price).toFixed(0)}`;
     }
     return `${currency} ${parseFloat(price).toFixed(2)}`;
-  };
-
-  const getStatusBadge = (project: Project) => {
-    if (project.isPaid) {
-      if (project.status === "completed") {
-        return <Badge className="bg-green-500" data-testid={`badge-status-${project.id}`}>Previewed</Badge>;
-      }
-      return <Badge className="bg-blue-500" data-testid={`badge-status-${project.id}`}>Processing</Badge>;
-    }
-    return <Badge variant="secondary" data-testid={`badge-status-${project.id}`}>Previewed</Badge>;
   };
 
   if (isLoading) {
@@ -193,6 +199,14 @@ export default function MyTemplates() {
               <Button
                 size="icon"
                 variant="default"
+                onClick={() => handleViewVideo(project)}
+                data-testid={`button-view-${project.id}`}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
                 onClick={() => handleDownload(project)}
                 data-testid={`button-download-${project.id}`}
               >
@@ -220,6 +234,14 @@ export default function MyTemplates() {
               <Button
                 size="icon"
                 variant="secondary"
+                onClick={() => handleViewVideo(project)}
+                data-testid={`button-view-${project.id}`}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
                 onClick={() => handleDownload(project)}
                 data-testid={`button-download-${project.id}`}
               >
@@ -232,24 +254,17 @@ export default function MyTemplates() {
       
       <div className="p-4">
         <div className="flex items-start justify-between gap-1 mb-2">
-          <h3 className="font-medium text-sm line-clamp-2" data-testid={`text-name-${project.id}`}>
+          <h3 className="font-medium text-sm line-clamp-2 flex-1" data-testid={`text-name-${project.id}`}>
             {project.templateName}
           </h3>
-          <span className="text-sm font-bold text-pink-500 ml-2" data-testid={`text-price-${project.id}`}>
+          <span className="text-sm font-bold text-pink-500 flex-shrink-0" data-testid={`text-price-${project.id}`}>
             {formatPrice(project.price, project.currency)}
           </span>
         </div>
         
-        <div className="flex items-center justify-between gap-1">
-          <p className="text-xs text-muted-foreground" data-testid={`text-preview-${project.id}`}>
-            {project.isPaid ? "Your video is ready!" : "Preview of your video is ready."}
-          </p>
-          {getStatusBadge(project)}
-        </div>
-        
         {project.paidAt && (
-          <p className="text-xs text-green-600 mt-2" data-testid={`text-date-${project.id}`}>
-            Purchased: {new Date(project.paidAt).toLocaleDateString()}
+          <p className="text-xs text-green-600" data-testid={`text-date-${project.id}`}>
+            {new Date(project.paidAt).toLocaleDateString()}
           </p>
         )}
       </div>
@@ -289,6 +304,14 @@ export default function MyTemplates() {
           </div>
         </section>
       )}
+
+      <VideoPreviewModal
+        open={showVideoModal}
+        onOpenChange={setShowVideoModal}
+        videoUrl={selectedVideoProject?.previewVideoUrl || null}
+        templateName={selectedVideoProject?.templateName || ""}
+        orientation={selectedVideoProject?.orientation || "portrait"}
+      />
 
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
         <DialogContent data-testid="modal-payment">

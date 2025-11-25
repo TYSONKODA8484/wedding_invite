@@ -162,6 +162,8 @@ export class DatabaseStorage implements IStorage {
         templateName: row.template?.templateName || 'Unknown Template',
         thumbnailUrl: row.template?.thumbnailUrl || row.template?.previewImageUrl,
         previewImageUrl: row.template?.previewImageUrl,
+        previewVideoUrl: row.template?.previewVideoUrl,
+        orientation: row.template?.orientation || 'portrait',
         price: row.template?.price || '0',
         currency: row.template?.currency || 'INR',
         status: row.project.status,
