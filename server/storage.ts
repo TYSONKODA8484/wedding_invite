@@ -285,33 +285,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Popularity tracking operations
+  // Formula: popularityScore = floor(totalGenerations / 10) + totalPurchases
+  // Single atomic UPDATE to avoid race conditions
+  
   async incrementTemplateGeneration(templateId: string): Promise<Template | undefined> {
-    // Increment totalGenerations and recalculate popularityScore
-    // popularityScore = floor(totalGenerations / 10) + totalPurchases
+    if (!templateId) return undefined;
+    
+    // Atomic UPDATE: increment generation and recalculate score in one statement
+    // In PostgreSQL, all SET expressions are evaluated using OLD row values,
+    // so (total_generations + 1) gives us the new value for score calculation
     const [updated] = await db
       .update(templates)
       .set({
         totalGenerations: sql`${templates.totalGenerations} + 1`,
-        popularityScore: sql`FLOOR((${templates.totalGenerations} + 1) / 10) + ${templates.totalPurchases}`,
+        popularityScore: sql`FLOOR((${templates.totalGenerations} + 1)::numeric / 10) + ${templates.totalPurchases}`,
         updatedAt: new Date(),
       })
       .where(eq(templates.id, templateId))
       .returning();
+    
     return updated || undefined;
   }
 
   async incrementTemplatePurchase(templateId: string): Promise<Template | undefined> {
-    // Increment totalPurchases and recalculate popularityScore
-    // popularityScore = floor(totalGenerations / 10) + totalPurchases
+    if (!templateId) return undefined;
+    
+    // Atomic UPDATE: increment purchase and recalculate score in one statement
+    // In PostgreSQL, all SET expressions are evaluated using OLD row values,
+    // so (total_purchases + 1) gives us the new value for score calculation
     const [updated] = await db
       .update(templates)
       .set({
         totalPurchases: sql`${templates.totalPurchases} + 1`,
-        popularityScore: sql`FLOOR(${templates.totalGenerations} / 10) + ${templates.totalPurchases} + 1`,
+        popularityScore: sql`FLOOR(${templates.totalGenerations}::numeric / 10) + ${templates.totalPurchases} + 1`,
         updatedAt: new Date(),
       })
       .where(eq(templates.id, templateId))
       .returning();
+    
     return updated || undefined;
   }
 }
