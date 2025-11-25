@@ -189,25 +189,27 @@ export default function TemplateDetail() {
         ogImage={template.thumbnailUrl}
       />
 
-      <section className="py-8 lg:py-12 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+      <section className="py-6 lg:py-10 bg-background">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
             <div 
-              className="relative bg-black rounded-xl overflow-hidden aspect-[9/16] max-w-md mx-auto lg:mx-0"
+              className="relative bg-muted rounded-lg overflow-hidden w-full lg:w-[380px] flex-shrink-0"
               data-testid="template-preview"
             >
               {youtubeVideoId ? (
-                <iframe
-                  className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
-                  title={template.templateName}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  data-testid="youtube-video"
-                />
+                <div className="aspect-[3/4]">
+                  <iframe
+                    className="w-full h-full"
+                    src={`https://www.youtube.com/embed/${youtubeVideoId}?rel=0&modestbranding=1&playsinline=1`}
+                    title={template.templateName}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    data-testid="youtube-video"
+                  />
+                </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="aspect-[3/4]">
                   <img
                     src={template.thumbnailUrl}
                     alt={template.templateName}
@@ -217,68 +219,69 @@ export default function TemplateDetail() {
               )}
             </div>
 
-            <div className="flex flex-col">
-              <h1 className="font-playfair text-2xl lg:text-3xl font-bold text-foreground mb-3" data-testid="text-template-title">
+            <div className="flex-1 flex flex-col">
+              <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2" data-testid="text-template-title">
                 {template.templateName}
               </h1>
               
-              <div className="flex items-center gap-4 mb-4">
-                <Badge variant="secondary" className="capitalize">{templateType}</Badge>
-                <span className="text-2xl font-bold text-foreground" data-testid="text-template-price">
+              <div className="flex items-center gap-3 mb-4">
+                <Badge variant="secondary" className="capitalize text-xs">{templateType}</Badge>
+                <span className="text-xl font-bold text-foreground" data-testid="text-template-price">
                   {displayPrice}
                 </span>
               </div>
 
               <Button
                 size="lg"
-                className="w-full mb-6 h-12 text-base font-semibold rounded-full"
+                className="w-full mb-5 h-11 text-sm font-semibold"
                 onClick={() => navigate(`/editor/${template.slug}`)}
                 data-testid="button-customize-template"
               >
-                <Heart className="w-5 h-5 mr-2 fill-current" />
+                <Heart className="w-4 h-4 mr-2 fill-current" />
                 Start Free Customization
               </Button>
 
-              <div className="space-y-3 mb-6">
-                <div className="flex items-start gap-3">
-                  <Globe className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="space-y-2 mb-5">
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground">
                     Create In : <span className="text-muted-foreground">English , हिन्दी , मराठी , ગુજરાતી , தமிழ் , తెలుగు</span>
                   </span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Palette className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground">Change your card's text, style, envelope, backdrop and more</span>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Download className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-foreground">Download high quality video.</span>
                 </div>
               </div>
 
-              <Card className="p-4 border-primary/30 bg-primary/5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-primary font-medium text-sm">Prefer to let the experts handle it?</span>
+              <Card className="p-4 border-primary/20 bg-primary/5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-foreground text-sm">Prefer to let the experts handle it?</span>
                   <span className="text-foreground font-bold">{expertPrice}</span>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-3">
                   Our expert graphic design team is ready to help! Contact us, and we'll craft it perfectly for you.
                 </p>
                 <Button 
                   variant="outline" 
-                  className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  size="sm"
+                  className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   data-testid="button-expert-create"
                 >
-                  <Phone className="w-4 h-4 mr-2" />
+                  <Phone className="w-3 h-3 mr-2" />
                   Expert Create
                 </Button>
               </Card>
             </div>
           </div>
 
-          <div className="mt-8 max-w-3xl">
-            <p className={`text-muted-foreground ${!showFullDescription ? 'line-clamp-2' : ''}`}>
-              {description}
+          <div className="mt-6">
+            <p className="text-sm text-muted-foreground">
+              Create beautiful <span className="text-primary font-medium">{template.templateName}</span> with customizable pages and send via WhatsApp
             </p>
             <button 
               onClick={() => setShowFullDescription(!showFullDescription)}
@@ -287,6 +290,9 @@ export default function TemplateDetail() {
             >
               {showFullDescription ? 'Show Less' : 'Show More'}
             </button>
+            {showFullDescription && (
+              <p className="text-sm text-muted-foreground mt-2">{description}</p>
+            )}
           </div>
         </div>
       </section>
