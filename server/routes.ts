@@ -333,7 +333,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type, 
         orientation, 
         photo,
-        sort 
+        sort,
+        offset,
+        limit
       } = req.query;
       
       const allTemplates = await storage.getTemplates();
@@ -366,22 +368,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filteredTemplates = filteredTemplates.filter(t => t.photoOption === photo);
       }
       
-      // Apply sorting
+      // Apply sorting - default to newest if no sort specified
       if (sort === 'popular') {
         filteredTemplates.sort((a, b) => (b.popularityScore || 0) - (a.popularityScore || 0));
-      } else if (sort === 'newest') {
+      } else if (sort === 'price_low') {
+        filteredTemplates.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+      } else if (sort === 'price_high') {
+        filteredTemplates.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+      } else {
+        // Default: newest first (by createdAt descending)
         filteredTemplates.sort((a, b) => {
           const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
           return dateB - dateA;
         });
-      } else if (sort === 'price_low') {
-        filteredTemplates.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
-      } else if (sort === 'price_high') {
-        filteredTemplates.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
       }
       
-      const templateList = filteredTemplates.map(t => ({
+      // Get total count before pagination
+      const total = filteredTemplates.length;
+      
+      // Apply pagination
+      const offsetNum = offset ? parseInt(offset as string, 10) : 0;
+      const limitNum = limit ? parseInt(limit as string, 10) : 25;
+      const paginatedTemplates = filteredTemplates.slice(offsetNum, offsetNum + limitNum);
+      
+      const templateList = paginatedTemplates.map(t => ({
         id: t.id,
         title: t.templateName,
         slug: t.slug,
@@ -398,7 +409,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         popularityScore: t.popularityScore || 0,
       }));
       
-      res.json(templateList);
+      // Return paginated response with metadata
+      res.json({
+        templates: templateList,
+        pagination: {
+          total,
+          offset: offsetNum,
+          limit: limitNum,
+          hasMore: offsetNum + limitNum < total,
+        }
+      });
     } catch (error) {
       console.error("Error fetching templates:", error);
       res.status(500).json({ error: "Failed to fetch templates" });
