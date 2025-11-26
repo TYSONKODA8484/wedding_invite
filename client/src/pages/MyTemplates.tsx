@@ -209,31 +209,35 @@ export default function MyTemplates() {
   const renderProjectCard = (project: Project) => (
     <Card 
       key={project.id} 
-      className="overflow-hidden hover-elevate"
+      className="group overflow-hidden transition-all duration-300"
       data-testid={`card-project-${project.id}`}
     >
-      <div className="relative aspect-[9/16]">
+      <div className="relative aspect-[9/16] overflow-hidden bg-muted">
         <img
           src={project.thumbnailUrl || project.previewImageUrl}
           alt={project.templateName}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
           data-testid={`img-thumbnail-${project.id}`}
         />
-        <div className="absolute top-2 right-2">
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        <div className="absolute top-3 right-3">
           {project.isPaid ? (
-            <Badge variant="default" className="bg-green-600 dark:bg-green-700 text-white" data-testid={`badge-paid-${project.id}`}>
+            <Badge className="bg-green-600 text-white font-semibold" data-testid={`badge-paid-${project.id}`}>
               Paid
             </Badge>
           ) : (
-            <Badge variant="secondary" data-testid={`badge-preview-${project.id}`}>
+            <Badge variant="secondary" className="bg-black/60 backdrop-blur-sm text-white border-none" data-testid={`badge-preview-${project.id}`}>
               Preview
             </Badge>
           )}
         </div>
-        <div className="absolute bottom-2 right-2">
+        
+        <div className="absolute bottom-3 left-3">
           <Badge 
-            variant="outline" 
-            className="bg-black/50 backdrop-blur-sm text-white border-white/30"
+            variant="secondary" 
+            className="bg-black/60 backdrop-blur-sm text-white border-none"
             data-testid={`badge-type-${project.id}`}
           >
             {project.templateType === "card" ? (
@@ -243,20 +247,41 @@ export default function MyTemplates() {
             )}
           </Badge>
         </div>
-        <div className="absolute bottom-2 left-2 flex items-center gap-2">
+      </div>
+      
+      <div className="p-3 lg:p-4">
+        <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-name-${project.id}`}>
+          {project.templateName}
+        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-muted-foreground capitalize">
+            {project.templateType}
+            {project.paidAt && (
+              <span className="text-green-600 ml-1">
+                {new Date(project.paidAt).toLocaleDateString()}
+              </span>
+            )}
+          </p>
+          <p className="text-base lg:text-lg font-semibold text-primary" data-testid={`text-price-${project.id}`}>
+            {formatPrice(project.price, project.currency)}
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
           {project.isPaid ? (
             <>
               <Button
-                size="icon"
+                size="sm"
                 variant="default"
+                className="flex-1"
                 onClick={() => handleViewVideo(project)}
                 data-testid={`button-view-${project.id}`}
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4 mr-1" /> View
               </Button>
               <Button
                 size="icon"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleDownload(project)}
                 data-testid={`button-download-${project.id}`}
               >
@@ -264,7 +289,7 @@ export default function MyTemplates() {
               </Button>
               <Button
                 size="icon"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleShare(project)}
                 data-testid={`button-share-${project.id}`}
               >
@@ -274,16 +299,17 @@ export default function MyTemplates() {
           ) : (
             <>
               <Button
-                size="icon"
+                size="sm"
                 variant="default"
+                className="flex-1"
                 onClick={() => handleEdit(project)}
                 data-testid={`button-edit-${project.id}`}
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
               <Button
                 size="icon"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleViewVideo(project)}
                 data-testid={`button-view-${project.id}`}
               >
@@ -291,7 +317,7 @@ export default function MyTemplates() {
               </Button>
               <Button
                 size="icon"
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleDownload(project)}
                 data-testid={`button-download-${project.id}`}
               >
@@ -300,23 +326,6 @@ export default function MyTemplates() {
             </>
           )}
         </div>
-      </div>
-      
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-1 mb-2">
-          <h3 className="font-medium text-sm line-clamp-2 flex-1" data-testid={`text-name-${project.id}`}>
-            {project.templateName}
-          </h3>
-          <span className="text-sm font-bold text-pink-500 flex-shrink-0" data-testid={`text-price-${project.id}`}>
-            {formatPrice(project.price, project.currency)}
-          </span>
-        </div>
-        
-        {project.paidAt && (
-          <p className="text-xs text-green-600" data-testid={`text-date-${project.id}`}>
-            {new Date(project.paidAt).toLocaleDateString()}
-          </p>
-        )}
       </div>
     </Card>
   );
