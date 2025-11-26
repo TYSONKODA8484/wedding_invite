@@ -312,8 +312,8 @@ export default function Templates() {
         </div>
       </div>
 
-      <section className="py-4 lg:py-6 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-6 lg:py-8 bg-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex items-start gap-3 mb-4">
             <div className="relative flex-shrink-0">

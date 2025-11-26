@@ -169,7 +169,7 @@ export default function MyTemplates() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <div className="text-center">Loading your templates...</div>
       </div>
     );
@@ -194,8 +194,8 @@ export default function MyTemplates() {
 
   if (!projects || projects.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="font-playfair text-3xl font-bold mb-8">My Videos</h1>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8">My Templates</h1>
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">You haven't created any video invitations yet</p>
           <Button onClick={() => navigate("/templates")} data-testid="button-browse-templates">
@@ -331,8 +331,8 @@ export default function MyTemplates() {
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="font-playfair text-3xl font-bold mb-8" data-testid="heading-my-videos">My Templates</h1>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8" data-testid="heading-my-videos">My Templates</h1>
       {/* Paid Templates Section - Only show if there are paid templates */}
       {paidProjects.length > 0 && (
         <section className="mb-10" data-testid="section-paid-templates">
