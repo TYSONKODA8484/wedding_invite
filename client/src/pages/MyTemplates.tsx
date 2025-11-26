@@ -212,7 +212,7 @@ export default function MyTemplates() {
       className="group overflow-hidden transition-all duration-300"
       data-testid={`card-project-${project.id}`}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+      <div className="relative aspect-[9/16] overflow-hidden bg-muted">
         <img
           src={project.thumbnailUrl || project.previewImageUrl}
           alt={project.templateName}
