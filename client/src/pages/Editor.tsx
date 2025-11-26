@@ -4,7 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import type { Template } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check } from "lucide-react";
+import { 
+  Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
+  Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
+  GripVertical, Music, Play
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +26,6 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
-import { PageViewer } from "@/components/PageViewer";
 import { PaymentModal as PaymentModalComponent } from "@/components/PaymentModal";
 
 interface EditableField {
@@ -42,7 +45,6 @@ interface CropBox {
   canvasHeight: number;
 }
 
-// Shared utility to compute crop box for both preview and export
 function computeCropBox(
   imgWidth: number,
   imgHeight: number,
@@ -88,7 +90,7 @@ interface CropModalProps {
 
 function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
   const [zoom, setZoom] = useState([100]);
-  const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1' | 'free'>('16:9');
+  const [aspectRatio, setAspectRatio] = useState<'16:9' | '9:16' | '1:1' | 'free'>('9:16');
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -146,7 +148,7 @@ function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
               <img 
                 src={previewUrl}
                 alt="Crop preview"
-                className="max-w-full max-h-[500px] object-contain"
+                className="max-w-full max-h-[400px] object-contain"
               />
             ) : (
               <p className="text-muted-foreground">Loading preview...</p>
@@ -175,7 +177,7 @@ function CropModal({ imageUrl, onConfirm, onCancel }: CropModalProps) {
           <div className="space-y-2">
             <Label>Aspect Ratio</Label>
             <div className="flex gap-2">
-              {(['16:9', '9:16', '1:1', 'free'] as const).map((ratio) => (
+              {(['9:16', '16:9', '1:1', 'free'] as const).map((ratio) => (
                 <Button
                   key={ratio}
                   variant={aspectRatio === ratio ? 'default' : 'outline'}
@@ -263,7 +265,7 @@ function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploa
       )}
       <div className="space-y-2">
         {preview ? (
-          <div className="relative aspect-video rounded-md overflow-hidden bg-muted border border-border">
+          <div className="relative aspect-[9/16] rounded-md overflow-hidden bg-muted border border-border">
             <img 
               src={preview} 
               alt={`Preview for ${fieldName}`}
@@ -293,13 +295,12 @@ function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploa
           </div>
         ) : (
           <div
-            className="aspect-video bg-muted rounded-md flex flex-col items-center justify-center border-2 border-dashed border-border cursor-pointer hover-elevate active-elevate-2 transition-colors"
+            className="aspect-[9/16] bg-muted rounded-md flex flex-col items-center justify-center border-2 border-dashed border-border cursor-pointer hover-elevate active-elevate-2 transition-colors"
             onClick={handleUploadClick}
             data-testid={`dropzone-${fieldName}`}
           >
-            <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
-            <p className="text-xs text-muted-foreground font-medium">Click to upload image</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">JPG, PNG, or GIF</p>
+            <ImageIcon className="w-6 h-6 text-muted-foreground mb-2" />
+            <p className="text-xs text-muted-foreground font-medium">Click to upload</p>
           </div>
         )}
         <input
@@ -310,18 +311,6 @@ function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploa
           onChange={handleFileChange}
           data-testid={`input-file-${fieldName}`}
         />
-        {!preview && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleUploadClick}
-            data-testid={`button-upload-${fieldName}`}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Choose Image
-          </Button>
-        )}
       </div>
     </>
   );
@@ -335,91 +324,40 @@ interface PreviewLoadingScreenProps {
 function PreviewLoadingScreen({ progress, onClose }: PreviewLoadingScreenProps) {
   return (
     <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl p-8">
-        <div className="text-center space-y-6">
-          {/* Progress Circle */}
+      <Card className="w-full max-w-lg p-6">
+        <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <div className="relative w-32 h-32">
-              <svg className="transform -rotate-90 w-32 h-32">
+            <div className="relative w-24 h-24">
+              <svg className="transform -rotate-90 w-24 h-24">
+                <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-muted" />
                 <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  className="text-muted"
-                />
-                <circle
-                  cx="64"
-                  cy="64"
-                  r="56"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  fill="transparent"
-                  strokeDasharray={`${2 * Math.PI * 56}`}
-                  strokeDashoffset={`${2 * Math.PI * 56 * (1 - progress / 100)}`}
+                  cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="6" fill="transparent"
+                  strokeDasharray={`${2 * Math.PI * 40}`}
+                  strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
                   className="text-primary transition-all duration-500"
                   strokeLinecap="round"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-3xl font-bold text-foreground">{progress}%</span>
+                <span className="text-2xl font-bold text-foreground">{progress}%</span>
               </div>
             </div>
           </div>
 
-          {/* Message */}
-          <div className="bg-primary/5 border border-primary/20 rounded-md p-4">
-            <p className="text-primary font-medium">
-              Video Creation in Progress! Thanks for your patience - the best is yet to come! 🎉 👰
+          <div className="bg-primary/10 border border-primary/20 rounded-md p-3">
+            <p className="text-primary font-medium text-sm">
+              Creating your video... Please wait!
             </p>
           </div>
 
-          {/* What's Next Checklist */}
-          <div className="text-left space-y-3">
-            <h3 className="font-semibold text-foreground text-lg">What's next?</h3>
-            <div className="space-y-2">
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Wait for 2-3 minutes. System will create the video.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Preview the video
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Pay only when you like the Preview.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Please do not click anywhere else video generation will stop.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Video will also be available under "My Videos".
-                </p>
-              </div>
+          <div className="text-left space-y-2 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Check className="w-4 h-4 text-green-500" />
+              <span>Video will be ready in 2-3 minutes</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Check className="w-4 h-4 text-green-500" />
+              <span>Pay only when you like the preview</span>
             </div>
           </div>
         </div>
@@ -438,43 +376,31 @@ interface PreviewModalProps {
 function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: PreviewModalProps) {
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">Preview</DialogTitle>
-            <Button
-              variant="default"
-              onClick={onDownload}
-              disabled={!downloadEnabled}
-              data-testid="button-modal-download"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Download Without Watermark
-            </Button>
-          </div>
+          <DialogTitle>Preview</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Preview Image/Video */}
-          <div className="relative bg-muted rounded-md overflow-hidden flex items-center justify-center min-h-[400px]">
+          <div className="relative bg-muted rounded-md overflow-hidden flex items-center justify-center">
             <img 
               src={previewUrl}
               alt="Preview"
-              className="max-w-full max-h-[600px] object-contain"
+              className="max-w-full max-h-[60vh] object-contain"
               data-testid="preview-modal-image"
             />
           </div>
 
-          {/* Disclaimer */}
-          <div className="bg-primary text-primary-foreground rounded-md p-3 text-sm text-center">
-            This is a low-quality preview for illustration only. The final video will be high quality. 
-            Please review carefully content cannot be changed after payment.
+          <div className="bg-primary/10 text-primary rounded-md p-3 text-sm text-center">
+            This is a preview. The final video will be high quality without watermark.
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} data-testid="button-modal-close">
-            Close
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>Close</Button>
+          <Button onClick={onDownload} disabled={!downloadEnabled}>
+            <Download className="w-4 h-4 mr-2" />
+            Download HD
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -482,7 +408,6 @@ function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: Prev
   );
 }
 
-// Helper to check if string is a UUID v4
 function isUUID(str: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
@@ -494,7 +419,6 @@ export default function Editor() {
   const slug = params?.slug;
   const isEditingProject = slug ? isUUID(slug) : false;
   
-  // Get the 'from' query parameter to know where to navigate back
   const searchParams = new URLSearchParams(window.location.search);
   const fromPage = searchParams.get('from');
 
@@ -503,8 +427,9 @@ export default function Editor() {
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState<string | null>((isEditingProject && slug) ? slug : null);
+  const [showReorderPanel, setShowReorderPanel] = useState(false);
+  const [zoom, setZoom] = useState(100);
   
-  // Preview/Download states
   const [showPreviewLoading, setShowPreviewLoading] = useState(false);
   const [previewProgress, setPreviewProgress] = useState(0);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -518,7 +443,6 @@ export default function Editor() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  // Fetch project data if editing an existing project
   const { data: projectData, isLoading: projectIsLoading } = useQuery({
     queryKey: ["/api/projects", slug],
     queryFn: async () => {
@@ -532,7 +456,6 @@ export default function Editor() {
     enabled: isEditingProject,
   });
 
-  // Fetch template data (either from new template or existing project's template)
   const { data: templateData, isLoading: templateIsLoading, error } = useQuery<Template & { pages?: any[] }>({
     queryKey: ["/api/templates", isEditingProject ? projectData?.templateId : slug],
     queryFn: async () => {
@@ -544,15 +467,10 @@ export default function Editor() {
     enabled: isEditingProject ? !!projectData?.templateId : !!slug,
   });
 
-  // Combined loading state: show loading while waiting for project and template data
   const isLoading = isEditingProject ? (projectIsLoading || templateIsLoading) : templateIsLoading;
 
-  // Load existing project customization data when editing
   useEffect(() => {
     if (projectData && projectData.customization) {
-      console.log("Loading customization data from project:", projectData.customization);
-      
-      // Load field values from customization.pages
       const newFieldValues: Record<string, string> = {};
       if (projectData.customization.pages) {
         for (const [pageId, fields] of Object.entries(projectData.customization.pages)) {
@@ -565,23 +483,19 @@ export default function Editor() {
       }
       setFieldValues(newFieldValues);
       
-      // Load image previews
       if (projectData.customization.images) {
         setImagePreviews(projectData.customization.images);
       }
     }
   }, [projectData]);
 
-  // Preload all page images to eliminate loading delays
   useEffect(() => {
     if (templateData?.pages) {
       templateData.pages.forEach((page) => {
-        // Preload page thumbnails
         if (page.thumbnailUrl) {
           const thumbnailImg = new Image();
           thumbnailImg.src = page.thumbnailUrl;
         }
-        // Preload page background images from media array
         const backgroundMedia = page.media?.find((m: any) => m.position === 'background');
         if (backgroundMedia?.url) {
           const bgImg = new Image();
@@ -591,12 +505,10 @@ export default function Editor() {
     }
   }, [templateData]);
 
-  // Check if user is logged in
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
   });
 
-  // Save project mutation
   const saveProjectMutation = useMutation({
     mutationFn: async () => {
       const token = localStorage.getItem('auth_token');
@@ -604,7 +516,6 @@ export default function Editor() {
         throw new Error("Not authenticated");
       }
 
-      // Collect all customization data from all pages
       const pages = templateData!.pages || [];
       const customizationData: Record<string, any> = {
         pages: {},
@@ -621,300 +532,147 @@ export default function Editor() {
         customizationData.pages[page.id] = pageFieldValues;
       }
 
-      // Add image file data
       customizationData.images = imagePreviews;
 
       if (projectId) {
-        // Update existing project - set status to preview_requested
-        console.log("Updating project:", projectId, "with customization:", customizationData);
         const response = await apiRequest("PUT", `/api/projects/${projectId}`, {
           customization: customizationData,
           status: "preview_requested",
         });
-        console.log("Project updated successfully:", response);
-        return response;
+        return response.json();
       } else {
-        // Create new project - initially set to preview_requested status
-        console.log("Creating new project with customization:", customizationData);
         const response = await apiRequest("POST", "/api/projects", {
           templateId: templateData!.id,
           customization: customizationData,
           status: "preview_requested",
         });
-        const projectData = await response.json();
-        if (projectData && projectData.id) {
-          setProjectId(projectData.id);
-          console.log("New project created with ID:", projectData.id);
-        }
-        return projectData;
+        const newProject = await response.json();
+        setProjectId(newProject.id);
+        return newProject;
       }
     },
-    onSuccess: (project) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      console.log("Project saved successfully:", project);
-      toast({
-        title: "Saved",
-        description: "Your customizations have been saved to database.",
-      });
+    onSuccess: () => {
+      startPreviewGeneration();
     },
-    onError: (error: any) => {
-      if (error.message !== "Not authenticated") {
+    onError: (error: Error) => {
+      if (error.message === "Not authenticated") {
+        setPendingPreview(true);
+        setShowAuthModal(true);
+      } else {
         toast({
-          title: "Save failed",
-          description: error.message || "Failed to save project",
+          title: "Error",
+          description: error.message,
           variant: "destructive",
         });
       }
     },
   });
 
-  const template = templateData;
-  const pages = templateData?.pages || [];
+  const startPreviewGeneration = () => {
+    setShowPreviewLoading(true);
+    setPreviewProgress(0);
+    
+    const interval = setInterval(() => {
+      setPreviewProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setShowPreviewLoading(false);
+          setPreviewUrl(templateData?.pages?.[0]?.thumbnailUrl || '');
+          setShowPreviewModal(true);
+          return 100;
+        }
+        return prev + 10;
+      });
+    }, 300);
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    if (pendingPreview) {
+      setPendingPreview(false);
+      saveProjectMutation.mutate();
+    }
+  };
+
+  const handlePreview = () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setPendingPreview(true);
+      setShowAuthModal(true);
+      return;
+    }
+    saveProjectMutation.mutate();
+  };
+
+  const handleDownload = () => {
+    setShowPreviewModal(false);
+    setShowPaymentModal(true);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen" data-testid="loading-editor">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground text-lg">Loading editor...</p>
-        </div>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (error || !template) {
+  if (error || !templateData) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-4" data-testid="error-editor">
-        <Card className="p-12 text-center max-w-md">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-            <X className="w-8 h-8 text-destructive" />
-          </div>
-          <h3 className="font-playfair text-2xl font-bold text-foreground mb-2">
-            Template Not Found
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            Unable to load the editor for this template.
-          </p>
-          <Button onClick={() => navigate("/templates")} data-testid="button-back-templates">
-            Back to Templates
-          </Button>
-        </Card>
+      <div className="h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <p className="text-destructive">Template not found</p>
+        <Button onClick={() => navigate("/templates")}>Browse Templates</Button>
       </div>
     );
   }
 
+  const template = templateData;
+  const pages = template.pages || [];
   const currentPage = pages[currentPageIndex];
-  const editableFields: EditableField[] = currentPage?.editableFields as EditableField[] || [];
-
-  const handleFieldChange = (fieldId: string, value: string) => {
-    setFieldValues(prev => ({ ...prev, [`${currentPage.id}_${fieldId}`]: value }));
-  };
+  const editableFields = currentPage?.editableFields || [];
 
   const getFieldValue = (fieldId: string) => {
-    const fieldKey = `${currentPage.id}_${fieldId}`;
-    if (fieldValues[fieldKey] !== undefined) {
-      return fieldValues[fieldKey];
+    const key = `${currentPage.id}_${fieldId}`;
+    if (fieldValues[key] !== undefined) {
+      return fieldValues[key];
     }
-    const field = currentPage.editableFields.find((f: any) => f.id === fieldId);
+    const field = editableFields.find((f: EditableField) => f.id === fieldId);
     return field?.defaultValue || '';
   };
 
-  const handleImageSelect = (fieldId: string, file: File) => {
-    const fieldKey = `${currentPage.id}_${fieldId}`;
-    setImageFiles(prev => ({
-      ...prev,
-      [fieldKey]: file
-    }));
+  const handleFieldChange = (fieldId: string, value: string) => {
+    const key = `${currentPage.id}_${fieldId}`;
+    setFieldValues((prev) => ({ ...prev, [key]: value }));
+  };
 
+  const handleImageSelect = (fieldId: string, file: File) => {
+    const key = `${currentPage.id}_${fieldId}`;
+    setImageFiles((prev) => ({ ...prev, [key]: file }));
+    
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImagePreviews(prev => ({
-        ...prev,
-        [fieldKey]: reader.result as string
-      }));
+      setImagePreviews((prev) => ({ ...prev, [key]: reader.result as string }));
     };
     reader.readAsDataURL(file);
   };
 
   const handleImageRemove = (fieldId: string) => {
-    const fieldKey = `${currentPage.id}_${fieldId}`;
-    setImageFiles(prev => {
-      const updated = { ...prev };
-      delete updated[fieldKey];
-      return updated;
+    const key = `${currentPage.id}_${fieldId}`;
+    setImageFiles((prev) => {
+      const newFiles = { ...prev };
+      delete newFiles[key];
+      return newFiles;
     });
-    setImagePreviews(prev => {
-      const updated = { ...prev };
-      delete updated[fieldKey];
-      return updated;
+    setImagePreviews((prev) => {
+      const newPreviews = { ...prev };
+      delete newPreviews[key];
+      return newPreviews;
     });
   };
 
   const getImagePreview = (fieldId: string): string | null => {
-    return imagePreviews[`${currentPage.id}_${fieldId}`] || null;
-  };
-
-  const handlePreview = async (verifiedUser?: any) => {
-    console.log("handlePreview called, verifiedUser:", verifiedUser, "user state:", user);
-    
-    // Prevent duplicate preview requests
-    if (saveProjectMutation.isPending) {
-      console.log("Save already in progress, skipping");
-      return;
-    }
-    
-    // Check if user is logged in - verify both user data AND auth token
-    const currentUser = verifiedUser || user || queryClient.getQueryData(["/api/auth/user"]);
-    const authToken = localStorage.getItem('auth_token');
-    console.log("Current user data:", currentUser, "Has token:", !!authToken);
-    
-    // Show auth modal if no user OR no token (and not currently verifying)
-    if ((!currentUser || !authToken) && !isAuthVerifying) {
-      console.log("User not logged in, showing auth modal");
-      setPendingPreview(true);
-      setShowAuthModal(true);
-      return;
-    }
-
-    try {
-      console.log("User is logged in, proceeding with preview");
-      
-      // IMPORTANT: Save project with customization data to database
-      // This must complete successfully before showing generation screen
-      const savedProject = await saveProjectMutation.mutateAsync();
-      
-      console.log("Project saved to database:", savedProject);
-      
-      // Start preview generation loading screen
-      setShowPreviewLoading(true);
-      setPreviewProgress(0);
-
-      // Simulate progress (in production, this would call After Effects API)
-      // TODO: Replace with actual API call to video generation service
-      const progressInterval = setInterval(() => {
-        setPreviewProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(progressInterval);
-            // Show preview modal when complete
-            setTimeout(() => {
-              setShowPreviewLoading(false);
-              setPreviewUrl(currentPage.thumbnailUrl); // Mock preview URL
-              setShowPreviewModal(true);
-              // Enable download button once preview is generated
-              setDownloadEnabled(true);
-            }, 500);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 300);
-    } catch (error: any) {
-      console.error("Preview failed:", error);
-      
-      // If authentication error (check for common auth error patterns), show auth modal
-      const isAuthError = error.message?.includes("authenticated") || 
-                          error.message?.includes("Unauthorized") ||
-                          error.status === 401 ||
-                          error.message?.includes("Session expired");
-      
-      if (isAuthError) {
-        console.log("Authentication error during preview, showing auth modal");
-        setPendingPreview(true);
-        setShowAuthModal(true);
-      } else {
-        toast({
-          title: "Preview failed",
-          description: error.message || "Failed to generate preview. Please try again.",
-          variant: "destructive",
-        });
-      }
-      setShowPreviewLoading(false);
-    }
-  };
-
-  const handleDownload = () => {
-    // Check if project is already paid
-    if (projectData?.paidAt) {
-      // Project is paid, allow download
-      toast({
-        title: "Downloading",
-        description: "Your video is ready to download.",
-      });
-      // TODO: Implement actual download logic for paid projects
-      setShowPreviewModal(false);
-      return;
-    }
-    
-    // Close preview modal and show payment modal for unpaid projects
-    setShowPreviewModal(false);
-    setShowPaymentModal(true);
-  };
-
-  const handleAuthSuccess = async () => {
-    console.log("Auth success - user logged in");
-    setShowAuthModal(false);
-    setIsAuthVerifying(true);
-    
-    try {
-      // Wait a moment to ensure localStorage has the auth token
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Force fetch user data to ensure we have it (don't rely on refetchQueries)
-      console.log("Fetching user data after login...");
-      const freshUserData = await queryClient.fetchQuery({
-        queryKey: ["/api/auth/user"],
-        queryFn: async () => {
-          const token = localStorage.getItem('auth_token');
-          const response = await fetch("/api/auth/user", { 
-            credentials: "include",
-            headers: {
-              "Authorization": `Bearer ${token}`
-            }
-          });
-          if (!response.ok) {
-            throw new Error("Failed to fetch user data");
-          }
-          return response.json();
-        },
-      });
-      console.log("Fresh user data fetched:", freshUserData);
-      
-      // Invalidate user query to update navbar and other components
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
-      // Verify we have the token before proceeding
-      const hasToken = !!localStorage.getItem('auth_token');
-      console.log("Token available after auth:", hasToken);
-      
-      // If pending preview, trigger it with verified user data
-      if (pendingPreview) {
-        console.log("Preview was pending, triggering it now with verified user data");
-        setPendingPreview(false);
-        
-        // Double-check we have what we need before calling handlePreview
-        if (freshUserData && hasToken) {
-          // Pass the verified user data directly to handlePreview
-          handlePreview(freshUserData);
-        } else {
-          console.error("Missing user data or token after auth, cannot proceed with preview");
-          toast({
-            title: "Authentication Issue",
-            description: "Please try clicking Preview again.",
-            variant: "destructive",
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
-      toast({
-        title: "Authentication Error",
-        description: "Please try clicking Preview again.",
-        variant: "destructive",
-      });
-    } finally {
-      // Always reset authVerifying flag
-      setIsAuthVerifying(false);
-    }
+    const key = `${currentPage.id}_${fieldId}`;
+    return imagePreviews[key] || null;
   };
 
   const goToNextPage = () => {
@@ -929,17 +687,16 @@ export default function Editor() {
     }
   };
 
+  const backgroundImage = currentPage?.media?.find((m: any) => m.position === 'background')?.url || 
+    currentPage?.media?.find((m: any) => m.type === 'image')?.url || 
+    currentPage?.thumbnailUrl || '';
+
   return (
-    <div className="h-screen flex flex-col bg-background" data-testid="editor-page">
-      {/* Preview Loading Screen */}
+    <div className="h-screen flex flex-col bg-background overflow-hidden" data-testid="editor-page">
       {showPreviewLoading && (
-        <PreviewLoadingScreen
-          progress={previewProgress}
-          onClose={() => setShowPreviewLoading(false)}
-        />
+        <PreviewLoadingScreen progress={previewProgress} onClose={() => setShowPreviewLoading(false)} />
       )}
 
-      {/* Preview Modal */}
       {showPreviewModal && (
         <PreviewModal
           previewUrl={previewUrl}
@@ -949,14 +706,8 @@ export default function Editor() {
         />
       )}
 
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={handleAuthSuccess}
-      />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={handleAuthSuccess} />
 
-      {/* Payment Modal */}
       {projectId && (
         <PaymentModalComponent
           isOpen={showPaymentModal}
@@ -966,98 +717,86 @@ export default function Editor() {
           amount={template.price}
           currency={template.currency}
           onSuccess={() => {
-            toast({
-              title: "Payment Successful!",
-              description: "Your video is now ready to download.",
-            });
+            toast({ title: "Payment Successful!", description: "Your video is now ready to download." });
             setDownloadEnabled(true);
           }}
         />
       )}
 
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                if (fromPage === 'my-templates') {
-                  navigate('/my-templates');
-                } else {
-                  navigate(`/template/${template.slug}`);
-                }
-              }}
-              data-testid="button-back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="font-semibold text-foreground text-lg line-clamp-1" data-testid="text-template-title">
-                {template.templateName}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Page {currentPageIndex + 1} of {pages.length}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handlePreview}
-              disabled={saveProjectMutation.isPending}
-              data-testid="button-preview"
-            >
-              {saveProjectMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4 mr-2" />
-                  Preview
-                </>
-              )}
-            </Button>
+      {/* Top Header */}
+      <header className="h-14 border-b bg-card flex items-center justify-between px-4 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => fromPage === 'my-templates' ? navigate('/my-templates') : navigate(`/template/${template.slug}`)}
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" data-testid="button-upload-music">
+            <Upload className="w-4 h-4 mr-2" />
+            Upload Music
+          </Button>
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={handlePreview}
+            disabled={saveProjectMutation.isPending}
+            data-testid="button-preview-video"
+          >
+            {saveProjectMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4 mr-2" />
+            )}
+            Preview Video
+          </Button>
+          <Button 
+            size="sm" 
+            disabled={!downloadEnabled}
+            onClick={handleDownload}
+            className="bg-muted text-muted-foreground"
+            data-testid="button-download"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download
+          </Button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left Panel - Pages/Clips */}
+        <div className="w-36 lg:w-44 border-r bg-card flex flex-col flex-shrink-0">
+          <div className="p-3 border-b">
             <Button 
               variant="default" 
               size="sm" 
-              disabled={!downloadEnabled}
-              onClick={handleDownload}
-              data-testid="button-download"
+              className="w-full text-xs"
+              onClick={() => setShowReorderPanel(!showReorderPanel)}
+              data-testid="button-reorder-clips"
             >
-              <Download className="w-4 h-4 mr-2" />
-              Download
+              <GripVertical className="w-3 h-3 mr-1" />
+              Re-Order Clips
             </Button>
           </div>
-        </div>
-      </div>
-
-      {/* Main Editor Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Page List */}
-        <div className="w-20 md:w-28 border-r bg-card hidden sm:flex flex-col">
-          <div className="p-3 border-b text-center">
-            <h2 className="text-xs font-semibold text-foreground">Pages</h2>
-            <p className="text-[10px] text-muted-foreground mt-0.5">{pages.length} total</p>
-          </div>
+          
           <ScrollArea className="flex-1">
             <div className="p-2 space-y-2">
               {pages.map((page, index) => (
-                <button
+                <div
                   key={page.id}
                   onClick={() => setCurrentPageIndex(index)}
-                  className={`w-full group relative rounded-md transition-all duration-200 hover-elevate ${
+                  className={`w-full relative rounded-lg overflow-hidden transition-all cursor-pointer ${
                     currentPageIndex === index
-                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-                      : 'hover:ring-1 hover:ring-muted-foreground/20'
+                      ? 'ring-2 ring-primary shadow-md'
+                      : 'hover:ring-1 hover:ring-muted-foreground/30'
                   }`}
-                  data-testid={`page-list-item-${index}`}
+                  data-testid={`page-thumbnail-${index}`}
                 >
-                  <div className="relative aspect-[9/16] overflow-hidden rounded-md bg-muted">
+                  <div className="aspect-[9/16] bg-muted relative">
                     <img
                       src={page.thumbnailUrl}
                       alt={page.pageName}
@@ -1065,97 +804,139 @@ export default function Editor() {
                       loading="eager"
                     />
                     {currentPageIndex === index && (
-                      <div className="absolute inset-0 bg-primary/20 pointer-events-none" />
+                      <div className="absolute inset-0 bg-primary/10" />
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent p-1">
-                      <p className="text-[10px] font-semibold text-white text-center">
-                        P{page.pageNumber}
-                      </p>
-                    </div>
                   </div>
-                </button>
+                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      className="h-5 w-5 rounded bg-background/80 hover:bg-background flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toast({ title: "Delete", description: "Page deletion coming soon" });
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           </ScrollArea>
         </div>
 
-        {/* Center - Page Preview */}
-        <div className="flex-1 flex flex-col bg-gradient-to-br from-muted/30 via-background to-muted/20">
-          <div className="flex-1 flex items-center justify-center p-6 md:p-8 lg:p-12">
-            <div className="relative w-full h-full max-w-2xl">
-              {/* Template Name Badge */}
-              <div className="flex items-center justify-center mb-4">
-                <Badge variant="secondary" className="text-sm font-medium px-4 py-1.5 shadow-sm">
-                  {template.templateName}
-                  {currentPage && <span className="ml-2">• Page {currentPage.pageNumber} of {pages.length}</span>}
-                </Badge>
-              </div>
-              
-              {/* Page Viewer with Zoom Controls */}
-              {currentPage ? (
-                <PageViewer 
-                  page={currentPage}
-                  className="h-full"
+        {/* Center Panel - Preview */}
+        <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
+          {/* Preview Area */}
+          <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+            <div 
+              className="relative bg-white dark:bg-card rounded-lg shadow-xl overflow-hidden"
+              style={{
+                width: `min(${280 * (zoom / 100)}px, 100%)`,
+                aspectRatio: '9/16',
+                maxHeight: 'calc(100% - 20px)',
+                transform: `scale(${zoom / 100})`,
+                transformOrigin: 'center center',
+              }}
+            >
+              {backgroundImage ? (
+                <img
+                  src={backgroundImage}
+                  alt={`Page ${currentPage?.pageNumber}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  data-testid="page-preview-image"
                 />
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="aspect-[9/16] bg-muted rounded-xl shadow-lg flex items-center justify-center max-w-md">
-                    <p className="text-muted-foreground">No page selected</p>
-                  </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
+                  <p className="text-muted-foreground text-sm">No preview</p>
                 </div>
               )}
             </div>
           </div>
-          
-          {/* Page Navigation */}
-          <div className="border-t bg-card p-4">
-            <div className="flex items-center justify-between max-w-md mx-auto">
+
+          {/* Bottom Controls */}
+          <div className="h-16 border-t bg-card flex items-center justify-between px-4 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToPreviousPage}
+              disabled={currentPageIndex === 0}
+              data-testid="button-back-page"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+
+            <div className="flex items-center gap-4">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={goToPreviousPage}
-                disabled={currentPageIndex === 0}
-                data-testid="button-previous-page"
+                onClick={handlePreview}
+                disabled={saveProjectMutation.isPending}
+                data-testid="button-preview"
               >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {currentPageIndex + 1} / {pages.length}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToNextPage}
-                disabled={currentPageIndex === pages.length - 1}
-                data-testid="button-next-page"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
+              
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-2 bg-muted rounded-md px-2 py-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setZoom(Math.max(50, zoom - 25))}
+                  disabled={zoom <= 50}
+                  data-testid="button-zoom-out"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-xs font-medium w-10 text-center">{zoom}%</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setZoom(Math.min(200, zoom + 25))}
+                  disabled={zoom >= 200}
+                  data-testid="button-zoom-in"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={goToNextPage}
+              disabled={currentPageIndex === pages.length - 1}
+              data-testid="button-next-page"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
           </div>
         </div>
 
-        {/* Right Sidebar - Editable Fields */}
-        <div className="w-80 border-l bg-card hidden lg:flex flex-col">
+        {/* Right Panel - Edit Fields */}
+        <div className="w-72 lg:w-80 border-l bg-card flex flex-col flex-shrink-0">
           <div className="p-4 border-b">
-            <h2 className="font-semibold text-foreground">Edit Fields</h2>
-            <p className="text-xs text-muted-foreground">
-              {editableFields.length} fields on this page
-            </p>
+            <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
+            <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
           </div>
+          
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
               {editableFields.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground text-sm">
-                    No editable fields on this page
-                  </p>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-sm">No editable fields on this page</p>
                 </div>
               ) : (
-                editableFields.filter(field => field?.id).map((field, index) => (
-                  <div key={index} className="space-y-1.5" data-testid={`field-${field.id}`}>
+                editableFields.filter((field: EditableField) => field?.id).map((field: EditableField, index: number) => (
+                  <div key={index} className="space-y-2" data-testid={`field-${field.id}`}>
+                    <Label htmlFor={field.id} className="text-xs font-medium">
+                      {field.label || field.id}
+                    </Label>
+                    
                     {field.type === 'textarea' ? (
                       <>
                         <Textarea
@@ -1164,13 +945,13 @@ export default function Editor() {
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           maxLength={field.maxLength}
                           rows={3}
-                          className="resize-none"
+                          className="resize-none text-sm"
                           data-testid={`input-${field.id}`}
                         />
                         {field.maxLength && (
                           <div className="flex justify-end">
-                            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                              {getFieldValue(field.id).length} / {field.maxLength}
+                            <span className="text-xs text-muted-foreground">
+                              {getFieldValue(field.id).length}/{field.maxLength}
                             </span>
                           </div>
                         )}
@@ -1190,12 +971,13 @@ export default function Editor() {
                           value={getFieldValue(field.id)}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           maxLength={field.maxLength}
+                          className="text-sm"
                           data-testid={`input-${field.id}`}
                         />
                         {field.maxLength && (
                           <div className="flex justify-end">
-                            <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                              {getFieldValue(field.id).length} / {field.maxLength}
+                            <span className="text-xs text-muted-foreground">
+                              {getFieldValue(field.id).length}/{field.maxLength}
                             </span>
                           </div>
                         )}
