@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
-  GripVertical, Music, Play
+  GripVertical, Music, Play, MoveDown
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,23 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
 import { PaymentModal as PaymentModalComponent } from "@/components/PaymentModal";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface EditableField {
   id: string;
@@ -413,6 +430,160 @@ function isUUID(str: string): boolean {
   return uuidRegex.test(str);
 }
 
+interface SortablePageItemProps {
+  page: any;
+  index: number;
+  isFirst: boolean;
+}
+
+function SortablePageItem({ page, index, isFirst }: SortablePageItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: page.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex flex-col items-center">
+      {!isFirst && (
+        <div className="flex items-center gap-2 py-3 text-muted-foreground">
+          <MoveDown className="w-4 h-4" />
+          <span className="text-xs">Drag & Drop</span>
+        </div>
+      )}
+      <div
+        {...attributes}
+        {...listeners}
+        className={`relative rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
+          isDragging ? 'opacity-80 scale-105 shadow-2xl ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
+        }`}
+        data-testid={`reorder-page-${index}`}
+      >
+        <div className="w-40 sm:w-48 aspect-[9/16] bg-muted">
+          <img
+            src={page.thumbnailUrl}
+            alt={page.pageName || `Page ${page.pageNumber}`}
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+        </div>
+        <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded px-2 py-1">
+          <span className="text-xs font-medium">Page {page.pageNumber}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ReorderClipsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  pages: any[];
+  onConfirm: (newOrder: string[]) => void;
+}
+
+function ReorderClipsModal({ isOpen, onClose, pages, onConfirm }: ReorderClipsModalProps) {
+  const [orderedPages, setOrderedPages] = useState(pages);
+
+  useEffect(() => {
+    setOrderedPages(pages);
+  }, [pages]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setOrderedPages((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  const handleConfirm = () => {
+    onConfirm(orderedPages.map((p) => p.id));
+    onClose();
+  };
+
+  const handleCancel = () => {
+    setOrderedPages(pages);
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold">Re-order Clips</h2>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleConfirm}
+              data-testid="button-confirm-reorder"
+            >
+              <Check className="w-5 h-5 text-green-600" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCancel}
+              data-testid="button-cancel-reorder"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+
+        <ScrollArea className="h-[calc(90vh-80px)]">
+          <div className="flex flex-col items-center py-6 px-4">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={orderedPages.map((p) => p.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {orderedPages.map((page, index) => (
+                  <SortablePageItem
+                    key={page.id}
+                    page={page}
+                    index={index}
+                    isFirst={index === 0}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          </div>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Editor() {
   const [, params] = useRoute("/editor/:slug");
   const [location, navigate] = useLocation();
@@ -427,7 +598,8 @@ export default function Editor() {
   const [imageFiles, setImageFiles] = useState<Record<string, File>>({});
   const [imagePreviews, setImagePreviews] = useState<Record<string, string>>({});
   const [projectId, setProjectId] = useState<string | null>((isEditingProject && slug) ? slug : null);
-  const [showReorderPanel, setShowReorderPanel] = useState(false);
+  const [showReorderModal, setShowReorderModal] = useState(false);
+  const [orderedPageIds, setOrderedPageIds] = useState<string[]>([]);
   const [zoom, setZoom] = useState(100);
   
   const [showPreviewLoading, setShowPreviewLoading] = useState(false);
@@ -502,8 +674,21 @@ export default function Editor() {
           bgImg.src = backgroundMedia.url;
         }
       });
+      
+      if (orderedPageIds.length === 0) {
+        setOrderedPageIds(templateData.pages.map((p: any) => p.id));
+      }
     }
   }, [templateData]);
+
+  const handleReorderConfirm = (newOrder: string[]) => {
+    setOrderedPageIds(newOrder);
+    setCurrentPageIndex(0);
+    toast({
+      title: "Clips reordered",
+      description: "The page order has been updated.",
+    });
+  };
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -627,7 +812,13 @@ export default function Editor() {
   }
 
   const template = templateData;
-  const pages = template.pages || [];
+  const rawPages = template.pages || [];
+  
+  const orderedPages = orderedPageIds.length > 0
+    ? orderedPageIds.map((id) => rawPages.find((p: any) => p.id === id)).filter(Boolean)
+    : rawPages;
+  
+  const pages = orderedPages;
   const currentPage = pages[currentPageIndex];
   const editableFields = currentPage?.editableFields || [];
 
@@ -708,6 +899,13 @@ export default function Editor() {
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={handleAuthSuccess} />
 
+      <ReorderClipsModal
+        isOpen={showReorderModal}
+        onClose={() => setShowReorderModal(false)}
+        pages={rawPages}
+        onConfirm={handleReorderConfirm}
+      />
+
       {projectId && (
         <PaymentModalComponent
           isOpen={showPaymentModal}
@@ -775,7 +973,7 @@ export default function Editor() {
               variant="default" 
               size="sm" 
               className="w-full text-xs"
-              onClick={() => setShowReorderPanel(!showReorderPanel)}
+              onClick={() => setShowReorderModal(true)}
               data-testid="button-reorder-clips"
             >
               <GripVertical className="w-3 h-3 mr-1" />
