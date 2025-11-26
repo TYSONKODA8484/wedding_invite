@@ -401,6 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subcategory: t.subcategory,
         duration: t.durationSec,
         thumbnailUrl: t.thumbnailUrl,
+        demoVideoUrl: t.previewVideoUrl,
         priceInr: Math.floor(parseFloat(t.price) * 100),
         tags: t.templateTags,
         orientation: t.orientation,
