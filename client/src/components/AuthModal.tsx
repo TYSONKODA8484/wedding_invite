@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Mail, Phone, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Phone } from "lucide-react";
 import { signInWithRedirect } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import {
@@ -27,7 +27,7 @@ interface AuthModalProps {
   onSuccess?: () => void;
 }
 
-type ViewState = "auth" | "forgot-input" | "forgot-otp" | "reset-success";
+type ViewState = "auth" | "forgot-input" | "forgot-otp";
 
 export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
@@ -50,8 +50,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [forgotInput, setForgotInput] = useState("");
   const [forgotInputType, setForgotInputType] = useState<"email" | "phone" | null>(null);
   const [otpValue, setOtpValue] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const detectInputType = (value: string): "email" | "phone" | null => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -208,7 +206,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setViewState("forgot-otp");
   };
 
-  const handleOtpSubmit = (e: React.FormEvent) => {
+  const handleOtpVerify = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (otpValue.length !== 6) {
@@ -220,26 +218,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please ensure both passwords are the same.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // UI-only: Show success state
-    setViewState("reset-success");
+    // UI-only: Show success and go back to sign in
+    toast({
+      title: "OTP Verified",
+      description: "Your identity has been verified successfully.",
+    });
+    handleBackToAuth();
   };
 
   const handleBackToAuth = () => {
@@ -247,8 +231,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     setForgotInput("");
     setForgotInputType(null);
     setOtpValue("");
-    setNewPassword("");
-    setConfirmNewPassword("");
   };
 
   const handleClose = () => {
@@ -309,7 +291,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 data-testid="input-forgot-email-phone"
               />
               <p className="text-xs text-muted-foreground">
-                We'll send a 6-digit verification code to reset your password.
+                We'll send a 6-digit verification code.
               </p>
             </div>
             
@@ -326,7 +308,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     );
   }
 
-  // Forgot Password - Enter OTP + New Password
+  // Forgot Password - Enter OTP
   if (viewState === "forgot-otp") {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -365,7 +347,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             </div>
           </div>
 
-          <form onSubmit={handleOtpSubmit} className="space-y-5 mt-2">
+          <form onSubmit={handleOtpVerify} className="space-y-5 mt-2">
             {/* 6-digit OTP Input */}
             <div className="space-y-3">
               <Label>Enter 6-digit verification code</Label>
@@ -403,74 +385,16 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 </button>
               </p>
             </div>
-
-            <Separator />
-
-            {/* New Password Fields */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  data-testid="input-new-password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-new-password">Confirm New Password</Label>
-                <Input
-                  id="confirm-new-password"
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  required
-                  data-testid="input-confirm-new-password"
-                />
-              </div>
-            </div>
             
             <Button 
               type="submit" 
               className="w-full"
               disabled={otpValue.length !== 6}
-              data-testid="button-reset-password"
+              data-testid="button-verify-otp"
             >
-              Reset Password
+              Verify
             </Button>
           </form>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Password Reset Success
-  if (viewState === "reset-success") {
-    return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[480px]" data-testid="modal-reset-success">
-          <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
-            <DialogTitle className="text-2xl font-playfair">
-              Password Reset Successful
-            </DialogTitle>
-            <DialogDescription className="text-base">
-              Your password has been reset successfully. You can now sign in with your new password.
-            </DialogDescription>
-            <Button 
-              onClick={handleBackToAuth} 
-              className="w-full max-w-[200px] mt-4"
-              data-testid="button-back-to-signin"
-            >
-              Back to Sign In
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
     );
