@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import type { Template } from "@shared/schema";
 import { SEOHead } from "@/components/SEOHead";
@@ -7,8 +7,21 @@ import { TemplateCard } from "@/components/TemplateCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SlidersHorizontal, X, Loader2, Sparkles } from "lucide-react";
 import templatesHubHero from "@assets/generated_images/Templates_hub_hero_image_bf0e94da.png";
+
+interface PaginatedResponse {
+  templates: Template[];
+  pagination: {
+    total: number;
+    offset: number;
+    limit: number;
+    hasMore: boolean;
+  };
+}
+
+const TEMPLATES_PER_PAGE = 25;
 
 interface FilterState {
   subcategory: string | null;
@@ -111,7 +124,7 @@ export default function Templates() {
     setLocation(basePath, { replace: true });
   };
 
-  const buildApiUrl = () => {
+  const buildApiUrl = (offset: number = 0) => {
     const params = new URLSearchParams();
     if (categoryFromUrl) params.set("category", categoryFromUrl);
     if (filters.subcategory) params.set("subcategory", filters.subcategory);
@@ -119,18 +132,65 @@ export default function Templates() {
     if (filters.orientation) params.set("orientation", filters.orientation);
     if (filters.photo) params.set("photo", filters.photo);
     if (filters.sort) params.set("sort", filters.sort);
-    const queryString = params.toString();
-    return queryString ? `/api/templates?${queryString}` : "/api/templates";
+    params.set("offset", offset.toString());
+    params.set("limit", TEMPLATES_PER_PAGE.toString());
+    return `/api/templates?${params.toString()}`;
   };
 
-  const { data: templates = [], isLoading, error } = useQuery<Template[]>({
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<PaginatedResponse>({
     queryKey: ["/api/templates", categoryFromUrl, filters],
-    queryFn: async () => {
-      const response = await fetch(buildApiUrl());
+    queryFn: async ({ pageParam = 0 }) => {
+      const response = await fetch(buildApiUrl(pageParam as number));
       if (!response.ok) throw new Error("Failed to fetch templates");
       return response.json();
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.pagination.hasMore) {
+        return lastPage.pagination.offset + lastPage.pagination.limit;
+      }
+      return undefined;
+    },
+    initialPageParam: 0,
   });
+
+  const templates = useMemo(() => {
+    return data?.pages.flatMap((page) => page.templates) || [];
+  }, [data]);
+
+  const totalCount = data?.pages[0]?.pagination.total || 0;
+
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const element = loadMoreRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: "200px",
+      threshold: 0,
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const subcategories = useMemo(() => {
     if (categoryFromUrl === "wedding") return WEDDING_SUBCATEGORIES;
@@ -394,7 +454,9 @@ export default function Templates() {
 
             <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{templates.length} designs</span>
+              <span className="text-sm font-medium">
+                {totalCount > 0 ? `${totalCount} designs` : "Loading..."}
+              </span>
             </div>
           </div>
 
@@ -511,15 +573,37 @@ export default function Templates() {
                     isPremium={template.isPremium}
                   />
                 ))}
+                
+                {isFetchingNextPage && (
+                  <>
+                    {[...Array(5)].map((_, i) => (
+                      <div key={`skeleton-${i}`} className="space-y-2">
+                        <Skeleton className="aspect-[3/4] w-full rounded-lg" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
 
-              {templates.length >= 20 && (
-                <div className="text-center mt-10">
-                  <Button variant="outline" size="lg" data-testid="button-load-more">
-                    Load More Templates
-                  </Button>
-                </div>
-              )}
+              <div 
+                ref={loadMoreRef} 
+                className="h-10 flex items-center justify-center mt-6"
+                data-testid="infinite-scroll-trigger"
+              >
+                {isFetchingNextPage && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="text-sm">Loading more...</span>
+                  </div>
+                )}
+                {!hasNextPage && templates.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    You've seen all {totalCount} templates
+                  </p>
+                )}
+              </div>
             </>
           )}
         </div>
