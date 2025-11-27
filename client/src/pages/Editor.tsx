@@ -458,53 +458,48 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
   } = useSortable({ id: page.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     transition,
     zIndex: isDragging ? 10 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-start gap-4">
-      <div className="relative">
-        <div
-          {...attributes}
-          {...listeners}
-          className={`relative rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
-            isDragging ? 'opacity-80 scale-105 shadow-2xl ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
-          }`}
-          data-testid={`reorder-page-${index}`}
-        >
-          <div className="w-40 sm:w-48 aspect-[9/16] bg-muted">
-            <img
-              src={page.thumbnailUrl}
-              alt={page.pageName || `Page ${page.pageNumber}`}
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
-          </div>
-          <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded px-2 py-1">
-            <span className="text-xs font-medium">Page {page.pageNumber}</span>
-          </div>
+    <div ref={setNodeRef} style={style} className="flex flex-col items-center">
+      <div
+        {...attributes}
+        {...listeners}
+        className={`relative rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-shadow ${
+          isDragging ? 'opacity-90 shadow-2xl ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
+        }`}
+        data-testid={`reorder-page-${index}`}
+      >
+        <div className="w-36 sm:w-44 aspect-[9/16] bg-muted flex-shrink-0">
+          <img
+            src={page.thumbnailUrl}
+            alt={page.pageName || `Page ${page.pageNumber}`}
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+        </div>
+        <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded px-2 py-1">
+          <span className="text-xs font-medium">Page {page.pageNumber}</span>
         </div>
       </div>
       
-      {/* Curved arrow illustration between pages */}
+      {/* Simple straight line between pages */}
       {!isLast && (
-        <div className="flex flex-col items-center justify-center h-full pt-16">
-          <svg width="80" height="120" viewBox="0 0 80 120" fill="none" className="text-muted-foreground">
-            <path
-              d="M10 10 C 10 60, 70 60, 70 110"
+        <div className="flex flex-col items-center py-4">
+          <svg width="2" height="40" viewBox="0 0 2 40" fill="none" className="text-muted-foreground/50">
+            <line
+              x1="1"
+              y1="0"
+              x2="1"
+              y2="40"
               stroke="currentColor"
               strokeWidth="2"
               strokeDasharray="4 4"
-              fill="none"
-            />
-            <polygon
-              points="70,110 65,100 75,100"
-              fill="currentColor"
             />
           </svg>
-          <span className="text-xs text-muted-foreground mt-1">Drag & Drop</span>
         </div>
       )}
     </div>
@@ -584,7 +579,8 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
         </div>
 
         <ScrollArea className="h-[calc(90vh-80px)]">
-          <div className="flex flex-col items-center py-6 px-8">
+          <div className="flex flex-col items-center py-8 px-6">
+            <p className="text-sm text-muted-foreground mb-6">Drag pages to reorder them</p>
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -594,15 +590,17 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
                 items={orderedPages.map((p) => p.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {orderedPages.map((page, index) => (
-                  <SortablePageItem
-                    key={page.id}
-                    page={page}
-                    index={index}
-                    isFirst={index === 0}
-                    isLast={index === orderedPages.length - 1}
-                  />
-                ))}
+                <div className="flex flex-col items-center gap-0">
+                  {orderedPages.map((page, index) => (
+                    <SortablePageItem
+                      key={page.id}
+                      page={page}
+                      index={index}
+                      isFirst={index === 0}
+                      isLast={index === orderedPages.length - 1}
+                    />
+                  ))}
+                </div>
               </SortableContext>
             </DndContext>
           </div>
