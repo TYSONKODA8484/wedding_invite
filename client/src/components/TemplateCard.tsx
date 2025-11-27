@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
-import { Play, Clock, Image, Video } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 
@@ -34,19 +33,11 @@ export function TemplateCard({
 
   const isVideoTemplate = templateType === "video";
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const handleMouseEnter = () => {
     setIsHovering(true);
     if (isVideoTemplate && demoVideoUrl && videoRef.current) {
       setShowVideo(true);
-      videoRef.current.play().catch(() => {
-        // Autoplay might be blocked, that's okay
-      });
+      videoRef.current.play().catch(() => {});
     }
   };
 
@@ -104,54 +95,24 @@ export function TemplateCard({
             </video>
           )}
           
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent transition-opacity duration-300 ${
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent transition-opacity duration-300 ${
             showVideo ? 'opacity-0' : 'opacity-100'
           }`} />
           
           {isVideoTemplate && !showVideo && (
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                <Play className="w-6 h-6 text-primary fill-current ml-0.5" />
+              <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <Play className="w-5 h-5 text-primary fill-current ml-0.5" />
               </div>
             </div>
           )}
 
-          <Badge 
-            variant="secondary" 
-            className={`absolute top-2.5 left-2.5 text-xs font-medium backdrop-blur-sm border-0 ${
-              isVideoTemplate 
-                ? 'bg-primary/90 text-primary-foreground' 
-                : 'bg-secondary/90 text-secondary-foreground'
-            }`}
+          <span 
+            className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-medium rounded bg-black/60 text-white backdrop-blur-sm"
             data-testid={`badge-type-${id}`}
           >
-            {isVideoTemplate ? (
-              <>
-                <Video className="w-3 h-3 mr-1" />
-                Video
-              </>
-            ) : (
-              <>
-                <Image className="w-3 h-3 mr-1" />
-                Card
-              </>
-            )}
-          </Badge>
-
-          {isPremium && (
-            <Badge className="absolute top-2.5 right-2.5 bg-accent text-accent-foreground font-medium text-xs border-0">
-              Premium
-            </Badge>
-          )}
-
-          {isVideoTemplate && (
-            <div className="absolute bottom-2.5 right-2.5">
-              <Badge variant="secondary" className="bg-black/70 backdrop-blur-sm text-white border-0 text-xs">
-                <Clock className="w-3 h-3 mr-1" />
-                {formatDuration(duration)}
-              </Badge>
-            </div>
-          )}
+            {isVideoTemplate ? "Video" : "Card"}
+          </span>
         </div>
 
         <div className="p-3 space-y-2">
