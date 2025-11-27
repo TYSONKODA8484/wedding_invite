@@ -42,6 +42,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -464,42 +465,43 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col items-center">
+    <div ref={setNodeRef} style={style} className="flex flex-col items-center w-full">
       <div
         {...attributes}
         {...listeners}
-        className={`relative rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-shadow ${
-          isDragging ? 'opacity-90 shadow-2xl ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
+        className={`relative rounded-xl overflow-hidden cursor-grab active:cursor-grabbing transition-all touch-none select-none ${
+          isDragging 
+            ? 'opacity-95 shadow-2xl ring-2 ring-primary scale-[1.02]' 
+            : 'hover:ring-2 hover:ring-primary/50 shadow-md'
         }`}
+        style={{ touchAction: 'none' }}
         data-testid={`reorder-page-${index}`}
       >
-        <div className="w-36 sm:w-44 aspect-[9/16] bg-muted flex-shrink-0">
+        {/* Responsive page thumbnail - smaller on mobile, larger on desktop */}
+        <div className="w-28 xs:w-32 sm:w-40 md:w-44 aspect-[9/16] bg-muted flex-shrink-0">
           <img
             src={page.thumbnailUrl}
             alt={page.pageName || `Page ${page.pageNumber}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover pointer-events-none"
             draggable={false}
           />
         </div>
-        <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded px-2 py-1">
-          <span className="text-xs font-medium">Page {page.pageNumber}</span>
+        
+        {/* Page number badge */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
+          <span className="text-xs font-semibold text-foreground">Page {page.pageNumber}</span>
+        </div>
+        
+        {/* Drag handle indicator */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5">
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
       </div>
       
-      {/* Simple straight line between pages */}
+      {/* Simple connector line between pages */}
       {!isLast && (
-        <div className="flex flex-col items-center py-4">
-          <svg width="2" height="40" viewBox="0 0 2 40" fill="none" className="text-muted-foreground/50">
-            <line
-              x1="1"
-              y1="0"
-              x2="1"
-              y2="40"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeDasharray="4 4"
-            />
-          </svg>
+        <div className="flex flex-col items-center py-3 sm:py-4">
+          <div className="w-0.5 h-6 sm:h-8 bg-gradient-to-b from-border to-transparent rounded-full" />
         </div>
       )}
     </div>
@@ -524,6 +526,12 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -555,32 +563,44 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">Re-order Pages</h2>
-          <div className="flex items-center gap-2">
+      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl h-[90vh] sm:h-[85vh] max-h-[90vh] p-0 overflow-hidden rounded-2xl">
+        {/* Header - Fixed at top */}
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
+          <div className="flex flex-col">
+            <h2 className="text-base sm:text-lg font-semibold">Re-order Pages</h2>
+            <p className="text-xs text-muted-foreground hidden sm:block">Drag to rearrange</p>
+          </div>
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleConfirm}
-              data-testid="button-confirm-reorder"
-            >
-              <Check className="w-5 h-5 text-green-600" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+              variant="outline"
+              size="sm"
               onClick={handleCancel}
+              className="h-8 px-3 text-xs sm:text-sm"
               data-testid="button-cancel-reorder"
             >
-              <X className="w-5 h-5" />
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleConfirm}
+              className="h-8 px-3 text-xs sm:text-sm"
+              data-testid="button-confirm-reorder"
+            >
+              <Check className="w-4 h-4 mr-1 sm:mr-2" />
+              Done
             </Button>
           </div>
         </div>
 
-        <ScrollArea className="h-[calc(90vh-80px)]">
-          <div className="flex flex-col items-center py-8 px-6">
-            <p className="text-sm text-muted-foreground mb-6">Drag pages to reorder them</p>
+        {/* Scrollable content area */}
+        <ScrollArea className="flex-1 h-[calc(90vh-64px)] sm:h-[calc(85vh-72px)]">
+          <div className="flex flex-col items-center py-6 sm:py-8 px-4 sm:px-6">
+            {/* Mobile instruction */}
+            <div className="flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 mb-6">
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+              <p className="text-xs sm:text-sm text-muted-foreground">Hold and drag to reorder</p>
+            </div>
+            
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -590,7 +610,7 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
                 items={orderedPages.map((p) => p.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex flex-col items-center gap-0">
+                <div className="flex flex-col items-center gap-0 w-full max-w-xs sm:max-w-sm">
                   {orderedPages.map((page, index) => (
                     <SortablePageItem
                       key={page.id}
@@ -603,6 +623,9 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
                 </div>
               </SortableContext>
             </DndContext>
+            
+            {/* Bottom padding for scroll */}
+            <div className="h-8" />
           </div>
         </ScrollArea>
       </DialogContent>
