@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
-  GripVertical, Music, Play, MoveDown, Trash2
+  GripVertical, Music, Play, MoveDown, Trash2, Undo2, Redo2, AlertTriangle
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
 import { PaymentModal as PaymentModalComponent } from "@/components/PaymentModal";
@@ -434,11 +444,10 @@ interface SortablePageItemProps {
   page: any;
   index: number;
   isFirst: boolean;
-  onDelete: (id: string) => void;
-  canDelete: boolean;
+  isLast: boolean;
 }
 
-function SortablePageItem({ page, index, isFirst, onDelete, canDelete }: SortablePageItemProps) {
+function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProps) {
   const {
     attributes,
     listeners,
@@ -455,14 +464,8 @@ function SortablePageItem({ page, index, isFirst, onDelete, canDelete }: Sortabl
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col items-center">
-      {!isFirst && (
-        <div className="flex items-center gap-2 py-3 text-muted-foreground">
-          <MoveDown className="w-4 h-4" />
-          <span className="text-xs">Drag & Drop</span>
-        </div>
-      )}
-      <div className="relative group">
+    <div ref={setNodeRef} style={style} className="flex items-start gap-4">
+      <div className="relative">
         <div
           {...attributes}
           {...listeners}
@@ -483,19 +486,27 @@ function SortablePageItem({ page, index, isFirst, onDelete, canDelete }: Sortabl
             <span className="text-xs font-medium">Page {page.pageNumber}</span>
           </div>
         </div>
-        {canDelete && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(page.id);
-            }}
-            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-destructive/90"
-            data-testid={`button-delete-page-${index}`}
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
-        )}
       </div>
+      
+      {/* Curved arrow illustration between pages */}
+      {!isLast && (
+        <div className="flex flex-col items-center justify-center h-full pt-16">
+          <svg width="80" height="120" viewBox="0 0 80 120" fill="none" className="text-muted-foreground">
+            <path
+              d="M10 10 C 10 60, 70 60, 70 110"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              fill="none"
+            />
+            <polygon
+              points="70,110 65,100 75,100"
+              fill="currentColor"
+            />
+          </svg>
+          <span className="text-xs text-muted-foreground mt-1">Drag & Drop</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -504,16 +515,14 @@ interface ReorderPagesModalProps {
   isOpen: boolean;
   onClose: () => void;
   pages: any[];
-  onConfirm: (newOrder: string[], deletedIds: string[]) => void;
+  onConfirm: (newOrder: string[]) => void;
 }
 
 function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesModalProps) {
   const [orderedPages, setOrderedPages] = useState(pages);
-  const [deletedPageIds, setDeletedPageIds] = useState<string[]>([]);
 
   useEffect(() => {
     setOrderedPages(pages);
-    setDeletedPageIds([]);
   }, [pages]);
 
   const sensors = useSensors(
@@ -539,26 +548,19 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
     }
   };
 
-  const handleDeletePage = (pageId: string) => {
-    if (orderedPages.length <= 1) return;
-    setOrderedPages((items) => items.filter((item) => item.id !== pageId));
-    setDeletedPageIds((prev) => [...prev, pageId]);
-  };
-
   const handleConfirm = () => {
-    onConfirm(orderedPages.map((p) => p.id), deletedPageIds);
+    onConfirm(orderedPages.map((p) => p.id));
     onClose();
   };
 
   const handleCancel = () => {
     setOrderedPages(pages);
-    setDeletedPageIds([]);
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-semibold">Re-order Pages</h2>
           <div className="flex items-center gap-2">
@@ -582,7 +584,7 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
         </div>
 
         <ScrollArea className="h-[calc(90vh-80px)]">
-          <div className="flex flex-col items-center py-6 px-4">
+          <div className="flex flex-col items-center py-6 px-8">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -598,8 +600,7 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
                     page={page}
                     index={index}
                     isFirst={index === 0}
-                    onDelete={handleDeletePage}
-                    canDelete={orderedPages.length > 1}
+                    isLast={index === orderedPages.length - 1}
                   />
                 ))}
               </SortableContext>
@@ -638,6 +639,110 @@ export default function Editor() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPreview, setPendingPreview] = useState(false);
   const [isAuthVerifying, setIsAuthVerifying] = useState(false);
+  
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pageToDelete, setPageToDelete] = useState<{ id: string; index: number } | null>(null);
+  
+  // Undo/Redo history
+  type HistoryAction = 
+    | { type: 'pages'; previousPageIds: string[]; previousPageIndex: number }
+    | { type: 'image'; fieldId: string; previousUrl: string | undefined }
+    | { type: 'text'; fieldId: string; previousValue: string };
+  
+  const [undoStack, setUndoStack] = useState<HistoryAction[]>([]);
+  const [redoStack, setRedoStack] = useState<HistoryAction[]>([]);
+  const [lastTextSnapshot, setLastTextSnapshot] = useState<Record<string, string>>({});
+  
+  const pushToHistory = (action: HistoryAction) => {
+    setUndoStack(prev => [...prev, action]);
+    setRedoStack([]); // Clear redo stack when new action is pushed
+  };
+  
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    
+    const action = undoStack[undoStack.length - 1];
+    setUndoStack(prev => prev.slice(0, -1));
+    
+    if (action.type === 'pages') {
+      // Save current state to redo
+      setRedoStack(prev => [...prev, {
+        type: 'pages',
+        previousPageIds: orderedPageIds,
+        previousPageIndex: currentPageIndex,
+      }]);
+      setOrderedPageIds(action.previousPageIds);
+      setCurrentPageIndex(Math.min(action.previousPageIndex, action.previousPageIds.length - 1));
+      toast({ title: "Undone", description: "Page changes reverted." });
+    } else if (action.type === 'image') {
+      setRedoStack(prev => [...prev, {
+        type: 'image',
+        fieldId: action.fieldId,
+        previousUrl: imagePreviews[action.fieldId],
+      }]);
+      if (action.previousUrl) {
+        setImagePreviews(prev => ({ ...prev, [action.fieldId]: action.previousUrl! }));
+      } else {
+        setImagePreviews(prev => {
+          const newPreviews = { ...prev };
+          delete newPreviews[action.fieldId];
+          return newPreviews;
+        });
+      }
+      toast({ title: "Undone", description: "Image change reverted." });
+    } else if (action.type === 'text') {
+      setRedoStack(prev => [...prev, {
+        type: 'text',
+        fieldId: action.fieldId,
+        previousValue: fieldValues[action.fieldId] || '',
+      }]);
+      setFieldValues(prev => ({ ...prev, [action.fieldId]: action.previousValue }));
+      toast({ title: "Undone", description: "Text change reverted." });
+    }
+  };
+  
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    
+    const action = redoStack[redoStack.length - 1];
+    setRedoStack(prev => prev.slice(0, -1));
+    
+    if (action.type === 'pages') {
+      setUndoStack(prev => [...prev, {
+        type: 'pages',
+        previousPageIds: orderedPageIds,
+        previousPageIndex: currentPageIndex,
+      }]);
+      setOrderedPageIds(action.previousPageIds);
+      setCurrentPageIndex(Math.min(action.previousPageIndex, action.previousPageIds.length - 1));
+      toast({ title: "Redone", description: "Page changes restored." });
+    } else if (action.type === 'image') {
+      setUndoStack(prev => [...prev, {
+        type: 'image',
+        fieldId: action.fieldId,
+        previousUrl: imagePreviews[action.fieldId],
+      }]);
+      if (action.previousUrl) {
+        setImagePreviews(prev => ({ ...prev, [action.fieldId]: action.previousUrl! }));
+      } else {
+        setImagePreviews(prev => {
+          const newPreviews = { ...prev };
+          delete newPreviews[action.fieldId];
+          return newPreviews;
+        });
+      }
+      toast({ title: "Redone", description: "Image change restored." });
+    } else if (action.type === 'text') {
+      setUndoStack(prev => [...prev, {
+        type: 'text',
+        fieldId: action.fieldId,
+        previousValue: fieldValues[action.fieldId] || '',
+      }]);
+      setFieldValues(prev => ({ ...prev, [action.fieldId]: action.previousValue }));
+      toast({ title: "Redone", description: "Text change restored." });
+    }
+  };
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -708,16 +813,62 @@ export default function Editor() {
     }
   }, [templateData]);
 
-  const handleReorderConfirm = (newOrder: string[], deletedIds: string[]) => {
+  const handleReorderConfirm = (newOrder: string[]) => {
+    // Save current state for undo
+    pushToHistory({
+      type: 'pages',
+      previousPageIds: orderedPageIds,
+      previousPageIndex: currentPageIndex,
+    });
     setOrderedPageIds(newOrder);
     setCurrentPageIndex(0);
-    const deletedCount = deletedIds.length;
     toast({
-      title: "Pages updated",
-      description: deletedCount > 0 
-        ? `Page order updated. ${deletedCount} page${deletedCount > 1 ? 's' : ''} removed.`
-        : "The page order has been updated.",
+      title: "Pages reordered",
+      description: "The page order has been updated.",
     });
+  };
+  
+  // Handle page deletion from sidebar
+  const handleDeletePageClick = (pageId: string, index: number) => {
+    if (orderedPageIds.length <= 1) {
+      toast({
+        title: "Cannot delete",
+        description: "You must have at least one page.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPageToDelete({ id: pageId, index });
+    setShowDeleteConfirm(true);
+  };
+  
+  const confirmDeletePage = () => {
+    if (!pageToDelete) return;
+    
+    // Save current state for undo
+    pushToHistory({
+      type: 'pages',
+      previousPageIds: orderedPageIds,
+      previousPageIndex: currentPageIndex,
+    });
+    
+    const newPageIds = orderedPageIds.filter(id => id !== pageToDelete.id);
+    setOrderedPageIds(newPageIds);
+    
+    // Adjust current page index if needed
+    if (currentPageIndex >= newPageIds.length) {
+      setCurrentPageIndex(Math.max(0, newPageIds.length - 1));
+    } else if (currentPageIndex > pageToDelete.index) {
+      setCurrentPageIndex(currentPageIndex - 1);
+    }
+    
+    toast({
+      title: "Page deleted",
+      description: "The page has been removed. Use Undo to restore it.",
+    });
+    
+    setShowDeleteConfirm(false);
+    setPageToDelete(null);
   };
 
   const { data: user } = useQuery({
@@ -863,11 +1014,56 @@ export default function Editor() {
 
   const handleFieldChange = (fieldId: string, value: string) => {
     const key = `${currentPage.id}_${fieldId}`;
+    const currentValue = fieldValues[key] || '';
+    
+    // Track text changes at word boundaries (when space is typed or field loses word)
+    const currentWords = currentValue.trim().split(/\s+/).filter(w => w);
+    const newWords = value.trim().split(/\s+/).filter(w => w);
+    const lastSnapshot = lastTextSnapshot[key] || '';
+    
+    // Save to history when a word is completed (space typed) or word deleted
+    if (currentWords.length !== newWords.length || 
+        (value.endsWith(' ') && !currentValue.endsWith(' '))) {
+      if (lastSnapshot !== currentValue) {
+        pushToHistory({
+          type: 'text',
+          fieldId: key,
+          previousValue: lastSnapshot,
+        });
+        setLastTextSnapshot(prev => ({ ...prev, [key]: currentValue }));
+      }
+    }
+    
     setFieldValues((prev) => ({ ...prev, [key]: value }));
+  };
+  
+  // Handle text field blur to save final state
+  const handleFieldBlur = (fieldId: string) => {
+    const key = `${currentPage.id}_${fieldId}`;
+    const currentValue = fieldValues[key] || '';
+    const lastSnapshot = lastTextSnapshot[key] || '';
+    
+    if (lastSnapshot !== currentValue && currentValue !== '') {
+      pushToHistory({
+        type: 'text',
+        fieldId: key,
+        previousValue: lastSnapshot,
+      });
+      setLastTextSnapshot(prev => ({ ...prev, [key]: currentValue }));
+    }
   };
 
   const handleImageSelect = (fieldId: string, file: File) => {
     const key = `${currentPage.id}_${fieldId}`;
+    
+    // Save previous image for undo
+    const previousUrl = imagePreviews[key];
+    pushToHistory({
+      type: 'image',
+      fieldId: key,
+      previousUrl: previousUrl,
+    });
+    
     setImageFiles((prev) => ({ ...prev, [key]: file }));
     
     const reader = new FileReader();
@@ -951,16 +1147,66 @@ export default function Editor() {
         />
       )}
 
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Delete Page?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this page? You can use the Undo button to restore it after deletion.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPageToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeletePage}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete Page
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Top Header */}
       <header className="h-14 border-b bg-card flex items-center justify-between px-4 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => fromPage === 'my-templates' ? navigate('/my-templates') : navigate(`/template/${template.slug}`)}
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => fromPage === 'my-templates' ? navigate('/my-templates') : navigate(`/template/${template.slug}`)}
+            data-testid="button-back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          
+          {/* Undo/Redo Buttons */}
+          <div className="flex items-center gap-1 border-l pl-2 ml-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleUndo}
+              disabled={undoStack.length === 0}
+              title="Undo (Ctrl+Z)"
+              data-testid="button-undo"
+            >
+              <Undo2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRedo}
+              disabled={redoStack.length === 0}
+              title="Redo (Ctrl+Y)"
+              data-testid="button-redo"
+            >
+              <Redo2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
         
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" data-testid="button-upload-music">
@@ -1016,35 +1262,44 @@ export default function Editor() {
               {pages.map((page, index) => (
                 <div
                   key={page.id}
-                  onClick={() => setCurrentPageIndex(index)}
-                  className={`w-full relative rounded-lg overflow-hidden transition-all cursor-pointer ${
-                    currentPageIndex === index
-                      ? 'ring-2 ring-primary shadow-md'
-                      : 'hover:ring-1 hover:ring-muted-foreground/30'
-                  }`}
-                  data-testid={`page-thumbnail-${index}`}
+                  className="relative"
+                  data-testid={`page-container-${index}`}
                 >
-                  <div className="aspect-[9/16] bg-muted relative">
-                    <img
-                      src={page.thumbnailUrl}
-                      alt={page.pageName}
-                      className="w-full h-full object-cover"
-                      loading="eager"
-                    />
-                    {currentPageIndex === index && (
-                      <div className="absolute inset-0 bg-primary/10" />
-                    )}
-                  </div>
-                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Delete button - always visible in top right */}
+                  {pages.length > 1 && (
                     <button
-                      className="h-5 w-5 rounded bg-background/80 hover:bg-background flex items-center justify-center"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toast({ title: "Delete", description: "Page deletion coming soon" });
+                        handleDeletePageClick(page.id, index);
                       }}
+                      className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md hover:bg-destructive/80 transition-colors"
+                      data-testid={`button-delete-page-${index}`}
+                      title="Delete page"
                     >
-                      <X className="w-3 h-3" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
+                  )}
+                  
+                  <div
+                    onClick={() => setCurrentPageIndex(index)}
+                    className={`w-full relative rounded-lg overflow-hidden transition-all cursor-pointer ${
+                      currentPageIndex === index
+                        ? 'ring-2 ring-primary shadow-md'
+                        : 'hover:ring-1 hover:ring-muted-foreground/30'
+                    }`}
+                    data-testid={`page-thumbnail-${index}`}
+                  >
+                    <div className="aspect-[9/16] bg-muted relative">
+                      <img
+                        src={page.thumbnailUrl}
+                        alt={page.pageName}
+                        className="w-full h-full object-cover"
+                        loading="eager"
+                      />
+                      {currentPageIndex === index && (
+                        <div className="absolute inset-0 bg-primary/10" />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1171,6 +1426,7 @@ export default function Editor() {
                           id={field.id}
                           value={getFieldValue(field.id)}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          onBlur={() => handleFieldBlur(field.id)}
                           maxLength={field.maxLength}
                           rows={3}
                           className="resize-none text-sm"
@@ -1198,6 +1454,7 @@ export default function Editor() {
                           type="text"
                           value={getFieldValue(field.id)}
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          onBlur={() => handleFieldBlur(field.id)}
                           maxLength={field.maxLength}
                           className="text-sm"
                           data-testid={`input-${field.id}`}
