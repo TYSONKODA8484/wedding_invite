@@ -24,23 +24,29 @@ A dual authentication system supports traditional email/password (JWT-based with
 The Templates page (`/templates`, `/templates/wedding`, `/templates/birthday`) features a comprehensive filtering system inspired by 247invites.com:
 
 **Quick Filter Chips:**
-- Wedding page: Save the Date, Engagement Ceremony, Hindu Wedding, South Indian, Marathi, Rajasthani, Jain, Punjabi, Muslim, Christian, Bengali
-- Birthday page: Birthday Invites, Kids Birthday, Adult Milestones
+- All Templates page (`/templates`): 
+  - Categories: Wedding, Birthday, Anniversary, Engagement, Baby Shower, Housewarming, Corporate Events
+  - Regions: India, UAE, Saudi Arabia, Gulf Region, South Asia (separated by visual divider)
+- Wedding page: Save the Date, Engagement Ceremony, Hindu Wedding, South Indian, Marathi, Rajasthani, Jain, Punjabi, Muslim, Christian, Bengali, Arabic, Gulf Wedding
+- Birthday page: Birthday Invites, Kids Birthday, Adult Milestones, First Birthday, Sweet 16
 
-**Filter Sheet Panel (left-side slide-out):**
+**Filter Sheet Panel (dropdown):**
 - Type: Video, Card
 - Sort by: Popular, Newest, Low to High, High to Low
 - Photo: With Photo, Without Photo
 - Card Orientation: Portrait, Landscape
+- Region: India, UAE, Saudi Arabia, Gulf Region, South Asia
 
 **Features:**
 - URL state sync for shareable filtered views
 - Active filters display with individual remove buttons
 - Clear all functionality
 - Server-side filtering via API query params
+- Infinite scroll pagination with 25 templates per batch
 
 **Database Columns:**
 - `subcategory`: Primary subcategory for quick chip filtering
+- `region`: Target region for templates (india, uae, saudi, gulf, south_asia)
 - `popularityScore`: Numeric score for Popular sort
 
 ### My Templates Page

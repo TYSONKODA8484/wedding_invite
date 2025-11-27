@@ -25,11 +25,31 @@ const TEMPLATES_PER_PAGE = 25;
 
 interface FilterState {
   subcategory: string | null;
+  category: string | null;
+  region: string | null;
   type: string | null;
   orientation: string | null;
   photo: string | null;
   sort: string | null;
 }
+
+const ALL_TEMPLATES_CATEGORIES = [
+  { value: "wedding", label: "Wedding" },
+  { value: "birthday", label: "Birthday" },
+  { value: "anniversary", label: "Anniversary" },
+  { value: "engagement", label: "Engagement" },
+  { value: "baby_shower", label: "Baby Shower" },
+  { value: "housewarming", label: "Housewarming" },
+  { value: "corporate", label: "Corporate Events" },
+];
+
+const REGION_FILTERS = [
+  { value: "india", label: "India" },
+  { value: "uae", label: "UAE" },
+  { value: "saudi", label: "Saudi Arabia" },
+  { value: "gulf", label: "Gulf Region" },
+  { value: "south_asia", label: "South Asia" },
+];
 
 const WEDDING_SUBCATEGORIES = [
   { value: "save_the_date", label: "Save the Date" },
@@ -43,12 +63,16 @@ const WEDDING_SUBCATEGORIES = [
   { value: "muslim", label: "Muslim" },
   { value: "christian", label: "Christian" },
   { value: "bengali", label: "Bengali" },
+  { value: "arabic", label: "Arabic" },
+  { value: "gulf_wedding", label: "Gulf Wedding" },
 ];
 
 const BIRTHDAY_SUBCATEGORIES = [
   { value: "birthday_invite", label: "Birthday Invites" },
   { value: "kids_birthday", label: "Kids Birthday" },
   { value: "adult_milestone", label: "Adult Milestones" },
+  { value: "first_birthday", label: "First Birthday" },
+  { value: "sweet_16", label: "Sweet 16" },
 ];
 
 const TEMPLATE_TYPES = [
@@ -81,6 +105,8 @@ export default function Templates() {
 
   const [filters, setFilters] = useState<FilterState>({
     subcategory: null,
+    category: null,
+    region: null,
     type: null,
     orientation: null,
     photo: null,
@@ -91,6 +117,8 @@ export default function Templates() {
     const urlParams = new URLSearchParams(window.location.search);
     setFilters({
       subcategory: urlParams.get("subcategory"),
+      category: urlParams.get("category"),
+      region: urlParams.get("region"),
       type: urlParams.get("type"),
       orientation: urlParams.get("orientation"),
       photo: urlParams.get("photo"),
@@ -115,6 +143,8 @@ export default function Templates() {
   const clearAllFilters = () => {
     setFilters({
       subcategory: null,
+      category: null,
+      region: null,
       type: null,
       orientation: null,
       photo: null,
@@ -126,8 +156,13 @@ export default function Templates() {
 
   const buildApiUrl = (offset: number = 0) => {
     const params = new URLSearchParams();
-    if (categoryFromUrl) params.set("category", categoryFromUrl);
+    if (categoryFromUrl) {
+      params.set("category", categoryFromUrl);
+    } else if (filters.category) {
+      params.set("category", filters.category);
+    }
     if (filters.subcategory) params.set("subcategory", filters.subcategory);
+    if (filters.region) params.set("region", filters.region);
     if (filters.type) params.set("type", filters.type);
     if (filters.orientation) params.set("orientation", filters.orientation);
     if (filters.photo) params.set("photo", filters.photo);
@@ -198,11 +233,15 @@ export default function Templates() {
     return [];
   }, [categoryFromUrl]);
 
+  const isAllTemplatesPage = !categoryFromUrl;
+
   const activeFiltersCount = [
     filters.type,
     filters.orientation,
     filters.photo,
     filters.sort,
+    filters.region,
+    !categoryFromUrl && filters.category,
   ].filter(Boolean).length;
 
   const getPageTitle = () => {
@@ -411,6 +450,21 @@ export default function Templates() {
                           ))}
                         </div>
                       </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Region</label>
+                        <div className="flex flex-wrap gap-2">
+                          {REGION_FILTERS.map((option) => (
+                            <FilterOption
+                              key={option.value}
+                              label={option.label}
+                              isSelected={filters.region === option.value}
+                              onClick={() => updateFilters({ region: filters.region === option.value ? null : option.value })}
+                              testId={`filter-region-${option.value}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex gap-2 mt-5 pt-4 border-t">
@@ -437,7 +491,31 @@ export default function Templates() {
               )}
             </div>
 
-            {subcategories.length > 0 && (
+            {isAllTemplatesPage ? (
+              <div className="flex flex-wrap gap-2 flex-1">
+                {ALL_TEMPLATES_CATEGORIES.map((cat) => (
+                  <FilterChip
+                    key={cat.value}
+                    label={cat.label}
+                    isSelected={filters.category === cat.value}
+                    onClick={() => updateFilters({ 
+                      category: filters.category === cat.value ? null : cat.value 
+                    })}
+                  />
+                ))}
+                <div className="w-px h-6 bg-border mx-1 self-center" />
+                {REGION_FILTERS.map((region) => (
+                  <FilterChip
+                    key={region.value}
+                    label={region.label}
+                    isSelected={filters.region === region.value}
+                    onClick={() => updateFilters({ 
+                      region: filters.region === region.value ? null : region.value 
+                    })}
+                  />
+                ))}
+              </div>
+            ) : subcategories.length > 0 ? (
               <div className="flex flex-wrap gap-2 flex-1">
                 {subcategories.map((sub) => (
                   <FilterChip
@@ -450,7 +528,7 @@ export default function Templates() {
                   />
                 ))}
               </div>
-            )}
+            ) : null}
 
             <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -460,9 +538,27 @@ export default function Templates() {
             </div>
           </div>
 
-          {(filters.subcategory || activeFiltersCount > 0) && (
+          {(filters.subcategory || filters.category || filters.region || activeFiltersCount > 0) && (
             <div className="flex items-center gap-2 mb-4 flex-wrap">
               <span className="text-xs text-muted-foreground">Active:</span>
+              {filters.category && isAllTemplatesPage && (
+                <Badge variant="secondary" className="gap-1 text-xs">
+                  {ALL_TEMPLATES_CATEGORIES.find(c => c.value === filters.category)?.label || filters.category}
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                    onClick={() => updateFilters({ category: null })}
+                  />
+                </Badge>
+              )}
+              {filters.region && (
+                <Badge variant="secondary" className="gap-1 text-xs">
+                  {REGION_FILTERS.find(r => r.value === filters.region)?.label || filters.region}
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                    onClick={() => updateFilters({ region: null })}
+                  />
+                </Badge>
+              )}
               {filters.subcategory && (
                 <Badge variant="secondary" className="gap-1 text-xs">
                   {subcategories.find(s => s.value === filters.subcategory)?.label || filters.subcategory}

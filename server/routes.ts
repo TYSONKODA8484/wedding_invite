@@ -330,6 +330,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { 
         category, 
         subcategory, 
+        region,
         type, 
         orientation, 
         photo,
@@ -343,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply filters
       let filteredTemplates = allTemplates;
       
-      // Filter by category (wedding/birthday)
+      // Filter by category (wedding/birthday/anniversary etc.)
       if (category) {
         filteredTemplates = filteredTemplates.filter(t => t.category === category);
       }
@@ -351,6 +352,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Filter by subcategory
       if (subcategory) {
         filteredTemplates = filteredTemplates.filter(t => t.subcategory === subcategory);
+      }
+      
+      // Filter by region (india/uae/saudi/gulf/south_asia)
+      if (region) {
+        filteredTemplates = filteredTemplates.filter(t => t.region === region);
       }
       
       // Filter by type (video/card)

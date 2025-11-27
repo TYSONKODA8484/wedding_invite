@@ -55,6 +55,7 @@ export const templates = pgTable("templates", {
   templateType: varchar("template_type").notNull(),
   category: varchar("category").notNull().default("wedding"),
   subcategory: varchar("subcategory").notNull().default("general"),
+  region: varchar("region").default("india"),
   currency: varchar("currency").notNull().default("INR"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   durationSec: integer("duration_sec").notNull().default(30),
