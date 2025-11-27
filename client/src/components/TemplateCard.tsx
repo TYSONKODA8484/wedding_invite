@@ -119,7 +119,6 @@ export function TemplateCard({
           <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <p className="text-xs text-muted-foreground capitalize">{category}</p>
           <Button variant="default" size="sm" className="w-full text-sm" data-testid={`button-use-template-${id}`}>
             Use Template
           </Button>
