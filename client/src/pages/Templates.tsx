@@ -661,11 +661,11 @@ export default function Templates() {
                     id={template.id}
                     title={template.title}
                     slug={template.slug}
-                    category={template.templateType}
+                    category={template.category}
                     duration={template.duration}
                     thumbnailUrl={template.thumbnailUrl}
                     demoVideoUrl={template.demoVideoUrl}
-                    priceInr={template.priceInr}
+                    templateType={template.templateType}
                     isPremium={template.isPremium}
                   />
                 ))}

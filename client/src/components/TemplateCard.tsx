@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Play, Clock } from "lucide-react";
+import { Play, Clock, Image, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,7 @@ interface TemplateCardProps {
   thumbnailUrl: string;
   demoVideoUrl?: string;
   isPremium?: boolean;
-  priceInr: number; // Price in paise
+  templateType?: "video" | "card";
 }
 
 export function TemplateCard({
@@ -26,11 +26,13 @@ export function TemplateCard({
   thumbnailUrl,
   demoVideoUrl,
   isPremium,
-  priceInr,
+  templateType = "video",
 }: TemplateCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const isVideoTemplate = templateType === "video";
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -38,14 +40,9 @@ export function TemplateCard({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const formatPrice = (paise: number) => {
-    const rupees = Math.floor(paise / 100);
-    return `₹${rupees.toLocaleString('en-IN')}`;
-  };
-
   const handleMouseEnter = () => {
     setIsHovering(true);
-    if (demoVideoUrl && videoRef.current) {
+    if (isVideoTemplate && demoVideoUrl && videoRef.current) {
       setShowVideo(true);
       videoRef.current.play().catch(() => {
         // Autoplay might be blocked, that's okay
@@ -63,7 +60,7 @@ export function TemplateCard({
   };
 
   const handleClick = (e: React.MouseEvent) => {
-    if (demoVideoUrl && videoRef.current) {
+    if (isVideoTemplate && demoVideoUrl && videoRef.current) {
       e.preventDefault();
       setShowVideo(true);
       if (videoRef.current.paused) {
@@ -75,10 +72,10 @@ export function TemplateCard({
   };
 
   return (
-    <Card className="group overflow-hidden transition-all duration-300" data-testid={`card-template-${id}`}>
-      <Link href={`/template/${slug}`} className="block hover-elevate active-elevate-2">
+    <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-300 bg-card" data-testid={`card-template-${id}`}>
+      <Link href={`/template/${slug}`} className="block">
         <div 
-          className="relative aspect-[9/16] overflow-hidden bg-muted"
+          className="relative aspect-[9/16] overflow-hidden bg-muted rounded-t-lg"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
@@ -86,12 +83,12 @@ export function TemplateCard({
           <img
             src={thumbnailUrl}
             alt={title}
-            className={`w-full h-full object-cover transition-all duration-300 ${
-              showVideo && demoVideoUrl ? 'opacity-0' : 'opacity-100 group-hover:scale-105'
+            className={`w-full h-full object-cover transition-all duration-500 ${
+              showVideo && isVideoTemplate && demoVideoUrl ? 'opacity-0 scale-100' : 'opacity-100 group-hover:scale-105'
             }`}
           />
           
-          {demoVideoUrl && (
+          {isVideoTemplate && demoVideoUrl && (
             <video
               ref={videoRef}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
@@ -107,40 +104,62 @@ export function TemplateCard({
             </video>
           )}
           
-          <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/20 transition-opacity duration-300 ${
-            showVideo ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent transition-opacity duration-300 ${
+            showVideo ? 'opacity-0' : 'opacity-100'
           }`} />
           
-          {!showVideo && (
+          {isVideoTemplate && !showVideo && (
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="w-16 h-16 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center">
-                <Play className="w-8 h-8 text-primary-foreground fill-current ml-1" />
+              <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <Play className="w-6 h-6 text-primary fill-current ml-0.5" />
               </div>
             </div>
           )}
+
+          <Badge 
+            variant="secondary" 
+            className={`absolute top-2.5 left-2.5 text-xs font-medium backdrop-blur-sm border-0 ${
+              isVideoTemplate 
+                ? 'bg-primary/90 text-primary-foreground' 
+                : 'bg-secondary/90 text-secondary-foreground'
+            }`}
+            data-testid={`badge-type-${id}`}
+          >
+            {isVideoTemplate ? (
+              <>
+                <Video className="w-3 h-3 mr-1" />
+                Video
+              </>
+            ) : (
+              <>
+                <Image className="w-3 h-3 mr-1" />
+                Card
+              </>
+            )}
+          </Badge>
+
           {isPremium && (
-            <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground font-semibold">
+            <Badge className="absolute top-2.5 right-2.5 bg-accent text-accent-foreground font-medium text-xs border-0">
               Premium
             </Badge>
           )}
-          <div className="absolute bottom-3 left-3 flex items-center gap-2">
-            <Badge variant="secondary" className="bg-black/60 backdrop-blur-sm text-white border-none">
-              <Clock className="w-3 h-3 mr-1" />
-              {formatDuration(duration)}
-            </Badge>
-          </div>
+
+          {isVideoTemplate && (
+            <div className="absolute bottom-2.5 right-2.5">
+              <Badge variant="secondary" className="bg-black/70 backdrop-blur-sm text-white border-0 text-xs">
+                <Clock className="w-3 h-3 mr-1" />
+                {formatDuration(duration)}
+              </Badge>
+            </div>
+          )}
         </div>
-        <div className="p-4">
-          <h3 className="font-playfair text-base lg:text-lg font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors">
+
+        <div className="p-3 space-y-2">
+          <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-muted-foreground capitalize">{category}</p>
-            <p className="text-lg font-semibold text-primary" data-testid={`price-template-${id}`}>
-              {formatPrice(priceInr)}
-            </p>
-          </div>
-          <Button variant="default" size="sm" className="w-full" data-testid={`button-use-template-${id}`}>
+          <p className="text-xs text-muted-foreground capitalize">{category}</p>
+          <Button variant="default" size="sm" className="w-full text-sm" data-testid={`button-use-template-${id}`}>
             Use Template
           </Button>
         </div>

@@ -65,12 +65,12 @@ export default function CategoryPage() {
   const category = categoryData[slug] || categoryData["wedding-video-invitations"];
 
   const templates = [
-    { id: "1", title: "Cinematic Love Story", slug: "cinematic-love-story", category: "wedding", duration: 45, thumbnailUrl: homepageHero, isPremium: true },
-    { id: "2", title: "Golden Elegance", slug: "golden-elegance", category: "engagement", duration: 30, thumbnailUrl: luxuryHero, isPremium: false },
-    { id: "3", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: indianPunjabiHero, isPremium: true },
-    { id: "4", title: "Modern Romance", slug: "modern-romance", category: "engagement", duration: 40, thumbnailUrl: engagementHero, isPremium: false },
-    { id: "5", title: "Royal Wedding", slug: "royal-wedding", category: "wedding", duration: 55, thumbnailUrl: luxuryHero, isPremium: true },
-    { id: "6", title: "Simple Elegance", slug: "simple-elegance", category: "wedding", duration: 35, thumbnailUrl: homepageHero, isPremium: false },
+    { id: "1", title: "Cinematic Love Story", slug: "cinematic-love-story", category: "wedding", duration: 45, thumbnailUrl: homepageHero, isPremium: true, templateType: "video" as const },
+    { id: "2", title: "Golden Elegance", slug: "golden-elegance", category: "engagement", duration: 30, thumbnailUrl: luxuryHero, isPremium: false, templateType: "card" as const },
+    { id: "3", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: indianPunjabiHero, isPremium: true, templateType: "video" as const },
+    { id: "4", title: "Modern Romance", slug: "modern-romance", category: "engagement", duration: 40, thumbnailUrl: engagementHero, isPremium: false, templateType: "video" as const },
+    { id: "5", title: "Royal Wedding", slug: "royal-wedding", category: "wedding", duration: 55, thumbnailUrl: luxuryHero, isPremium: true, templateType: "video" as const },
+    { id: "6", title: "Simple Elegance", slug: "simple-elegance", category: "wedding", duration: 35, thumbnailUrl: homepageHero, isPremium: false, templateType: "card" as const },
   ];
 
   return (
@@ -124,7 +124,7 @@ export default function CategoryPage() {
             <p className="text-muted-foreground">{category.templateCount} templates available</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
             {templates.map((template) => (
               <TemplateCard key={template.id} {...template} />
             ))}

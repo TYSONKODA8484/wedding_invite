@@ -172,9 +172,20 @@ export default function CountryPage() {
               </p>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
               {templates.map((template) => (
-                <TemplateCard key={template.id} {...template} />
+                <TemplateCard
+                  key={template.id}
+                  id={template.id}
+                  title={template.templateName}
+                  slug={template.slug}
+                  category={template.category}
+                  duration={template.durationSec}
+                  thumbnailUrl={template.thumbnailUrl}
+                  demoVideoUrl={template.previewVideoUrl}
+                  templateType={template.templateType as "video" | "card"}
+                  isPremium={Number(template.price) > 150000}
+                />
               ))}
             </div>
           )}
