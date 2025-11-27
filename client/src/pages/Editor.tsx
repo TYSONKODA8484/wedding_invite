@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
-  GripVertical, Music, Play, MoveDown
+  GripVertical, Music, Play, MoveDown, Trash2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -434,9 +434,11 @@ interface SortablePageItemProps {
   page: any;
   index: number;
   isFirst: boolean;
+  onDelete: (id: string) => void;
+  canDelete: boolean;
 }
 
-function SortablePageItem({ page, index, isFirst }: SortablePageItemProps) {
+function SortablePageItem({ page, index, isFirst, onDelete, canDelete }: SortablePageItemProps) {
   const {
     attributes,
     listeners,
@@ -460,42 +462,58 @@ function SortablePageItem({ page, index, isFirst }: SortablePageItemProps) {
           <span className="text-xs">Drag & Drop</span>
         </div>
       )}
-      <div
-        {...attributes}
-        {...listeners}
-        className={`relative rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
-          isDragging ? 'opacity-80 scale-105 shadow-2xl ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
-        }`}
-        data-testid={`reorder-page-${index}`}
-      >
-        <div className="w-40 sm:w-48 aspect-[9/16] bg-muted">
-          <img
-            src={page.thumbnailUrl}
-            alt={page.pageName || `Page ${page.pageNumber}`}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
+      <div className="relative group">
+        <div
+          {...attributes}
+          {...listeners}
+          className={`relative rounded-lg overflow-hidden cursor-grab active:cursor-grabbing transition-all ${
+            isDragging ? 'opacity-80 scale-105 shadow-2xl ring-2 ring-primary' : 'hover:ring-2 hover:ring-primary/50'
+          }`}
+          data-testid={`reorder-page-${index}`}
+        >
+          <div className="w-40 sm:w-48 aspect-[9/16] bg-muted">
+            <img
+              src={page.thumbnailUrl}
+              alt={page.pageName || `Page ${page.pageNumber}`}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+          </div>
+          <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded px-2 py-1">
+            <span className="text-xs font-medium">Page {page.pageNumber}</span>
+          </div>
         </div>
-        <div className="absolute bottom-2 left-2 bg-background/90 backdrop-blur-sm rounded px-2 py-1">
-          <span className="text-xs font-medium">Page {page.pageNumber}</span>
-        </div>
+        {canDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(page.id);
+            }}
+            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md hover:bg-destructive/90"
+            data-testid={`button-delete-page-${index}`}
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-interface ReorderClipsModalProps {
+interface ReorderPagesModalProps {
   isOpen: boolean;
   onClose: () => void;
   pages: any[];
-  onConfirm: (newOrder: string[]) => void;
+  onConfirm: (newOrder: string[], deletedIds: string[]) => void;
 }
 
-function ReorderClipsModal({ isOpen, onClose, pages, onConfirm }: ReorderClipsModalProps) {
+function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesModalProps) {
   const [orderedPages, setOrderedPages] = useState(pages);
+  const [deletedPageIds, setDeletedPageIds] = useState<string[]>([]);
 
   useEffect(() => {
     setOrderedPages(pages);
+    setDeletedPageIds([]);
   }, [pages]);
 
   const sensors = useSensors(
@@ -521,13 +539,20 @@ function ReorderClipsModal({ isOpen, onClose, pages, onConfirm }: ReorderClipsMo
     }
   };
 
+  const handleDeletePage = (pageId: string) => {
+    if (orderedPages.length <= 1) return;
+    setOrderedPages((items) => items.filter((item) => item.id !== pageId));
+    setDeletedPageIds((prev) => [...prev, pageId]);
+  };
+
   const handleConfirm = () => {
-    onConfirm(orderedPages.map((p) => p.id));
+    onConfirm(orderedPages.map((p) => p.id), deletedPageIds);
     onClose();
   };
 
   const handleCancel = () => {
     setOrderedPages(pages);
+    setDeletedPageIds([]);
     onClose();
   };
 
@@ -535,7 +560,7 @@ function ReorderClipsModal({ isOpen, onClose, pages, onConfirm }: ReorderClipsMo
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
       <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">Re-order Clips</h2>
+          <h2 className="text-lg font-semibold">Re-order Pages</h2>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -573,6 +598,8 @@ function ReorderClipsModal({ isOpen, onClose, pages, onConfirm }: ReorderClipsMo
                     page={page}
                     index={index}
                     isFirst={index === 0}
+                    onDelete={handleDeletePage}
+                    canDelete={orderedPages.length > 1}
                   />
                 ))}
               </SortableContext>
@@ -681,12 +708,15 @@ export default function Editor() {
     }
   }, [templateData]);
 
-  const handleReorderConfirm = (newOrder: string[]) => {
+  const handleReorderConfirm = (newOrder: string[], deletedIds: string[]) => {
     setOrderedPageIds(newOrder);
     setCurrentPageIndex(0);
+    const deletedCount = deletedIds.length;
     toast({
-      title: "Clips reordered",
-      description: "The page order has been updated.",
+      title: "Pages updated",
+      description: deletedCount > 0 
+        ? `Page order updated. ${deletedCount} page${deletedCount > 1 ? 's' : ''} removed.`
+        : "The page order has been updated.",
     });
   };
 
@@ -899,7 +929,7 @@ export default function Editor() {
 
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={handleAuthSuccess} />
 
-      <ReorderClipsModal
+      <ReorderPagesModal
         isOpen={showReorderModal}
         onClose={() => setShowReorderModal(false)}
         pages={rawPages}
@@ -974,10 +1004,10 @@ export default function Editor() {
               size="sm" 
               className="w-full text-xs"
               onClick={() => setShowReorderModal(true)}
-              data-testid="button-reorder-clips"
+              data-testid="button-reorder-pages"
             >
               <GripVertical className="w-3 h-3 mr-1" />
-              Re-Order Clips
+              Re-Order Pages
             </Button>
           </div>
           
