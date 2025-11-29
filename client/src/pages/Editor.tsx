@@ -466,75 +466,79 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
 
   return (
     <div ref={setNodeRef} style={style} className="flex flex-col items-center w-full">
-      {/* Page thumbnail */}
-      <div
-        {...attributes}
-        {...listeners}
-        className={`relative rounded-xl overflow-hidden cursor-grab active:cursor-grabbing transition-all touch-none select-none ${
-          isDragging 
-            ? 'opacity-95 shadow-2xl ring-2 ring-primary scale-[1.02]' 
-            : 'hover:ring-2 hover:ring-primary/50 shadow-md'
-        }`}
-        style={{ touchAction: 'none' }}
-        data-testid={`reorder-page-${index}`}
-      >
-        <div className="w-32 sm:w-40 md:w-48 aspect-[9/16] bg-muted flex-shrink-0">
-          <img
-            src={page.thumbnailUrl}
-            alt={page.pageName || `Page ${page.pageNumber}`}
-            className="w-full h-full object-cover pointer-events-none"
-            draggable={false}
-          />
+      {/* Page row with thumbnail and optional curve */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Page thumbnail */}
+        <div
+          {...attributes}
+          {...listeners}
+          className={`relative rounded-xl overflow-hidden cursor-grab active:cursor-grabbing transition-all touch-none select-none ${
+            isDragging 
+              ? 'opacity-95 shadow-2xl ring-2 ring-primary scale-[1.02]' 
+              : 'hover:ring-2 hover:ring-primary/50 shadow-md'
+          }`}
+          style={{ touchAction: 'none' }}
+          data-testid={`reorder-page-${index}`}
+        >
+          <div className="w-32 sm:w-40 md:w-48 aspect-[9/16] bg-muted flex-shrink-0">
+            <img
+              src={page.thumbnailUrl}
+              alt={page.pageName || `Page ${page.pageNumber}`}
+              className="w-full h-full object-cover pointer-events-none"
+              draggable={false}
+            />
+          </div>
+          
+          {/* Page number badge */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm border border-border/50">
+            <span className="text-xs font-semibold text-foreground">Page {page.pageNumber}</span>
+          </div>
+          
+          {/* Drag handle indicator */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-border/30">
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
         </div>
         
-        {/* Page number badge */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm border border-border/50">
-          <span className="text-xs font-semibold text-foreground">Page {page.pageNumber}</span>
-        </div>
-        
-        {/* Drag handle indicator */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-border/30">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
-        </div>
+        {/* C-curve arrow on the right side - shows between each page */}
+        {!isLast && (
+          <div className="flex-shrink-0 self-end mb-[-60px] sm:mb-[-80px]">
+            <svg 
+              width="40" 
+              height="80" 
+              viewBox="0 0 40 80" 
+              fill="none" 
+              className="text-primary"
+            >
+              {/* C-curve path */}
+              <path
+                d="M5 5 C 30 5, 35 40, 35 40 C 35 40, 30 75, 5 75"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
+              />
+              {/* Arrow head pointing down-left */}
+              <path
+                d="M10 68 L4 77 L13 74"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
+          </div>
+        )}
       </div>
       
       {/* Simple vertical line between pages */}
       {!isLast && (
         <div className="py-2 sm:py-3">
-          <div className="w-0.5 h-4 sm:h-6 bg-border/50 rounded-full" />
+          <div className="w-0.5 h-4 sm:h-6 bg-border/40 rounded-full" />
         </div>
       )}
     </div>
-  );
-}
-
-function CurvedArrowSVG() {
-  return (
-    <svg 
-      width="45" 
-      height="100" 
-      viewBox="0 0 45 100" 
-      fill="none" 
-      className="text-primary"
-    >
-      {/* C-curve path */}
-      <path
-        d="M5 5 C 35 5, 40 50, 40 50 C 40 50, 35 95, 5 95"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* Arrow head pointing down-left */}
-      <path
-        d="M10 88 L5 97 L14 94"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </svg>
   );
 }
 
@@ -640,26 +644,16 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
                 items={orderedPages.map((p) => p.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex items-start gap-4 sm:gap-6">
-                  {/* Pages list */}
-                  <div className="flex flex-col items-center gap-0">
-                    {orderedPages.map((page, index) => (
-                      <SortablePageItem
-                        key={page.id}
-                        page={page}
-                        index={index}
-                        isFirst={index === 0}
-                        isLast={index === orderedPages.length - 1}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* C-curve arrow on the side - only show when more than 1 page */}
-                  {orderedPages.length > 1 && (
-                    <div className="flex items-center self-center">
-                      <CurvedArrowSVG />
-                    </div>
-                  )}
+                <div className="flex flex-col items-center gap-0">
+                  {orderedPages.map((page, index) => (
+                    <SortablePageItem
+                      key={page.id}
+                      page={page}
+                      index={index}
+                      isFirst={index === 0}
+                      isLast={index === orderedPages.length - 1}
+                    />
+                  ))}
                 </div>
               </SortableContext>
             </DndContext>
