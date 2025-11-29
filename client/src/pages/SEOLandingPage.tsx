@@ -184,14 +184,22 @@ const getPopularSearches = (region?: RegionData, category?: CategoryData) => {
     { text: "Wedding Invitation Video Maker", href: "/wedding-invitation-video" },
     { text: "Birthday Invitation Video", href: "/birthday-invitation-video" },
     { text: "Digital Wedding Card", href: "/wedding-invitation-card" },
+    { text: "Digital Birthday Card", href: "/birthday-invitation-card" },
   ];
+  
+  // Create style-specific search links with subcategory filters
+  const styleToSubcategory = (style: string) => {
+    return style.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  };
   
   const regionSearches = region ? [
     { text: `${region.name} Wedding Video`, href: `/${region.slug}/wedding-invitation-video` },
     { text: `${region.name} Birthday Video`, href: `/${region.slug}/birthday-invitation-video` },
-    ...region.popularStyles.slice(0, 3).map(style => ({
+    { text: `${region.name} Wedding Card`, href: `/${region.slug}/wedding-invitation-card` },
+    // Popular styles with subcategory filter for unique URLs
+    ...region.popularStyles.slice(0, 4).map(style => ({
       text: `${style} Wedding Video`,
-      href: `/${region.slug}/wedding-invitation-video`,
+      href: `/templates/wedding?region=${region.slug}&subcategory=${styleToSubcategory(style)}`,
     })),
   ] : [];
   
@@ -201,8 +209,22 @@ const getPopularSearches = (region?: RegionData, category?: CategoryData) => {
     { text: `Saudi Arabia ${category.name}`, href: `/saudi-arabia/${category.slug}` },
   ] : [];
   
-  const allSearches = [...regionSearches, ...categorySearches, ...baseSearches];
-  return allSearches.slice(0, 12);
+  // Cross-link to other regions for better SEO
+  const crossRegionSearches = !region ? [
+    { text: "India Wedding Invitations", href: "/india" },
+    { text: "UAE Wedding Invitations", href: "/uae" },
+    { text: "Saudi Arabia Invitations", href: "/saudi-arabia" },
+  ] : [];
+  
+  const allSearches = [...regionSearches, ...categorySearches, ...crossRegionSearches, ...baseSearches];
+  
+  // Ensure unique URLs by deduplicating
+  const seenHrefs = new Set<string>();
+  return allSearches.filter(search => {
+    if (seenHrefs.has(search.href)) return false;
+    seenHrefs.add(search.href);
+    return true;
+  }).slice(0, 12);
 };
 
 const getFAQs = (region?: RegionData, category?: CategoryData) => {
@@ -246,8 +268,9 @@ export default function SEOLandingPage() {
   
   let regionSlug: string | undefined;
   let categorySlug: string | undefined;
+  let isValidRoute = false;
   
-  if (pathSegments.length >= 2) {
+  if (pathSegments.length === 2) {
     // Combined route like /india/wedding-invitation-video
     const potentialRegion = pathSegments[0];
     const potentialCategory = pathSegments[1];
@@ -255,23 +278,30 @@ export default function SEOLandingPage() {
     if (regionData[potentialRegion] && categoryData[potentialCategory]) {
       regionSlug = potentialRegion;
       categorySlug = potentialCategory;
+      isValidRoute = true;
     }
-  }
-  
-  if (!regionSlug && !categorySlug && pathSegments.length >= 1) {
+    // If 2 segments but not a valid combined route, this is invalid - don't fallback
+  } else if (pathSegments.length === 1) {
     // Single segment - check if it's a region or category
     const segment = pathSegments[0];
     
     if (regionData[segment]) {
       regionSlug = segment;
+      isValidRoute = true;
     } else if (categoryData[segment]) {
       categorySlug = segment;
+      isValidRoute = true;
     }
   }
   
   const isRegionPage = Boolean(regionSlug && regionData[regionSlug] && !categorySlug);
   const isCategoryPage = Boolean(categorySlug && categoryData[categorySlug] && !regionSlug);
   const isCombinedPage = Boolean(regionSlug && categorySlug && regionData[regionSlug] && categoryData[categorySlug]);
+  
+  // If route is not valid, return null (let wouter handle 404)
+  if (!isValidRoute) {
+    return null;
+  }
   
   const region = regionSlug ? regionData[regionSlug] : undefined;
   const category = categorySlug ? categoryData[categorySlug] : undefined;

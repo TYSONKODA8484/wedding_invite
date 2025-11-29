@@ -62,6 +62,32 @@ Features:
 ### Design System & SEO
 The design emphasizes a premium, cinematic aesthetic with generous whitespace, elegant animations, and video-centric layouts optimized for mobile. Culturally authentic elements are incorporated. SEO targets India, UAE, and Saudi Arabia with an enhanced `SEOHead` component, WhatsApp-optimized Open Graph tags, mobile-first meta tags, `hreflang`, and comprehensive schema markup.
 
+### SEO Landing Pages (November 2025)
+Comprehensive SEO landing page system targeting regional and category-specific search traffic:
+
+**Regional Pages:**
+- `/india` - India market with Hindi localization, market stats (10M+ weddings/year), popular styles (South Indian, Marathi, Punjabi, etc.), ceremonies
+- `/uae` - UAE market with Arabic localization, market stats (50K+ weddings/year), Gulf-specific content
+- `/saudi-arabia` - Saudi Arabia market with Arabic localization, premium positioning
+
+**Category Pages:**
+- `/wedding-invitation-video` - Wedding video invitations with feature highlights
+- `/birthday-invitation-video` - Birthday video invitations
+- `/wedding-invitation-card` - Digital wedding invitation cards
+- `/birthday-invitation-card` - Digital birthday cards
+
+**Combined Pages:**
+All 12 combinations of region + category (e.g., `/india/wedding-invitation-video`, `/uae/birthday-invitation-card`)
+
+**Features:**
+- Dynamic content localization per region (market stats, currency symbols, ceremonies)
+- Schema markup: CollectionPage, BreadcrumbList, FAQPage, Organization
+- hreflang tags for language alternates (en-IN, ar-AE, ar-SA)
+- Popular Searches internal linking for SEO juice distribution
+- FAQ sections with structured data
+- Template showcase with filtered results by region/category
+- Market stats section with weddings/year and digital adoption metrics
+
 ## External Dependencies
 
 ### Authentication
