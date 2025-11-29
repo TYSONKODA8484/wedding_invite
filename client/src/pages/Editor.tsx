@@ -1262,14 +1262,14 @@ export default function Editor() {
             size="sm" 
             onClick={handlePreview}
             disabled={saveProjectMutation.isPending}
-            data-testid="button-preview-video"
+            data-testid="button-generate"
           >
             {saveProjectMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <Play className="w-4 h-4 mr-2" />
             )}
-            Preview Video
+            Generate
           </Button>
           <Button 
             size="sm" 
