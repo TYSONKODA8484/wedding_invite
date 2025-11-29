@@ -1371,16 +1371,19 @@ export default function Editor() {
             </Button>
 
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePreview}
-                disabled={saveProjectMutation.isPending}
-                data-testid="button-preview"
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreview}
+                  disabled={saveProjectMutation.isPending}
+                  data-testid="button-preview"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview
+                </Button>
+                <span className="text-xs text-muted-foreground hidden sm:inline">Coming soon</span>
+              </div>
               
               {/* Zoom Controls */}
               <div className="flex items-center gap-2 bg-muted rounded-md px-2 py-1">
