@@ -665,6 +665,9 @@ export default function Editor() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [pageToDelete, setPageToDelete] = useState<{ id: string; index: number } | null>(null);
   
+  // Preview coming soon modal
+  const [showPreviewComingSoon, setShowPreviewComingSoon] = useState(false);
+  
   // Undo/Redo history
   type HistoryAction = 
     | { type: 'pages'; previousPageIds: string[]; previousPageIndex: number }
@@ -982,13 +985,7 @@ export default function Editor() {
   };
 
   const handlePreview = () => {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      setPendingPreview(true);
-      setShowAuthModal(true);
-      return;
-    }
-    saveProjectMutation.mutate();
+    setShowPreviewComingSoon(true);
   };
 
   const handleDownload = () => {
@@ -1192,6 +1189,32 @@ export default function Editor() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Preview Coming Soon Modal */}
+      <Dialog open={showPreviewComingSoon} onOpenChange={setShowPreviewComingSoon}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-primary" />
+              Preview
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+            <p className="text-foreground font-medium mb-2">We're working on it!</p>
+            <p className="text-sm text-muted-foreground">
+              Preview feature will be available soon. Stay tuned!
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowPreviewComingSoon(false)} className="w-full">
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Top Header */}
       <header className="h-14 border-b bg-card flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -1371,19 +1394,15 @@ export default function Editor() {
             </Button>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePreview}
-                  disabled={saveProjectMutation.isPending}
-                  data-testid="button-preview"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Preview
-                </Button>
-                <span className="text-xs text-muted-foreground hidden sm:inline">Coming soon</span>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreview}
+                data-testid="button-preview"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
               
               {/* Zoom Controls */}
               <div className="flex items-center gap-2 bg-muted rounded-md px-2 py-1">
