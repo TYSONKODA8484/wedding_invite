@@ -668,6 +668,45 @@ export default function Editor() {
   // Preview coming soon modal
   const [showPreviewComingSoon, setShowPreviewComingSoon] = useState(false);
   
+  // Music modal state
+  const [showMusicModal, setShowMusicModal] = useState(false);
+  const [selectedMusic, setSelectedMusic] = useState('default');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState('1:15');
+  const [audioCurrentTime, setAudioCurrentTime] = useState('0:00');
+  const [customMusicFile, setCustomMusicFile] = useState<File | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const musicFileInputRef = useRef<HTMLInputElement>(null);
+  
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+  
+  const handleMusicFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('audio/')) {
+      setCustomMusicFile(file);
+      setSelectedMusic('custom');
+      toast({ title: "Music uploaded", description: file.name });
+    }
+  };
+  
+  const togglePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  };
+  
   // Undo/Redo history
   type HistoryAction = 
     | { type: 'pages'; previousPageIds: string[]; previousPageIndex: number }
@@ -1215,6 +1254,190 @@ export default function Editor() {
         </DialogContent>
       </Dialog>
 
+      {/* Upload Music Modal */}
+      <Dialog open={showMusicModal} onOpenChange={setShowMusicModal}>
+        <DialogContent className="w-[95vw] max-w-4xl p-0 overflow-hidden max-h-[90vh]">
+          <ScrollArea className="max-h-[90vh]">
+            <div className="flex flex-col lg:flex-row">
+              {/* Left Section - Music Controls */}
+              <div className="flex-1 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r">
+                <h2 className="text-lg font-semibold mb-4 sm:mb-6">Default Music</h2>
+                
+                {/* Music Dropdown */}
+                <div className="mb-4 sm:mb-6">
+                  <select 
+                    value={selectedMusic}
+                    onChange={(e) => setSelectedMusic(e.target.value)}
+                    className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    data-testid="select-music"
+                  >
+                    <option value="default">Default Music</option>
+                    <option value="romantic">Romantic Melody</option>
+                    <option value="traditional">Traditional Indian</option>
+                    <option value="arabic">Arabic Theme</option>
+                    <option value="classical">Classical</option>
+                    {customMusicFile && <option value="custom">{customMusicFile.name}</option>}
+                  </select>
+                </div>
+                
+                {/* Audio Player */}
+                <div className="bg-muted/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-background shadow-sm flex-shrink-0"
+                      onClick={togglePlayPause}
+                      data-testid="button-play-music"
+                    >
+                      {isPlaying ? (
+                        <div className="w-3 h-3 bg-foreground rounded-sm" />
+                      ) : (
+                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                      )}
+                    </Button>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                        <span>{audioCurrentTime}</span>
+                        <span>/</span>
+                        <span>{audioDuration}</span>
+                      </div>
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${audioProgress}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Upload Button */}
+                <input
+                  ref={musicFileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  onChange={handleMusicFileChange}
+                  data-testid="input-music-file"
+                />
+                <Button 
+                  className="w-full mb-4 sm:mb-6 bg-primary hover:bg-primary/90"
+                  onClick={() => musicFileInputRef.current?.click()}
+                  data-testid="button-upload-custom-music"
+                >
+                  <Music className="w-4 h-4 mr-2" />
+                  Upload Your Music
+                </Button>
+                
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      toast({ title: "Music saved", description: "Your music selection has been saved." });
+                      setShowMusicModal(false);
+                    }}
+                    data-testid="button-save-music"
+                  >
+                    Save
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setShowMusicModal(false);
+                      handlePreview();
+                    }}
+                    data-testid="button-preview-from-music"
+                  >
+                    Preview Video
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    disabled={!downloadEnabled}
+                    className={!downloadEnabled ? "opacity-50" : ""}
+                    data-testid="button-download-from-music"
+                  >
+                    Download
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Right Section - Info Panel */}
+              <div className="w-full lg:w-80 bg-muted/20 p-4 sm:p-6">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground">
+                      Preview the video at least once, before you click on Pay & Download HD Quality Video.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground">
+                      The WeddingInvite.ai Watermark won't be in the Final HD Quality Video.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground">
+                      The preview video will be in low quality for you to review quickly.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground">
+                      The Final Video will be in <strong>HD quality</strong>.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground">
+                      The video will be available for download only for a period of <strong>six days</strong> from the date of purchase.
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground">
+                      Payment can be made using your <strong>Credit/Debit Card, PayPal Or Wallets and UPI</strong>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       {/* Top Header */}
       <header className="h-14 border-b bg-card flex items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -1252,30 +1475,37 @@ export default function Editor() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" data-testid="button-upload-music">
-            <Upload className="w-4 h-4 mr-2" />
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowMusicModal(true)}
+            className="border-border"
+            data-testid="button-upload-music"
+          >
+            <Music className="w-4 h-4 mr-2" />
             Upload Music
           </Button>
           <Button 
-            variant="default" 
             size="sm" 
             onClick={handlePreview}
             disabled={saveProjectMutation.isPending}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4"
             data-testid="button-generate"
           >
             {saveProjectMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Play className="w-4 h-4 mr-2" />
+              <Play className="w-4 h-4 mr-2 fill-current" />
             )}
             Generate
           </Button>
           <Button 
+            variant="outline"
             size="sm" 
             disabled={!downloadEnabled}
             onClick={handleDownload}
-            className="bg-muted text-muted-foreground"
+            className={!downloadEnabled ? "opacity-50 cursor-not-allowed" : ""}
             data-testid="button-download"
           >
             <Download className="w-4 h-4 mr-2" />
