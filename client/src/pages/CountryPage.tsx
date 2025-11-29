@@ -53,20 +53,27 @@ const countryData: Record<string, any> = {
   },
 };
 
+interface TemplateResponse {
+  templates: Template[];
+  pagination: { total: number; offset: number; limit: number; hasMore: boolean };
+}
+
 export default function CountryPage() {
   const [, params] = useRoute("/countries/:slug");
   const slug = params?.slug || "india";
   const country = countryData[slug] || countryData.india;
 
   // Fetch templates from the database by country
-  const { data: templates = [], isLoading } = useQuery<Template[]>({
-    queryKey: ["/api/templates", { country: country.slug }],
+  const { data, isLoading } = useQuery<TemplateResponse>({
+    queryKey: ["/api/templates", { region: country.slug }],
     queryFn: async () => {
-      const response = await fetch(`/api/templates?country=${country.slug}`);
+      const response = await fetch(`/api/templates?region=${country.slug}`);
       if (!response.ok) throw new Error("Failed to fetch templates");
       return response.json();
     },
   });
+  
+  const templates = data?.templates || [];
 
   const collectionSchema = {
     "@context": "https://schema.org",

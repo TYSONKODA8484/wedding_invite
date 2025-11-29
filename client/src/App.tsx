@@ -15,6 +15,7 @@ import CategoryPage from "@/pages/CategoryPage";
 import Cultures from "@/pages/Cultures";
 import CulturePage from "@/pages/CulturePage";
 import CountryPage from "@/pages/CountryPage";
+import SEOLandingPage from "@/pages/SEOLandingPage";
 // TODO: Re-enable after MVP - Monthly subscription pricing
 // import Pricing from "@/pages/Pricing";
 import HowItWorks from "@/pages/HowItWorks";
@@ -67,6 +68,38 @@ function Router() {
       <Route path="/countries/india" component={CountryPage} />
       <Route path="/countries/uae" component={CountryPage} />
       <Route path="/countries/saudi-arabia" component={CountryPage} />
+      
+      {/* SEO Landing Pages - Clean Top-Level URLs */}
+      {/* Regional Pages */}
+      <Route path="/india" component={SEOLandingPage} />
+      <Route path="/uae" component={SEOLandingPage} />
+      <Route path="/saudi-arabia" component={SEOLandingPage} />
+      
+      {/* Category Pages - Video */}
+      <Route path="/wedding-invitation-video" component={SEOLandingPage} />
+      <Route path="/birthday-invitation-video" component={SEOLandingPage} />
+      
+      {/* Category Pages - Card */}
+      <Route path="/wedding-invitation-card" component={SEOLandingPage} />
+      <Route path="/birthday-invitation-card" component={SEOLandingPage} />
+      
+      {/* Combined Regional + Category Pages (India) */}
+      <Route path="/india/wedding-invitation-video" component={SEOLandingPage} />
+      <Route path="/india/wedding-invitation-card" component={SEOLandingPage} />
+      <Route path="/india/birthday-invitation-video" component={SEOLandingPage} />
+      <Route path="/india/birthday-invitation-card" component={SEOLandingPage} />
+      
+      {/* Combined Regional + Category Pages (UAE) */}
+      <Route path="/uae/wedding-invitation-video" component={SEOLandingPage} />
+      <Route path="/uae/wedding-invitation-card" component={SEOLandingPage} />
+      <Route path="/uae/birthday-invitation-video" component={SEOLandingPage} />
+      <Route path="/uae/birthday-invitation-card" component={SEOLandingPage} />
+      
+      {/* Combined Regional + Category Pages (Saudi Arabia) */}
+      <Route path="/saudi-arabia/wedding-invitation-video" component={SEOLandingPage} />
+      <Route path="/saudi-arabia/wedding-invitation-card" component={SEOLandingPage} />
+      <Route path="/saudi-arabia/birthday-invitation-video" component={SEOLandingPage} />
+      <Route path="/saudi-arabia/birthday-invitation-card" component={SEOLandingPage} />
       
       {/* TODO: Re-enable after MVP - Monthly subscription pricing */}
       {/* <Route path="/pricing" component={Pricing} /> */}

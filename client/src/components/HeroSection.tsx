@@ -67,11 +67,9 @@ export function HeroSection({
                 asChild
                 data-testid="button-hero-primary"
               >
-                <Link href={primaryCTA.href}>
-                  <a className="flex items-center gap-2">
-                    {primaryCTA.text}
-                    <ArrowRight className="w-5 h-5" />
-                  </a>
+                <Link href={primaryCTA.href} className="flex items-center gap-2">
+                  {primaryCTA.text}
+                  <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
             )}
@@ -84,7 +82,7 @@ export function HeroSection({
                 data-testid="button-hero-secondary"
               >
                 <Link href={secondaryCTA.href}>
-                  <a>{secondaryCTA.text}</a>
+                  {secondaryCTA.text}
                 </Link>
               </Button>
             )}
