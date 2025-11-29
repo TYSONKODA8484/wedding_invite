@@ -478,7 +478,7 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
         data-testid={`reorder-page-${index}`}
       >
         {/* Responsive page thumbnail - smaller on mobile, larger on desktop */}
-        <div className="w-28 xs:w-32 sm:w-40 md:w-44 aspect-[9/16] bg-muted flex-shrink-0">
+        <div className="w-32 sm:w-40 md:w-48 aspect-[9/16] bg-muted flex-shrink-0">
           <img
             src={page.thumbnailUrl}
             alt={page.pageName || `Page ${page.pageNumber}`}
@@ -488,20 +488,45 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
         </div>
         
         {/* Page number badge */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm border border-border/50">
           <span className="text-xs font-semibold text-foreground">Page {page.pageNumber}</span>
         </div>
         
         {/* Drag handle indicator */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-border/30">
           <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
       </div>
       
-      {/* Simple connector line between pages */}
+      {/* Curved arrow connector between pages */}
       {!isLast && (
-        <div className="flex flex-col items-center py-3 sm:py-4">
-          <div className="w-0.5 h-6 sm:h-8 bg-gradient-to-b from-border to-transparent rounded-full" />
+        <div className="flex items-center justify-center py-2 sm:py-3">
+          <svg 
+            width="60" 
+            height="50" 
+            viewBox="0 0 60 50" 
+            fill="none" 
+            className="text-primary/40"
+          >
+            {/* Curved path with arrow */}
+            <path
+              d="M30 5 C 10 5, 10 25, 30 25 C 50 25, 50 45, 30 45"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeDasharray="4 3"
+              strokeLinecap="round"
+              fill="none"
+            />
+            {/* Arrow head pointing down */}
+            <path
+              d="M25 40 L30 48 L35 40"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
         </div>
       )}
     </div>
