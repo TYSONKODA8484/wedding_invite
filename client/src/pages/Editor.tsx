@@ -652,6 +652,13 @@ export default function Editor() {
   const [orderedPageIds, setOrderedPageIds] = useState<string[]>([]);
   const [zoom, setZoom] = useState(100);
   
+  // Pan/drag state for zoomed preview
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const previewCardRef = useRef<HTMLDivElement>(null);
+  
   const [showPreviewLoading, setShowPreviewLoading] = useState(false);
   const [previewProgress, setPreviewProgress] = useState(0);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -811,6 +818,93 @@ export default function Editor() {
   
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Reset pan position when zoom changes or page changes
+  useEffect(() => {
+    setPanPosition({ x: 0, y: 0 });
+  }, [zoom, currentPageIndex]);
+
+  // Window-level listeners to ensure panning ends even if mouse leaves container or window loses focus
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsPanning(false);
+    };
+    
+    const handleWindowBlur = () => {
+      setIsPanning(false);
+    };
+    
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('pointerup', handleGlobalMouseUp);
+    window.addEventListener('pointercancel', handleGlobalMouseUp);
+    window.addEventListener('blur', handleWindowBlur);
+    
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('pointerup', handleGlobalMouseUp);
+      window.removeEventListener('pointercancel', handleGlobalMouseUp);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, []);
+
+  // Pan handlers for Photoshop-style drag navigation
+  const handlePanStart = (e: React.MouseEvent) => {
+    if (zoom <= 100) return; // Only enable panning when zoomed in
+    
+    // Only start panning if clicking on the preview area (container, card, or image)
+    // Exclude interactive form elements
+    const target = e.target as HTMLElement;
+    const tagName = target.tagName.toLowerCase();
+    
+    // Don't start pan on interactive elements
+    if (['input', 'button', 'textarea', 'select', 'a'].includes(tagName)) {
+      return;
+    }
+    
+    // Check if the click is within the preview area
+    const isInPreviewArea = previewContainerRef.current?.contains(target);
+    if (!isInPreviewArea) return;
+    
+    e.preventDefault();
+    setIsPanning(true);
+    setPanStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+  };
+
+  const handlePanMove = (e: React.MouseEvent) => {
+    if (!isPanning || zoom <= 100) return;
+    e.preventDefault();
+    
+    const container = previewContainerRef.current;
+    const card = previewCardRef.current;
+    if (!container || !card) return;
+    
+    // Calculate new pan position
+    let newX = e.clientX - panStart.x;
+    let newY = e.clientY - panStart.y;
+    
+    // Get actual dimensions of container and card
+    const containerRect = container.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    
+    // Calculate how much the card extends beyond the container in each direction
+    // This is the actual visible overflow that we can pan through
+    const overflowX = Math.max(0, cardRect.width - containerRect.width);
+    const overflowY = Math.max(0, cardRect.height - containerRect.height);
+    
+    // Max pan is half the overflow (centered starting position)
+    const maxPanX = overflowX / 2;
+    const maxPanY = overflowY / 2;
+    
+    // Clamp pan position to bounds
+    newX = Math.max(-maxPanX, Math.min(maxPanX, newX));
+    newY = Math.max(-maxPanY, Math.min(maxPanY, newY));
+    
+    setPanPosition({ x: newX, y: newY });
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
+  };
 
   const { data: projectData, isLoading: projectIsLoading } = useQuery({
     queryKey: ["/api/projects", slug],
@@ -1638,23 +1732,37 @@ export default function Editor() {
 
         {/* Center Panel - Preview */}
         <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
-          {/* Preview Area */}
-          <div className="flex-1 flex items-center justify-center p-4 min-h-0">
+          {/* Preview Area - with pan/drag support when zoomed */}
+          <div 
+            ref={previewContainerRef}
+            className="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden"
+            style={{
+              cursor: zoom > 100 ? (isPanning ? 'grabbing' : 'grab') : 'default',
+            }}
+            onMouseDown={handlePanStart}
+            onMouseMove={handlePanMove}
+            onMouseUp={handlePanEnd}
+            onMouseLeave={handlePanEnd}
+          >
             <div 
-              className="relative bg-white dark:bg-card rounded-lg shadow-xl overflow-hidden"
+              ref={previewCardRef}
+              className="relative bg-white dark:bg-card rounded-lg shadow-xl overflow-hidden select-none"
               style={{
-                width: `min(${280 * (zoom / 100)}px, 100%)`,
-                aspectRatio: '9/16',
-                maxHeight: 'calc(100% - 20px)',
-                transform: `scale(${zoom / 100})`,
-                transformOrigin: 'center center',
+                width: `${280 * (zoom / 100)}px`,
+                height: `${280 * (zoom / 100) * (16 / 9)}px`,
+                maxWidth: zoom <= 100 ? '100%' : 'none',
+                maxHeight: zoom <= 100 ? 'calc(100% - 20px)' : 'none',
+                transform: `translate(${panPosition.x}px, ${panPosition.y}px)`,
+                transition: isPanning ? 'none' : 'transform 0.1s ease-out',
               }}
+              data-testid="preview-container"
             >
               {backgroundImage ? (
                 <img
                   src={backgroundImage}
                   alt={`Page ${currentPage?.pageNumber}`}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  draggable={false}
                   data-testid="page-preview-image"
                 />
               ) : (
