@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Sparkles, User, LogOut, Heart, Cake } from "lucide-react";
+import { Menu, Sparkles, User, LogOut, Heart, Cake, LayoutGrid, X } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 
 export function Navigation() {
@@ -87,6 +87,7 @@ export function Navigation() {
   };
 
   const centerNavLinks = [
+    { label: "All Templates", href: "/templates", icon: LayoutGrid },
     { label: "Wedding", href: "/templates/wedding", icon: Heart },
     { label: "Birthday", href: "/templates/birthday", icon: Cake },
     { label: "How It Works", href: "/#how-it-works" },
@@ -214,43 +215,83 @@ export function Navigation() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-10 w-10"
                 data-testid="button-mobile-menu"
               >
                 <Menu className="w-6 h-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <nav className="flex flex-col gap-2 mt-8" data-testid="nav-mobile">
-                {/* Category Links */}
-                {centerNavLinks.map((link) => (
+            <SheetContent side="right" className="w-[280px] sm:w-80 p-0">
+              <SheetHeader className="px-4 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <SheetTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <span className="font-playfair text-lg">Menu</span>
+                  </SheetTitle>
+                </div>
+              </SheetHeader>
+              
+              <nav className="flex flex-col p-4" data-testid="nav-mobile">
+                {/* Browse Templates section */}
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 px-2">
+                  Browse Templates
+                </p>
+                {centerNavLinks.slice(0, 3).map((link) => (
                   <Link 
                     key={link.href} 
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-3 rounded-md text-base font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-2 ${
-                      location === link.href || location.startsWith(link.href.split('?')[0])
-                        ? "bg-accent/10 text-accent-foreground"
-                        : "text-foreground/80"
+                    className={`px-3 py-3.5 rounded-lg text-base font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-3 min-h-[48px] ${
+                      location === link.href || (link.href !== "/templates" && location.startsWith(link.href))
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground"
                     }`}
                     data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    {link.icon && <link.icon className="w-4 h-4" />}
+                    {link.icon && <link.icon className="w-5 h-5" />}
                     {link.label}
                   </Link>
                 ))}
                 
                 <div className="border-t border-border my-4" />
                 
+                {/* Other Links */}
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 px-2">
+                  More
+                </p>
+                {centerNavLinks.slice(3).map((link) => (
+                  <Link 
+                    key={link.href} 
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`px-3 py-3.5 rounded-lg text-base font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-3 min-h-[48px] ${
+                      location === link.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground"
+                    }`}
+                    data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                
+                <div className="border-t border-border my-4" />
+                
+                {/* Account section */}
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 px-2">
+                  Account
+                </p>
+                
                 {isLoggedIn && user ? (
                   <>
-                    <div className="px-4 py-3 bg-accent/10 rounded-md">
+                    <div className="px-3 py-3 bg-muted/50 rounded-lg mb-3">
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                     <Button
                       variant="default"
-                      size="default"
-                      className="w-full"
+                      size="lg"
+                      className="w-full min-h-[48px] mb-2"
                       asChild
                       data-testid="button-my-templates-mobile"
                     >
@@ -259,9 +300,9 @@ export function Navigation() {
                       </Link>
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="default"
-                      className="w-full justify-start"
+                      variant="outline"
+                      size="lg"
+                      className="w-full min-h-[48px] justify-start"
                       onClick={() => {
                         setMobileMenuOpen(false);
                         handleLogout();
@@ -276,8 +317,8 @@ export function Navigation() {
                   <>
                     <Button
                       variant="default"
-                      size="default"
-                      className="w-full"
+                      size="lg"
+                      className="w-full min-h-[48px] mb-2"
                       onClick={() => {
                         setMobileMenuOpen(false);
                         setAuthModalOpen(true);
@@ -287,9 +328,9 @@ export function Navigation() {
                       My Templates
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="default"
-                      className="w-full"
+                      variant="outline"
+                      size="lg"
+                      className="w-full min-h-[48px]"
                       onClick={() => {
                         setMobileMenuOpen(false);
                         setAuthModalOpen(true);

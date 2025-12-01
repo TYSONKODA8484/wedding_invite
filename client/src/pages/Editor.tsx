@@ -8,7 +8,7 @@ import {
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
   GripVertical, Music, Play, MoveDown, Trash2, Undo2, Redo2, AlertTriangle,
-  Sparkles, CreditCard
+  Sparkles, CreditCard, ChevronUp, ChevronDown, Edit3, Layers
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -651,6 +651,21 @@ export default function Editor() {
   const [showReorderModal, setShowReorderModal] = useState(false);
   const [orderedPageIds, setOrderedPageIds] = useState<string[]>([]);
   const [zoom, setZoom] = useState(100);
+  
+  // Mobile states
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileEditSheetOpen, setMobileEditSheetOpen] = useState(false);
+  const [mobilePageStripExpanded, setMobilePageStripExpanded] = useState(false);
+  
+  // Detect mobile screen
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Pan/drag state for zoomed preview
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
@@ -1583,23 +1598,25 @@ export default function Editor() {
         </DialogContent>
       </Dialog>
 
-      {/* Top Header */}
-      <header className="h-14 border-b bg-card flex items-center justify-between px-4 flex-shrink-0">
-        <div className="flex items-center gap-2">
+      {/* Top Header - Responsive */}
+      <header className="h-12 md:h-14 border-b bg-card flex items-center justify-between px-2 md:px-4 flex-shrink-0">
+        <div className="flex items-center gap-1 md:gap-2">
           <Button
             variant="ghost"
             size="icon"
+            className="h-9 w-9"
             onClick={() => fromPage === 'my-templates' ? navigate('/my-templates') : navigate(`/template/${template.slug}`)}
             data-testid="button-back"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
-          {/* Undo/Redo Buttons */}
-          <div className="flex items-center gap-1 border-l pl-2 ml-2">
+          {/* Undo/Redo Buttons - Hidden on very small screens */}
+          <div className="hidden xs:flex items-center gap-1 border-l pl-2 ml-1">
             <Button
               variant="ghost"
               size="icon"
+              className="h-8 w-8"
               onClick={handleUndo}
               disabled={undoStack.length === 0}
               title="Undo (Ctrl+Z)"
@@ -1610,6 +1627,7 @@ export default function Editor() {
             <Button
               variant="ghost"
               size="icon"
+              className="h-8 w-8"
               onClick={handleRedo}
               disabled={redoStack.length === 0}
               title="Redo (Ctrl+Y)"
@@ -1620,33 +1638,34 @@ export default function Editor() {
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3">
+          {/* Music button - icon only on mobile */}
           <Button 
             variant="outline" 
             size="sm"
             onClick={() => setShowMusicModal(true)}
-            className="border-border"
+            className="border-border h-8 md:h-9 px-2 md:px-3"
             data-testid="button-upload-music"
           >
-            <Music className="w-4 h-4 mr-2" />
-            Upload Music
+            <Music className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Upload Music</span>
           </Button>
           <Button 
             size="sm" 
             onClick={handleGenerateClick}
             disabled={saveProjectMutation.isPending}
-            className="relative overflow-visible bg-gradient-to-r from-primary via-primary to-amber-500 hover:from-primary/90 hover:via-primary/90 hover:to-amber-500/90 text-primary-foreground px-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
+            className="relative overflow-visible bg-gradient-to-r from-primary via-primary to-amber-500 hover:from-primary/90 hover:via-primary/90 hover:to-amber-500/90 text-primary-foreground px-3 md:px-5 h-8 md:h-9 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
             data-testid="button-generate"
           >
             {saveProjectMutation.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 md:mr-2 animate-spin" />
             ) : (
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 md:mr-2" />
             )}
-            Generate
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="hidden sm:inline">Generate</span>
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 md:h-3 md:w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 md:h-3 md:w-3 bg-amber-500"></span>
             </span>
           </Button>
           <Button 
@@ -1654,19 +1673,105 @@ export default function Editor() {
             size="sm" 
             disabled={!downloadEnabled}
             onClick={handleDownload}
-            className={!downloadEnabled ? "opacity-50 cursor-not-allowed" : ""}
+            className={`h-8 md:h-9 px-2 md:px-3 ${!downloadEnabled ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="button-download"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Download
+            <Download className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Download</span>
           </Button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex min-h-0">
-        {/* Left Panel - Pages/Clips */}
-        <div className="w-36 lg:w-44 border-r bg-card flex flex-col flex-shrink-0">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+        {/* Mobile Page Strip - Only visible on mobile */}
+        {isMobile && (
+          <div className="bg-card border-b flex-shrink-0">
+            {/* Page indicator and actions row */}
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMobilePageStripExpanded(!mobilePageStripExpanded)}
+                  className="h-8 px-2"
+                  data-testid="button-toggle-pages"
+                >
+                  <Layers className="w-4 h-4 mr-1" />
+                  Page {currentPageIndex + 1}/{pages.length}
+                  {mobilePageStripExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                </Button>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowReorderModal(true)}
+                className="h-8 px-2"
+                data-testid="button-reorder-pages-mobile"
+              >
+                <GripVertical className="w-4 h-4 mr-1" />
+                Reorder
+              </Button>
+            </div>
+            
+            {/* Expandable horizontal page strip */}
+            {mobilePageStripExpanded && (
+              <div className="px-2 pb-2">
+                <ScrollArea className="w-full">
+                  <div className="flex gap-2 pb-2">
+                    {pages.map((page, index) => (
+                      <div
+                        key={page.id}
+                        className="relative flex-shrink-0"
+                        data-testid={`mobile-page-container-${index}`}
+                      >
+                        {pages.length > 1 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePageClick(page.id, index);
+                            }}
+                            className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md"
+                            data-testid={`button-delete-page-mobile-${index}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                        <div
+                          onClick={() => {
+                            setCurrentPageIndex(index);
+                            setMobilePageStripExpanded(false);
+                          }}
+                          className={`w-16 relative rounded-lg overflow-hidden transition-all cursor-pointer ${
+                            currentPageIndex === index
+                              ? 'ring-2 ring-primary shadow-md'
+                              : 'ring-1 ring-border'
+                          }`}
+                          data-testid={`mobile-page-thumbnail-${index}`}
+                        >
+                          <div className="aspect-[9/16] bg-muted relative">
+                            <img
+                              src={page.thumbnailUrl}
+                              alt={page.pageName}
+                              className="w-full h-full object-cover"
+                              loading="eager"
+                            />
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] text-center py-0.5">
+                            {index + 1}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Left Panel - Pages/Clips - Hidden on mobile */}
+        <div className="hidden md:flex w-36 lg:w-44 border-r bg-card flex-col flex-shrink-0">
           <div className="p-3 border-b">
             <Button 
               variant="default" 
@@ -1773,20 +1878,35 @@ export default function Editor() {
             </div>
           </div>
 
-          {/* Bottom Controls */}
-          <div className="h-16 border-t bg-card flex items-center justify-between px-4 flex-shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToPreviousPage}
-              disabled={currentPageIndex === 0}
-              data-testid="button-back-page"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Back
-            </Button>
+          {/* Bottom Controls - Responsive */}
+          <div className="h-14 md:h-16 border-t bg-card flex items-center justify-between px-2 md:px-4 flex-shrink-0">
+            {/* Mobile: Show Edit Fields button on left */}
+            {isMobile ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMobileEditSheetOpen(true)}
+                className="h-9 px-3"
+                data-testid="button-edit-fields-mobile"
+              >
+                <Edit3 className="w-4 h-4 mr-1" />
+                Edit
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={currentPageIndex === 0}
+                data-testid="button-back-page"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+            )}
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Preview button - hidden on very small screens */}
               <Button
                 variant="outline"
                 size="sm"
@@ -1796,14 +1916,15 @@ export default function Editor() {
                     description: "Field preview feature is currently being developed. Stay tuned!",
                   });
                 }}
+                className="hidden xs:flex h-8 md:h-9 px-2 md:px-3"
                 data-testid="button-preview"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
+                <Eye className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Preview</span>
               </Button>
               
-              {/* Zoom Controls */}
-              <div className="flex items-center gap-2 bg-muted rounded-md px-2 py-1">
+              {/* Zoom Controls - Desktop only */}
+              <div className="hidden md:flex items-center gap-2 bg-muted rounded-md px-2 py-1">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -1826,23 +1947,69 @@ export default function Editor() {
                   <ZoomIn className="w-4 h-4" />
                 </Button>
               </div>
+              
+              {/* Mobile: Page navigation */}
+              {isMobile && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={goToPreviousPage}
+                    disabled={currentPageIndex === 0}
+                    data-testid="button-prev-page-mobile"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={goToNextPage}
+                    disabled={currentPageIndex === pages.length - 1}
+                    data-testid="button-next-page-mobile"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
-            <Button
-              variant="default"
-              size="sm"
-              onClick={goToNextPage}
-              disabled={currentPageIndex === pages.length - 1}
-              data-testid="button-next-page"
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </Button>
+            {/* Desktop: Next button */}
+            {!isMobile && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={currentPageIndex === pages.length - 1}
+                data-testid="button-next-page"
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            )}
+            
+            {/* Mobile: Generate button on right */}
+            {isMobile && (
+              <Button
+                size="sm"
+                onClick={handleGenerateClick}
+                disabled={saveProjectMutation.isPending}
+                className="h-9 px-3 bg-gradient-to-r from-primary to-amber-500"
+                data-testid="button-generate-mobile"
+              >
+                {saveProjectMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Right Panel - Edit Fields */}
-        <div className="w-72 lg:w-80 border-l bg-card flex flex-col flex-shrink-0">
+        {/* Right Panel - Edit Fields - Hidden on mobile */}
+        <div className="hidden md:flex w-72 lg:w-80 border-l bg-card flex-col flex-shrink-0">
           <div className="p-4 border-b">
             <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
             <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
@@ -1915,6 +2082,106 @@ export default function Editor() {
             </div>
           </ScrollArea>
         </div>
+        
+        {/* Mobile Edit Sheet - Bottom slide-up panel */}
+        {isMobile && mobileEditSheetOpen && (
+          <div className="fixed inset-0 z-50 bg-black/50" onClick={() => setMobileEditSheetOpen(false)}>
+            <div 
+              className="absolute bottom-0 left-0 right-0 bg-card rounded-t-2xl max-h-[75vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Handle bar */}
+              <div className="flex justify-center py-3">
+                <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+              </div>
+              
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pb-3 border-b">
+                <div>
+                  <h2 className="font-semibold text-foreground text-base">Edit Fields</h2>
+                  <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setMobileEditSheetOpen(false)}
+                  className="h-8 w-8"
+                  data-testid="button-close-edit-sheet"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              
+              {/* Scrollable content */}
+              <ScrollArea className="flex-1 px-4 py-4">
+                <div className="space-y-4 pb-8">
+                  {editableFields.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground text-sm">No editable fields on this page</p>
+                    </div>
+                  ) : (
+                    editableFields.filter((field: EditableField) => field?.id).map((field: EditableField, index: number) => (
+                      <div key={index} className="space-y-2" data-testid={`mobile-field-${field.id}`}>
+                        <Label htmlFor={`mobile-${field.id}`} className="text-sm font-medium">
+                          {field.label || field.id}
+                        </Label>
+                        
+                        {field.type === 'textarea' ? (
+                          <>
+                            <Textarea
+                              id={`mobile-${field.id}`}
+                              value={getFieldValue(field.id)}
+                              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                              onBlur={() => handleFieldBlur(field.id)}
+                              maxLength={field.maxLength}
+                              rows={3}
+                              className="resize-none text-base"
+                              data-testid={`mobile-input-${field.id}`}
+                            />
+                            {field.maxLength && (
+                              <div className="flex justify-end">
+                                <span className="text-xs text-muted-foreground">
+                                  {getFieldValue(field.id).length}/{field.maxLength}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        ) : field.type === 'image' ? (
+                          <ImageUploadField
+                            fieldName={field.id}
+                            preview={getImagePreview(field.id)}
+                            onSelect={(file) => handleImageSelect(field.id, file)}
+                            onRemove={() => handleImageRemove(field.id)}
+                          />
+                        ) : (
+                          <>
+                            <Input
+                              id={`mobile-${field.id}`}
+                              type="text"
+                              value={getFieldValue(field.id)}
+                              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                              onBlur={() => handleFieldBlur(field.id)}
+                              maxLength={field.maxLength}
+                              className="text-base h-11"
+                              data-testid={`mobile-input-${field.id}`}
+                            />
+                            {field.maxLength && (
+                              <div className="flex justify-end">
+                                <span className="text-xs text-muted-foreground">
+                                  {getFieldValue(field.id).length}/{field.maxLength}
+                                </span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

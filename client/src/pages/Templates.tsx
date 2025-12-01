@@ -283,7 +283,7 @@ export default function Templates() {
   }) => (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all border whitespace-nowrap ${
+      className={`px-3 py-2 min-h-[36px] rounded-full text-xs sm:text-sm font-medium transition-all border whitespace-nowrap flex-shrink-0 ${
         isSelected
           ? "bg-primary text-primary-foreground border-primary shadow-sm"
           : "bg-card text-foreground border-border hover:border-primary/50 hover:bg-accent/30"
@@ -354,11 +354,11 @@ export default function Templates() {
       <section className="py-6 lg:py-8 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="flex items-start gap-3 mb-4">
+          <div className="flex flex-col md:flex-row md:items-start gap-3 mb-4">
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card hover:bg-accent/50 border border-border text-foreground font-medium text-sm transition-all"
+                className="flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-full bg-card hover:bg-accent/50 border border-border text-foreground font-medium text-sm transition-all"
                 data-testid="button-open-filters"
               >
                 <SlidersHorizontal className="w-4 h-4" />
@@ -492,50 +492,62 @@ export default function Templates() {
             </div>
 
             {isAllTemplatesPage ? (
-              <div className="flex flex-wrap gap-2 flex-1">
-                {ALL_TEMPLATES_CATEGORIES.map((cat) => (
-                  <FilterChip
-                    key={cat.value}
-                    label={cat.label}
-                    isSelected={filters.category === cat.value}
-                    onClick={() => updateFilters({ 
-                      category: filters.category === cat.value ? null : cat.value 
-                    })}
-                  />
-                ))}
-                <div className="w-px h-6 bg-border mx-1 self-center" />
-                {REGION_FILTERS.map((region) => (
-                  <FilterChip
-                    key={region.value}
-                    label={region.label}
-                    isSelected={filters.region === region.value}
-                    onClick={() => updateFilters({ 
-                      region: filters.region === region.value ? null : region.value 
-                    })}
-                  />
-                ))}
+              <div className="flex-1 overflow-x-auto pb-2 -mb-2 scrollbar-hide">
+                <div className="flex gap-2 md:flex-wrap">
+                  {ALL_TEMPLATES_CATEGORIES.map((cat) => (
+                    <FilterChip
+                      key={cat.value}
+                      label={cat.label}
+                      isSelected={filters.category === cat.value}
+                      onClick={() => updateFilters({ 
+                        category: filters.category === cat.value ? null : cat.value 
+                      })}
+                    />
+                  ))}
+                  <div className="w-px h-6 bg-border mx-1 self-center flex-shrink-0" />
+                  {REGION_FILTERS.map((region) => (
+                    <FilterChip
+                      key={region.value}
+                      label={region.label}
+                      isSelected={filters.region === region.value}
+                      onClick={() => updateFilters({ 
+                        region: filters.region === region.value ? null : region.value 
+                      })}
+                    />
+                  ))}
+                </div>
               </div>
             ) : subcategories.length > 0 ? (
-              <div className="flex flex-wrap gap-2 flex-1">
-                {subcategories.map((sub) => (
-                  <FilterChip
-                    key={sub.value}
-                    label={sub.label}
-                    isSelected={filters.subcategory === sub.value}
-                    onClick={() => updateFilters({ 
-                      subcategory: filters.subcategory === sub.value ? null : sub.value 
-                    })}
-                  />
-                ))}
+              <div className="flex-1 overflow-x-auto pb-2 -mb-2 scrollbar-hide">
+                <div className="flex gap-2 md:flex-wrap">
+                  {subcategories.map((sub) => (
+                    <FilterChip
+                      key={sub.value}
+                      label={sub.label}
+                      isSelected={filters.subcategory === sub.value}
+                      onClick={() => updateFilters({ 
+                        subcategory: filters.subcategory === sub.value ? null : sub.value 
+                      })}
+                    />
+                  ))}
+                </div>
               </div>
             ) : null}
 
-            <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 text-muted-foreground flex-shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-sm font-medium">
                 {totalCount > 0 ? `${totalCount} designs` : "Loading..."}
               </span>
             </div>
+          </div>
+          
+          {/* Mobile template count */}
+          <div className="flex md:hidden items-center gap-2 text-muted-foreground mb-3">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">
+              {totalCount > 0 ? `${totalCount} designs` : "Loading..."}
+            </span>
           </div>
 
           {(filters.subcategory || filters.category || filters.region || activeFiltersCount > 0) && (
@@ -654,7 +666,7 @@ export default function Templates() {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
                 {templates.map((template: any) => (
                   <TemplateCard
                     key={template.id}
