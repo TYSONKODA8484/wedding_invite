@@ -1682,7 +1682,12 @@ export default function Editor() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleGenerateClick}
+                onClick={() => {
+                  toast({
+                    title: "Coming Soon",
+                    description: "Field preview feature is currently being developed. Stay tuned!",
+                  });
+                }}
                 data-testid="button-preview"
               >
                 <Eye className="w-4 h-4 mr-2" />
