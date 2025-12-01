@@ -1024,41 +1024,18 @@ export default function Editor() {
     }
   };
 
-  const handlePreview = () => {
-    setShowPreviewComingSoon(true);
-  };
-
-  const handleGenerate = async () => {
-    if (!templateData) return;
-    
-    // First, save the project if not already saved
-    if (!projectId) {
-      // Create the project first
-      try {
-        const templatePages = templateData.pages || [];
-        const response = await apiRequest("POST", "/api/projects", {
-          templateId: templateData.id,
-          fieldValues,
-          pageOrder: orderedPageIds.length > 0 ? orderedPageIds : templatePages.map((p: any) => p.id),
-        });
-        const data = await response.json();
-        setProjectId(data.id);
-        
-        // Now open payment modal
-        setTimeout(() => {
-          setShowPaymentModal(true);
-        }, 100);
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to save your project. Please try again.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // Project already exists, just open payment modal
-      setShowPaymentModal(true);
+  const handleGenerateClick = () => {
+    // Check if user is logged in first
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setPendingPreview(true);
+      setShowAuthModal(true);
+      return;
     }
+    
+    // Trigger the save project mutation which handles the full flow:
+    // Save → Generating modal → Preview modal → Download button → Payment
+    saveProjectMutation.mutate();
   };
 
   const handleDownload = () => {
@@ -1390,11 +1367,11 @@ export default function Editor() {
                     size="sm"
                     onClick={() => {
                       setShowMusicModal(false);
-                      handlePreview();
+                      handleGenerateClick();
                     }}
                     data-testid="button-preview-from-music"
                   >
-                    Preview Video
+                    Generate Video
                   </Button>
                   <Button 
                     variant="outline"
@@ -1522,7 +1499,7 @@ export default function Editor() {
           </Button>
           <Button 
             size="sm" 
-            onClick={handleGenerate}
+            onClick={handleGenerateClick}
             disabled={saveProjectMutation.isPending}
             className="relative overflow-visible bg-gradient-to-r from-primary via-primary to-amber-500 hover:from-primary/90 hover:via-primary/90 hover:to-amber-500/90 text-primary-foreground px-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
             data-testid="button-generate"
@@ -1532,7 +1509,7 @@ export default function Editor() {
             ) : (
               <Sparkles className="w-4 h-4 mr-2" />
             )}
-            Generate & Pay
+            Generate
             <span className="absolute -top-1 -right-1 flex h-3 w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
@@ -1665,7 +1642,7 @@ export default function Editor() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handlePreview}
+                onClick={handleGenerateClick}
                 data-testid="button-preview"
               >
                 <Eye className="w-4 h-4 mr-2" />
