@@ -7,7 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
-  GripVertical, Music, Play, MoveDown, Trash2, Undo2, Redo2, AlertTriangle
+  GripVertical, Music, Play, MoveDown, Trash2, Undo2, Redo2, AlertTriangle,
+  Sparkles, CreditCard
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1027,6 +1028,39 @@ export default function Editor() {
     setShowPreviewComingSoon(true);
   };
 
+  const handleGenerate = async () => {
+    if (!templateData) return;
+    
+    // First, save the project if not already saved
+    if (!projectId) {
+      // Create the project first
+      try {
+        const templatePages = templateData.pages || [];
+        const response = await apiRequest("POST", "/api/projects", {
+          templateId: templateData.id,
+          fieldValues,
+          pageOrder: orderedPageIds.length > 0 ? orderedPageIds : templatePages.map((p: any) => p.id),
+        });
+        const data = await response.json();
+        setProjectId(data.id);
+        
+        // Now open payment modal
+        setTimeout(() => {
+          setShowPaymentModal(true);
+        }, 100);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save your project. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Project already exists, just open payment modal
+      setShowPaymentModal(true);
+    }
+  };
+
   const handleDownload = () => {
     setShowPreviewModal(false);
     setShowPaymentModal(true);
@@ -1488,17 +1522,21 @@ export default function Editor() {
           </Button>
           <Button 
             size="sm" 
-            onClick={handlePreview}
+            onClick={handleGenerate}
             disabled={saveProjectMutation.isPending}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-4"
+            className="relative overflow-visible bg-gradient-to-r from-primary via-primary to-amber-500 hover:from-primary/90 hover:via-primary/90 hover:to-amber-500/90 text-primary-foreground px-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 font-semibold"
             data-testid="button-generate"
           >
             {saveProjectMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              <Play className="w-4 h-4 mr-2 fill-current" />
+              <Sparkles className="w-4 h-4 mr-2" />
             )}
-            Generate
+            Generate & Pay
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+            </span>
           </Button>
           <Button 
             variant="outline"
