@@ -696,10 +696,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Increment template purchase count for popularity tracking
       await storage.incrementTemplatePurchase(order.templateId);
       
+      // Get the updated project with download URL
+      const updatedProject = await storage.getProjectById(order.projectId);
+      const template = await storage.getTemplateById(order.templateId);
+      
       res.json({
         success: true,
         message: "Payment verified successfully",
         projectId: order.projectId,
+        downloadUrl: updatedProject?.finalUrl || updatedProject?.previewUrl || template?.previewVideoUrl || null,
+        templateName: template?.templateName || "Video",
       });
     } catch (error) {
       console.error("Error verifying payment:", error);

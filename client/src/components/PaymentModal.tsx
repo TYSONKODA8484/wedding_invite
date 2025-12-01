@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Loader2 } from "lucide-react";
+import { CreditCard, Loader2, Download } from "lucide-react";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ interface PaymentModalProps {
   amount: string;
   currency: string;
   onSuccess: () => void;
+  onDownloadReady?: (downloadUrl: string, templateName: string) => void;
 }
 
 declare global {
@@ -29,9 +30,20 @@ export function PaymentModal({
   amount,
   currency,
   onSuccess,
+  onDownloadReady,
 }: PaymentModalProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  
+  const triggerDownload = (url: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename.replace(/[^a-zA-Z0-9]/g, '_')}_WeddingInvite.mp4`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handlePayment = async () => {
     try {
@@ -53,20 +65,32 @@ export function PaymentModal({
         order_id: razorpayOrderId,
         handler: async function (response: any) {
           try {
-            await apiRequest("POST", `/api/payment/verify`, {
+            const verifyResponse = await apiRequest("POST", `/api/payment/verify`, {
               orderId: orderData.orderId,
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             });
+            
+            const verifyData = await verifyResponse.json();
 
             await queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
             await queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
 
             toast({
               title: "Payment Successful!",
-              description: "Your video is now ready to download.",
+              description: "Your video download will start automatically.",
             });
+
+            // Trigger automatic download if URL is available
+            if (verifyData.downloadUrl) {
+              triggerDownload(verifyData.downloadUrl, verifyData.templateName || templateName);
+              
+              // Also notify parent component so Download button gets enabled
+              if (onDownloadReady) {
+                onDownloadReady(verifyData.downloadUrl, verifyData.templateName || templateName);
+              }
+            }
 
             onSuccess();
             onClose();

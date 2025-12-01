@@ -657,6 +657,7 @@ export default function Editor() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [downloadEnabled, setDownloadEnabled] = useState(false);
+  const [downloadUrl, setDownloadUrl] = useState<string>('');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [pendingPreview, setPendingPreview] = useState(false);
@@ -838,21 +839,34 @@ export default function Editor() {
   const isLoading = isEditingProject ? (projectIsLoading || templateIsLoading) : templateIsLoading;
 
   useEffect(() => {
-    if (projectData && projectData.customization) {
-      const newFieldValues: Record<string, string> = {};
-      if (projectData.customization.pages) {
-        for (const [pageId, fields] of Object.entries(projectData.customization.pages)) {
-          if (typeof fields === 'object') {
-            for (const [fieldId, value] of Object.entries(fields as Record<string, any>)) {
-              newFieldValues[`${pageId}_${fieldId}`] = value || '';
+    if (projectData) {
+      // Load customization data
+      if (projectData.customization) {
+        const newFieldValues: Record<string, string> = {};
+        if (projectData.customization.pages) {
+          for (const [pageId, fields] of Object.entries(projectData.customization.pages)) {
+            if (typeof fields === 'object') {
+              for (const [fieldId, value] of Object.entries(fields as Record<string, any>)) {
+                newFieldValues[`${pageId}_${fieldId}`] = value || '';
+              }
             }
           }
         }
+        setFieldValues(newFieldValues);
+        
+        if (projectData.customization.images) {
+          setImagePreviews(projectData.customization.images);
+        }
       }
-      setFieldValues(newFieldValues);
       
-      if (projectData.customization.images) {
-        setImagePreviews(projectData.customization.images);
+      // Check if project is already paid - enable Download button
+      if (projectData.paidAt) {
+        setDownloadEnabled(true);
+        // Set download URL from project or template
+        const url = projectData.finalUrl || projectData.previewUrl;
+        if (url) {
+          setDownloadUrl(url);
+        }
       }
     }
   }, [projectData]);
@@ -1040,6 +1054,25 @@ export default function Editor() {
 
   const handleDownload = () => {
     setShowPreviewModal(false);
+    
+    // If download is already enabled (payment complete), trigger actual download
+    if (downloadEnabled && downloadUrl) {
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `${template?.templateName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Video'}_WeddingInvite.mp4`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download Started",
+        description: "Your video is being downloaded.",
+      });
+      return;
+    }
+    
+    // Otherwise, open payment modal
     setShowPaymentModal(true);
   };
 
@@ -1209,8 +1242,15 @@ export default function Editor() {
           amount={template.price}
           currency={template.currency}
           onSuccess={() => {
-            toast({ title: "Payment Successful!", description: "Your video is now ready to download." });
             setDownloadEnabled(true);
+            // Set download URL from template if not already set
+            if (!downloadUrl && template.previewVideoUrl) {
+              setDownloadUrl(template.previewVideoUrl);
+            }
+          }}
+          onDownloadReady={(url, name) => {
+            setDownloadEnabled(true);
+            setDownloadUrl(url);
           }}
         />
       )}
