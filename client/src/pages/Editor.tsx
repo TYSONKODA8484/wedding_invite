@@ -1,14 +1,14 @@
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState, useRef, useEffect } from "react";
-import type { Template } from "@shared/schema";
+import { useState, useRef, useEffect, useCallback } from "react";
+import type { Template, Music as MusicType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
-  GripVertical, Music, Play, MoveDown, Trash2, Undo2, Redo2, AlertTriangle,
-  Sparkles, CreditCard
+  GripVertical, Music, Play, Pause, MoveDown, Trash2, Undo2, Redo2, AlertTriangle,
+  Sparkles, CreditCard, Volume2, VolumeX
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -679,14 +679,22 @@ export default function Editor() {
   
   // Music modal state
   const [showMusicModal, setShowMusicModal] = useState(false);
-  const [selectedMusic, setSelectedMusic] = useState('default');
+  const [selectedMusicId, setSelectedMusicId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
-  const [audioDuration, setAudioDuration] = useState('1:15');
-  const [audioCurrentTime, setAudioCurrentTime] = useState('0:00');
+  const [audioDurationSeconds, setAudioDurationSeconds] = useState(0);
+  const [audioCurrentSeconds, setAudioCurrentSeconds] = useState(0);
   const [customMusicFile, setCustomMusicFile] = useState<File | null>(null);
+  const [customMusicUrl, setCustomMusicUrl] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicFileInputRef = useRef<HTMLInputElement>(null);
+  const customMusicUrlRef = useRef<string | null>(null); // Track URL for cleanup
+  
+  // Fetch music library
+  const { data: musicLibrary, isLoading: musicLoading } = useQuery<{ music: MusicType[] }>({
+    queryKey: ["/api/music"],
+  });
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -694,27 +702,160 @@ export default function Editor() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
   
+  // Get current music URL based on selection
+  const getCurrentMusicUrl = useCallback(() => {
+    if (customMusicUrl) return customMusicUrl;
+    if (selectedMusicId && musicLibrary?.music) {
+      const track = musicLibrary.music.find(m => m.id === selectedMusicId);
+      if (track) return `/api/media/${track.url}`;
+    }
+    return null;
+  }, [selectedMusicId, musicLibrary, customMusicUrl]);
+  
+  // Get current music name
+  const getCurrentMusicName = useCallback(() => {
+    if (customMusicFile) return customMusicFile.name;
+    if (selectedMusicId && musicLibrary?.music) {
+      const track = musicLibrary.music.find(m => m.id === selectedMusicId);
+      return track?.name || 'Default Music';
+    }
+    return 'No music selected';
+  }, [selectedMusicId, musicLibrary, customMusicFile]);
+  
+  // Helper to safely revoke object URL
+  const revokeCustomMusicUrl = useCallback(() => {
+    if (customMusicUrlRef.current) {
+      URL.revokeObjectURL(customMusicUrlRef.current);
+      customMusicUrlRef.current = null;
+    }
+  }, []);
+  
   const handleMusicFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('audio/')) {
+      // Revoke previous custom URL if exists
+      revokeCustomMusicUrl();
+      
       setCustomMusicFile(file);
-      setSelectedMusic('custom');
+      // Create object URL for playback
+      const url = URL.createObjectURL(file);
+      customMusicUrlRef.current = url; // Track for cleanup
+      setCustomMusicUrl(url);
+      setSelectedMusicId(null); // Clear stock music selection
+      // Reset playback state
+      setIsPlaying(false);
+      setAudioProgress(0);
+      setAudioCurrentSeconds(0);
       toast({ title: "Music uploaded", description: file.name });
     }
   };
   
-  const togglePlayPause = () => {
+  const handleSelectStockMusic = (musicId: string) => {
+    // Revoke custom URL if switching to stock music
+    revokeCustomMusicUrl();
+    setSelectedMusicId(musicId);
+    setCustomMusicFile(null);
+    setCustomMusicUrl(null);
+    setIsPlaying(false);
+    setAudioProgress(0);
+    setAudioCurrentSeconds(0);
+  };
+  
+  // Cleanup audio when modal closes (preserves selection, just stops playback)
+  const handleMusicModalClose = useCallback(() => {
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+    setAudioProgress(0);
+    setAudioCurrentSeconds(0);
+    setAudioDurationSeconds(0);
+    setIsMuted(false);
+    setShowMusicModal(false);
+  }, []);
+  
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      revokeCustomMusicUrl();
+    };
+  }, [revokeCustomMusicUrl]);
+  
+  const togglePlayPause = () => {
+    if (!audioRef.current) return;
+    
+    // Guard against missing source
+    const currentSrc = getCurrentMusicUrl();
+    if (!currentSrc) {
+      toast({ title: "No music selected", description: "Please select or upload music first." });
+      return;
+    }
+    
+    if (isPlaying) {
+      audioRef.current.pause();
     } else {
-      setIsPlaying(!isPlaying);
+      audioRef.current.play().catch((error) => {
+        console.warn('Audio playback error:', error);
+        setIsPlaying(false);
+      });
     }
   };
+  
+  const toggleMute = () => {
+    if (audioRef.current) {
+      audioRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+  
+  const handleSeek = (value: number[]) => {
+    if (audioRef.current && audioDurationSeconds > 0) {
+      const newTime = (value[0] / 100) * audioDurationSeconds;
+      audioRef.current.currentTime = newTime;
+      setAudioCurrentSeconds(newTime);
+      setAudioProgress(value[0]);
+    }
+  };
+  
+  // Audio event handlers
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        setAudioCurrentSeconds(audio.currentTime);
+        setAudioProgress((audio.currentTime / audio.duration) * 100);
+      }
+    };
+    
+    const handleLoadedMetadata = () => {
+      setAudioDurationSeconds(audio.duration);
+    };
+    
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setAudioProgress(0);
+      setAudioCurrentSeconds(0);
+    };
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, []);
   
   // Undo/Redo history
   type HistoryAction = 
@@ -982,6 +1123,11 @@ export default function Editor() {
       if (orderedPageIds.length === 0) {
         setOrderedPageIds(templateData.pages.map((p: any) => p.id));
       }
+    }
+    
+    // Initialize default music for video templates
+    if (templateData && (templateData as any).defaultMusic && !selectedMusicId && !customMusicUrl) {
+      setSelectedMusicId((templateData as any).defaultMusic.id);
     }
   }, [templateData]);
 
@@ -1399,30 +1545,41 @@ export default function Editor() {
         </DialogContent>
       </Dialog>
 
+      {/* Hidden Audio Element for playback */}
+      <audio 
+        ref={audioRef} 
+        src={getCurrentMusicUrl() || undefined}
+        preload="metadata"
+      />
+
       {/* Upload Music Modal */}
-      <Dialog open={showMusicModal} onOpenChange={setShowMusicModal}>
+      <Dialog open={showMusicModal} onOpenChange={(open) => {
+        if (!open) {
+          handleMusicModalClose();
+        } else {
+          setShowMusicModal(true);
+        }
+      }}>
         <DialogContent className="w-[95vw] max-w-4xl p-0 overflow-hidden max-h-[90vh]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Background Music</DialogTitle>
+          </DialogHeader>
           <ScrollArea className="max-h-[90vh]">
             <div className="flex flex-col lg:flex-row">
               {/* Left Section - Music Controls */}
               <div className="flex-1 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r">
-                <h2 className="text-lg font-semibold mb-4 sm:mb-6">Default Music</h2>
+                <h2 className="text-lg font-semibold mb-4 sm:mb-6">Background Music</h2>
                 
-                {/* Music Dropdown */}
+                {/* Current Selection Display */}
                 <div className="mb-4 sm:mb-6">
-                  <select 
-                    value={selectedMusic}
-                    onChange={(e) => setSelectedMusic(e.target.value)}
-                    className="w-full h-10 px-3 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    data-testid="select-music"
-                  >
-                    <option value="default">Default Music</option>
-                    <option value="romantic">Romantic Melody</option>
-                    <option value="traditional">Traditional Indian</option>
-                    <option value="arabic">Arabic Theme</option>
-                    <option value="classical">Classical</option>
-                    {customMusicFile && <option value="custom">{customMusicFile.name}</option>}
-                  </select>
+                  <Label className="text-sm text-muted-foreground mb-2 block">Currently Selected</Label>
+                  <div className="flex items-center gap-2 p-3 rounded-md border border-border bg-muted/30">
+                    <Music className="w-4 h-4 text-primary flex-shrink-0" />
+                    <span className="text-sm font-medium truncate">{getCurrentMusicName()}</span>
+                    {customMusicFile && (
+                      <Badge variant="secondary" className="ml-auto flex-shrink-0">Custom</Badge>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Audio Player */}
@@ -1433,36 +1590,88 @@ export default function Editor() {
                       size="icon"
                       className="h-10 w-10 rounded-full bg-background shadow-sm flex-shrink-0"
                       onClick={togglePlayPause}
+                      disabled={!getCurrentMusicUrl()}
                       data-testid="button-play-music"
                     >
                       {isPlaying ? (
-                        <div className="w-3 h-3 bg-foreground rounded-sm" />
+                        <Pause className="w-4 h-4" />
                       ) : (
-                        <Play className="w-4 h-4 fill-current ml-0.5" />
+                        <Play className="w-4 h-4 ml-0.5" />
                       )}
                     </Button>
                     
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
-                        <span>{audioCurrentTime}</span>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                        <span>{formatTime(audioCurrentSeconds)}</span>
                         <span>/</span>
-                        <span>{audioDuration}</span>
+                        <span>{formatTime(audioDurationSeconds)}</span>
                       </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${audioProgress}%` }}
-                        />
-                      </div>
+                      <Slider
+                        value={[audioProgress]}
+                        onValueChange={handleSeek}
+                        max={100}
+                        step={0.1}
+                        disabled={!getCurrentMusicUrl()}
+                        className="cursor-pointer"
+                        data-testid="slider-audio-progress"
+                      />
                     </div>
                     
-                    <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
-                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                      </svg>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 flex-shrink-0"
+                      onClick={toggleMute}
+                      disabled={!getCurrentMusicUrl()}
+                      data-testid="button-mute-music"
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
+                </div>
+                
+                {/* Music Library */}
+                <div className="mb-4 sm:mb-6">
+                  <Label className="text-sm text-muted-foreground mb-2 block">Music Library</Label>
+                  {musicLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {musicLibrary?.music?.map((track) => (
+                        <div
+                          key={track.id}
+                          onClick={() => handleSelectStockMusic(track.id)}
+                          className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                            selectedMusicId === track.id && !customMusicFile
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-muted-foreground/50'
+                          }`}
+                          data-testid={`music-track-${track.id}`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            selectedMusicId === track.id && !customMusicFile
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          }`}>
+                            <Music className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{track.name}</p>
+                            <p className="text-xs text-muted-foreground capitalize">{track.category} • {track.duration}s</p>
+                          </div>
+                          {selectedMusicId === track.id && !customMusicFile && (
+                            <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Upload Button */}
@@ -1475,60 +1684,47 @@ export default function Editor() {
                   data-testid="input-music-file"
                 />
                 <Button 
-                  className="w-full mb-4 sm:mb-6 bg-primary hover:bg-primary/90"
+                  variant="outline"
+                  className="w-full mb-4 sm:mb-6"
                   onClick={() => musicFileInputRef.current?.click()}
                   data-testid="button-upload-custom-music"
                 >
-                  <Music className="w-4 h-4 mr-2" />
+                  <Upload className="w-4 h-4 mr-2" />
                   Upload Your Music
                 </Button>
                 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <Button 
-                    variant="outline" 
-                    size="sm"
                     onClick={() => {
+                      handleMusicModalClose();
                       toast({ title: "Music saved", description: "Your music selection has been saved." });
-                      setShowMusicModal(false);
                     }}
                     data-testid="button-save-music"
                   >
-                    Save
+                    <Check className="w-4 h-4 mr-2" />
+                    Save Selection
                   </Button>
                   <Button 
                     variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowMusicModal(false);
-                      handleGenerateClick();
-                    }}
-                    data-testid="button-preview-from-music"
+                    onClick={handleMusicModalClose}
+                    data-testid="button-cancel-music"
                   >
-                    Generate Video
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    size="sm"
-                    disabled={!downloadEnabled}
-                    className={!downloadEnabled ? "opacity-50" : ""}
-                    data-testid="button-download-from-music"
-                  >
-                    Download
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                    Cancel
                   </Button>
                 </div>
               </div>
               
               {/* Right Section - Info Panel */}
               <div className="w-full lg:w-80 bg-muted/20 p-4 sm:p-6">
+                <h3 className="font-medium mb-4">Music Tips</h3>
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                       <Check className="w-3 h-3 text-white" />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground">
-                      Preview the video at least once, before you click on Pay & Download HD Quality Video.
+                      Choose from our curated music library or upload your own track.
                     </p>
                   </div>
                   
@@ -1537,7 +1733,7 @@ export default function Editor() {
                       <Check className="w-3 h-3 text-white" />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground">
-                      The WeddingInvite.ai Watermark won't be in the Final HD Quality Video.
+                      Music should be <strong>30 seconds or longer</strong> for best results.
                     </p>
                   </div>
                   
@@ -1546,7 +1742,7 @@ export default function Editor() {
                       <Check className="w-3 h-3 text-white" />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground">
-                      The preview video will be in low quality for you to review quickly.
+                      Supported formats: <strong>MP3, WAV, AAC, M4A</strong>
                     </p>
                   </div>
                   
@@ -1555,25 +1751,16 @@ export default function Editor() {
                       <Check className="w-3 h-3 text-white" />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground">
-                      The Final Video will be in <strong>HD quality</strong>.
+                      Preview your music before generating the video.
                     </p>
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Music className="w-3 h-3 text-primary-foreground" />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground">
-                      The video will be available for download only for a period of <strong>six days</strong> from the date of purchase.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-foreground">
-                      Payment can be made using your <strong>Credit/Debit Card, PayPal Or Wallets and UPI</strong>.
+                      The selected music will be added as background audio to your video invitation.
                     </p>
                   </div>
                 </div>
@@ -1621,16 +1808,19 @@ export default function Editor() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowMusicModal(true)}
-            className="border-border"
-            data-testid="button-upload-music"
-          >
-            <Music className="w-4 h-4 mr-2" />
-            Upload Music
-          </Button>
+          {/* Show music button only for video templates */}
+          {template?.templateType === 'video' && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowMusicModal(true)}
+              className="border-border"
+              data-testid="button-upload-music"
+            >
+              <Music className="w-4 h-4 mr-2" />
+              {selectedMusicId || customMusicFile ? 'Change Music' : 'Add Music'}
+            </Button>
+          )}
           <Button 
             size="sm" 
             onClick={handleGenerateClick}
