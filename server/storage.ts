@@ -187,12 +187,24 @@ export class DatabaseStorage implements IStorage {
         (row.payment && row.payment.status === 'success') ||
         !!row.project.paidAt;
       
-      // Use project-specific URLs if available, fall back to template video
-      const videoUrl = row.project.previewUrl || row.project.finalUrl || row.template?.previewVideoUrl;
-      
       // Determine template type (card or video)
       const rawType = row.template?.templateType || 'video';
       const templateType = rawType === 'card' ? 'card' : 'video';
+      
+      // Construct object storage URLs for card/video preview/final files
+      // Pattern: /objects/projects/{projectId}/{card|video}_{preview|final}.{ext}
+      const projectId = row.project.id;
+      const cardExt = 'jpg';
+      const videoExt = 'mp4';
+      
+      // Object storage URLs for the four file types
+      const cardPreviewUrl = `/objects/projects/${projectId}/card_preview.${cardExt}`;
+      const cardFinalUrl = `/objects/projects/${projectId}/card_final.${cardExt}`;
+      const videoPreviewUrl = `/objects/projects/${projectId}/video_preview.${videoExt}`;
+      const videoFinalUrl = `/objects/projects/${projectId}/video_final.${videoExt}`;
+      
+      // Use project-specific URLs if available, fall back to template video
+      const videoUrl = row.project.previewUrl || row.project.finalUrl || row.template?.previewVideoUrl;
       
       return {
         id: row.project.id,
@@ -210,6 +222,10 @@ export class DatabaseStorage implements IStorage {
         paymentStatus: row.payment?.status || row.order?.status || 'pending',
         previewUrl: row.project.previewUrl,
         finalUrl: row.project.finalUrl,
+        cardPreviewUrl,
+        cardFinalUrl,
+        videoPreviewUrl: videoPreviewUrl,
+        videoFinalUrl,
         createdAt: row.project.createdAt,
         updatedAt: row.project.updatedAt,
         paidAt: row.project.paidAt,
