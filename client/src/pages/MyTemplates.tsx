@@ -78,6 +78,9 @@ export default function MyTemplates() {
       
       return response.json();
     },
+    staleTime: 0, // Always consider data stale - refetch when needed
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
   const handleEdit = (project: Project) => {

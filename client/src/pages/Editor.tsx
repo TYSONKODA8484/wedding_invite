@@ -1146,6 +1146,8 @@ export default function Editor() {
       return response.json();
     },
     enabled: isEditingProject,
+    staleTime: 0, // Always get fresh project data
+    refetchOnMount: 'always', // Force refetch when mounting editor
   });
 
   const { data: templateData, isLoading: templateIsLoading, error } = useQuery<Template & { pages?: any[] }>({
@@ -1389,6 +1391,8 @@ export default function Editor() {
       }
     },
     onSuccess: () => {
+      // Invalidate My Templates cache so new/updated project appears immediately
+      queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
       startPreviewGeneration();
     },
     onError: (error: Error) => {
