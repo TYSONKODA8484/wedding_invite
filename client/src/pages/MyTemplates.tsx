@@ -44,6 +44,10 @@ interface Project {
   paymentStatus: string;
   previewUrl: string | null;
   finalUrl: string | null;
+  cardPreviewUrl: string | null;
+  cardFinalUrl: string | null;
+  videoPreviewUrl: string | null;
+  videoFinalUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   paidAt: Date | null;
@@ -146,7 +150,16 @@ export default function MyTemplates() {
   };
 
   const triggerDownload = (project: Project) => {
-    const urlToDownload = project.finalUrl || project.previewUrl || project.previewVideoUrl;
+    // Use card_final or video_final from object storage based on template type
+    // Fall back to legacy URLs if not available
+    let urlToDownload: string | null = null;
+    
+    if (project.templateType === "card") {
+      urlToDownload = project.cardFinalUrl || project.finalUrl || project.previewUrl;
+    } else {
+      urlToDownload = project.videoFinalUrl || project.finalUrl || project.previewUrl || project.previewVideoUrl;
+    }
+    
     if (urlToDownload) {
       const link = document.createElement("a");
       link.href = urlToDownload;
@@ -215,10 +228,15 @@ export default function MyTemplates() {
   };
 
   const handleShare = async (project: Project) => {
-    // Share the actual generated file (finalUrl for paid, previewUrl for unpaid)
-    const fileUrl = project.isPaid 
-      ? (project.finalUrl || project.previewUrl || project.previewVideoUrl)
-      : (project.previewUrl || project.previewVideoUrl);
+    // Share the actual final file from object storage (card_final or video_final)
+    // Fall back to legacy URLs if not available
+    let fileUrl: string | null = null;
+    
+    if (project.templateType === "card") {
+      fileUrl = project.cardFinalUrl || project.finalUrl || project.previewUrl;
+    } else {
+      fileUrl = project.videoFinalUrl || project.finalUrl || project.previewUrl || project.previewVideoUrl;
+    }
     
     const marketingText = `Check out my ${project.templateType === "card" ? "invitation card" : "video invitation"} - ${project.templateName}! Created with WeddingInvite.AI`;
     
@@ -484,11 +502,15 @@ export default function MyTemplates() {
       <VideoPreviewModal
         open={showVideoModal}
         onOpenChange={setShowVideoModal}
-        videoUrl={
-          selectedVideoProject?.isPaid 
-            ? (selectedVideoProject?.finalUrl || selectedVideoProject?.previewUrl || selectedVideoProject?.previewVideoUrl || null)
-            : (selectedVideoProject?.previewUrl || selectedVideoProject?.previewVideoUrl || null)
-        }
+        videoUrl={(() => {
+          if (!selectedVideoProject) return null;
+          // Use card_preview or video_preview from object storage based on template type
+          if (selectedVideoProject.templateType === "card") {
+            return selectedVideoProject.cardPreviewUrl || selectedVideoProject.previewUrl || selectedVideoProject.previewImageUrl || null;
+          } else {
+            return selectedVideoProject.videoPreviewUrl || selectedVideoProject.previewUrl || selectedVideoProject.previewVideoUrl || null;
+          }
+        })()}
         templateName={selectedVideoProject?.templateName || ""}
         orientation={selectedVideoProject?.orientation || "portrait"}
       />

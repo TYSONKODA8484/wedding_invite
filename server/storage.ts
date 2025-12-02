@@ -197,7 +197,7 @@ export class DatabaseStorage implements IStorage {
       const cardExt = 'jpg';
       const videoExt = 'mp4';
       
-      // Object storage URLs for the four file types
+      // Object storage URLs for the four file types (nullable until files are generated)
       const cardPreviewUrl = `/objects/projects/${projectId}/card_preview.${cardExt}`;
       const cardFinalUrl = `/objects/projects/${projectId}/card_final.${cardExt}`;
       const videoPreviewUrl = `/objects/projects/${projectId}/video_preview.${videoExt}`;
@@ -222,10 +222,10 @@ export class DatabaseStorage implements IStorage {
         paymentStatus: row.payment?.status || row.order?.status || 'pending',
         previewUrl: row.project.previewUrl,
         finalUrl: row.project.finalUrl,
-        cardPreviewUrl,
-        cardFinalUrl,
-        videoPreviewUrl: videoPreviewUrl,
-        videoFinalUrl,
+        cardPreviewUrl: templateType === 'card' ? cardPreviewUrl : null,
+        cardFinalUrl: templateType === 'card' ? cardFinalUrl : null,
+        videoPreviewUrl: templateType === 'video' ? videoPreviewUrl : null,
+        videoFinalUrl: templateType === 'video' ? videoFinalUrl : null,
         createdAt: row.project.createdAt,
         updatedAt: row.project.updatedAt,
         paidAt: row.project.paidAt,
