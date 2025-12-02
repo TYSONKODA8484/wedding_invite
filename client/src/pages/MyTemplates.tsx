@@ -1,14 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Edit, Share2, Eye, FileImage, Film, Music } from "lucide-react";
+import { Download, Edit, Share2, Eye, FileImage, Film, Music, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VideoPreviewModal } from "@/components/VideoPreviewModal";
 import { PaymentModal } from "@/components/PaymentModal";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MusicInfo {
   id: string;
@@ -49,6 +59,8 @@ export default function MyTemplates() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideoProject, setSelectedVideoProject] = useState<Project | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects/mine"],
@@ -82,6 +94,52 @@ export default function MyTemplates() {
     refetchOnMount: true, // Refetch when component mounts
     refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete project");
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
+      toast({
+        title: "Project Deleted",
+        description: "Your project has been deleted successfully.",
+      });
+      setShowDeleteDialog(false);
+      setProjectToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDelete = (project: Project) => {
+    setProjectToDelete(project);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (projectToDelete) {
+      deleteProjectMutation.mutate(projectToDelete.id);
+    }
+  };
 
   const handleEdit = (project: Project) => {
     navigate(`/editor/${project.id}?from=my-templates`);
@@ -156,20 +214,38 @@ export default function MyTemplates() {
     setShowVideoModal(true);
   };
 
-  const handleShare = (project: Project) => {
-    const shareUrl = `${window.location.origin}/template/${project.templateId}`;
+  const handleShare = async (project: Project) => {
+    // Share the actual generated file (finalUrl for paid, previewUrl for unpaid)
+    const fileUrl = project.isPaid 
+      ? (project.finalUrl || project.previewUrl || project.previewVideoUrl)
+      : (project.previewUrl || project.previewVideoUrl);
     
-    if (navigator.share) {
-      navigator.share({
-        title: project.templateName,
-        text: `Check out this ${project.templateName} video invitation!`,
-        url: shareUrl,
-      }).catch(() => {});
+    const marketingText = `Check out my ${project.templateType === "card" ? "invitation card" : "video invitation"} - ${project.templateName}! Created with WeddingInvite.AI`;
+    
+    if (navigator.share && fileUrl) {
+      try {
+        await navigator.share({
+          title: `${project.templateName} - WeddingInvite.AI`,
+          text: marketingText,
+          url: fileUrl,
+        });
+      } catch (error) {
+        // User cancelled or share failed - fall back to clipboard
+        await navigator.clipboard.writeText(`${marketingText}\n\n${fileUrl}`);
+        toast({
+          title: "Link copied!",
+          description: "Share text and link copied to clipboard",
+        });
+      }
     } else {
-      navigator.clipboard.writeText(shareUrl);
+      // Fallback: copy to clipboard with marketing text
+      const shareText = fileUrl 
+        ? `${marketingText}\n\n${fileUrl}` 
+        : marketingText;
+      await navigator.clipboard.writeText(shareText);
       toast({
         title: "Link copied!",
-        description: "Share link copied to clipboard",
+        description: "Share text copied to clipboard",
       });
     }
   };
@@ -352,6 +428,15 @@ export default function MyTemplates() {
               >
                 <Download className="h-4 w-4" />
               </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => handleDelete(project)}
+                data-testid={`button-delete-${project.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </>
           )}
         </div>
@@ -417,6 +502,30 @@ export default function MyTemplates() {
           onSuccess={handlePaymentSuccess}
         />
       )}
+      
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{projectToDelete?.templateName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProjectToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteProjectMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deleteProjectMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
