@@ -48,6 +48,7 @@ export interface IStorage {
   getProjectById(id: string): Promise<Project | undefined>;
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
+  deleteProject(id: string): Promise<boolean>;
   
   // Order operations
   createOrder(order: InsertOrder): Promise<Order>;
@@ -242,6 +243,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(projects.id, id))
       .returning();
     return updated || undefined;
+  }
+
+  async deleteProject(id: string): Promise<boolean> {
+    const result = await db
+      .delete(projects)
+      .where(eq(projects.id, id))
+      .returning();
+    return result.length > 0;
   }
 
   // Order operations

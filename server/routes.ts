@@ -374,6 +374,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete a project (only unpaid/generated projects can be deleted)
+  app.delete("/api/projects/:id", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { id } = req.params;
+      
+      const project = await storage.getProjectById(id);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to delete this project" });
+      }
+      
+      // Prevent deletion of paid projects
+      if (project.paidAt) {
+        return res.status(400).json({ error: "Cannot delete paid projects" });
+      }
+      
+      const deleted = await storage.deleteProject(id);
+      
+      if (deleted) {
+        res.json({ success: true, message: "Project deleted successfully" });
+      } else {
+        res.status(500).json({ error: "Failed to delete project" });
+      }
+    } catch (error) {
+      console.error("Delete project error:", error);
+      res.status(500).json({ error: "Failed to delete project" });
+    }
+  });
+
   // ==================== TEMPLATE ROUTES ====================
   
   app.get("/api/templates", async (req, res) => {
