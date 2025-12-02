@@ -245,7 +245,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.userId;
       const projects = await storage.getUserProjects(userId);
       
-      res.json(projects);
+      // Enrich projects with music information
+      const enrichedProjects = await Promise.all(projects.map(async (project: any) => {
+        let selectedMusic = null;
+        if (project.selectedMusicId) {
+          selectedMusic = await storage.getMusicById(project.selectedMusicId);
+        }
+        
+        return {
+          ...project,
+          selectedMusic: selectedMusic ? {
+            id: selectedMusic.id,
+            name: selectedMusic.name,
+            url: selectedMusic.url,
+            duration: selectedMusic.duration,
+            category: selectedMusic.category,
+          } : null,
+        };
+      }));
+      
+      res.json(enrichedProjects);
     } catch (error) {
       console.error("Get user projects error:", error);
       res.status(500).json({ error: "Failed to fetch projects" });
@@ -255,10 +274,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.userId;
-      const { templateId, customization } = req.body;
+      const { templateId, customization, selectedMusicId, customMusicUrl } = req.body;
       
       if (!templateId || !customization) {
         return res.status(400).json({ error: "Template ID and customization are required" });
+      }
+      
+      // Get template to check for default music
+      const template = await storage.getTemplateById(templateId);
+      
+      // Determine music to use:
+      // 1. If customMusicUrl provided, use it (user uploaded custom music)
+      // 2. If selectedMusicId provided, use it (user selected stock music)
+      // 3. Otherwise, use template's default music
+      let finalSelectedMusicId = selectedMusicId || null;
+      let finalCustomMusicUrl = customMusicUrl || null;
+      
+      // If no music specified by user and template has default, use template default
+      if (!selectedMusicId && !customMusicUrl && template?.defaultMusicId) {
+        finalSelectedMusicId = template.defaultMusicId;
       }
       
       const project = await storage.createProject({
@@ -266,6 +300,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         templateId,
         customization,
         status: "draft",
+        selectedMusicId: finalSelectedMusicId,
+        customMusicUrl: finalCustomMusicUrl,
       });
       
       // Increment template generation count for popularity tracking
@@ -316,7 +352,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to view this project" });
       }
       
-      res.json(project);
+      // Fetch music information if project has selectedMusicId
+      let selectedMusic = null;
+      if ((project as any).selectedMusicId) {
+        selectedMusic = await storage.getMusicById((project as any).selectedMusicId);
+      }
+      
+      res.json({
+        ...project,
+        selectedMusic: selectedMusic ? {
+          id: selectedMusic.id,
+          name: selectedMusic.name,
+          url: selectedMusic.url,
+          duration: selectedMusic.duration,
+          category: selectedMusic.category,
+        } : null,
+      });
     } catch (error) {
       console.error("Get project error:", error);
       res.status(500).json({ error: "Failed to fetch project" });
@@ -569,56 +620,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ==================== INSTANCE ROUTES ====================
-  
-  app.post("/api/instances", async (req, res) => {
+  // Upload custom music for a project
+  app.post("/api/projects/:projectId/music/upload", authMiddleware, async (req: any, res) => {
     try {
-      const { template_id, user_id, template_json, currency, amount } = req.body;
+      const userId = req.user.userId;
+      const { projectId } = req.params;
       
-      if (!template_id || !user_id || !template_json) {
-        return res.status(400).json({ error: "template_id, user_id, and template_json are required" });
+      // Verify project belongs to user
+      const project = await storage.getProjectById(projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized" });
       }
       
-      // TODO: Remove - deprecated endpoint
-      return res.status(410).json({ 
-        error: "This endpoint is deprecated. Please use /api/projects instead."
+      // Expect base64 encoded audio data and filename
+      const { audioData, filename, mimeType } = req.body;
+      
+      if (!audioData) {
+        return res.status(400).json({ error: "Audio data is required" });
+      }
+      
+      // Validate mime type
+      const allowedTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'];
+      if (mimeType && !allowedTypes.includes(mimeType)) {
+        return res.status(400).json({ error: "Invalid audio format. Allowed: MP3, WAV, OGG" });
+      }
+      
+      // Decode base64 data
+      const audioBuffer = Buffer.from(audioData, 'base64');
+      
+      // Validate file size (max 10MB)
+      if (audioBuffer.length > 10 * 1024 * 1024) {
+        return res.status(400).json({ error: "File too large. Max 10MB allowed." });
+      }
+      
+      // Create object storage client
+      const objectStorage = new Client();
+      
+      // Generate unique filename with timestamp
+      const timestamp = Date.now();
+      const safeFilename = filename?.replace(/[^a-zA-Z0-9.-]/g, '_') || 'custom_music.mp3';
+      const storagePath = `user_music/${userId}/${projectId}_${timestamp}_${safeFilename}`;
+      
+      // Upload to object storage
+      await objectStorage.uploadFromBytes(storagePath, audioBuffer);
+      
+      // Get the public URL
+      const musicUrl = `/api/media/user_music/${userId}/${projectId}_${timestamp}_${safeFilename}`;
+      
+      // Update project with custom music URL
+      await storage.updateProject(projectId, {
+        customMusicUrl: musicUrl,
+        selectedMusicId: null, // Clear stock music selection when custom is uploaded
       });
       
       res.json({
-        instance_id: customization.id,
-        status: customization.status,
+        success: true,
+        musicUrl,
+        filename: safeFilename,
       });
     } catch (error) {
-      console.error("Error creating instance:", error);
-      res.status(500).json({ error: "Failed to create instance" });
+      console.error("Error uploading custom music:", error);
+      res.status(500).json({ error: "Failed to upload music" });
     }
   });
+
+  // ==================== INSTANCE ROUTES (Deprecated) ====================
   
-  app.put("/api/instances/:id", async (req, res) => {
-    try {
-      const { template_json } = req.body;
-      
-      if (!template_json) {
-        return res.status(400).json({ error: "template_json is required" });
-      }
-      
-      // TODO: Remove - deprecated endpoint
-      return res.status(410).json({ 
-        error: "This endpoint is deprecated. Please use /api/projects/:id instead."
-      });
-      
-      if (!updated) {
-        return res.status(404).json({ error: "Instance not found" });
-      }
-      
-      res.json({
-        instance_id: updated.id,
-        status: updated.status,
-      });
-    } catch (error) {
-      console.error("Error updating instance:", error);
-      res.status(500).json({ error: "Failed to update instance" });
-    }
+  app.post("/api/instances", async (_req, res) => {
+    return res.status(410).json({ 
+      error: "This endpoint is deprecated. Please use /api/projects instead."
+    });
+  });
+  
+  app.put("/api/instances/:id", async (_req, res) => {
+    return res.status(410).json({ 
+      error: "This endpoint is deprecated. Please use /api/projects/:id instead."
+    });
   });
 
   // ==================== PAYMENT ROUTES ====================
@@ -800,6 +880,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
     return mimeTypes[ext || ''] || 'application/octet-stream';
   };
+  
+  // Serve user-uploaded custom music files
+  app.get("/api/media/user_music/:userId/:filename", async (req, res) => {
+    try {
+      const { userId, filename } = req.params;
+      const client = new Client();
+      const fileKey = `user_music/${userId}/${filename}`;
+      
+      const contentType = getContentType(filename);
+      
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000',
+        'Accept-Ranges': 'bytes',
+      });
+      
+      const stream = client.downloadAsStream(fileKey);
+      
+      stream.on('error', (error) => {
+        console.error("Stream error for user music", fileKey, ":", error);
+        if (!res.headersSent) {
+          res.status(404).json({ error: "File not found" });
+        }
+      });
+      
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving user music file:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve music file" });
+      }
+    }
+  });
   
   // Handle media files in subdirectories (e.g., Ind/music/filename.mp3)
   app.get("/api/media/Ind/music/:filename", async (req, res) => {

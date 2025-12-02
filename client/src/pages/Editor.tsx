@@ -744,6 +744,38 @@ export default function Editor() {
     }
   }, []);
   
+  // Upload custom music to object storage
+  const uploadCustomMusicToStorage = async (projId: string, file: File): Promise<string> => {
+    // Read file as base64
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1]; // Remove data:audio/... prefix
+          
+          const response = await apiRequest("POST", `/api/projects/${projId}/music/upload`, {
+            audioData: base64Data,
+            filename: file.name,
+            mimeType: file.type,
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "Failed to upload music");
+          }
+          
+          const data = await response.json();
+          resolve(data.musicUrl);
+        } catch (error) {
+          console.error("Error uploading music:", error);
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+  
   const handleMusicFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('audio/')) {
@@ -1146,6 +1178,18 @@ export default function Editor() {
         }
       }
       
+      // Load music selection from existing project
+      if (projectData.selectedMusicId) {
+        setSelectedMusicId(projectData.selectedMusicId);
+        setCustomMusicUrl(null);
+        setCustomMusicFile(null);
+      } else if (projectData.customMusicUrl) {
+        // Project has custom music - set the URL for playback
+        setCustomMusicUrl(projectData.customMusicUrl);
+        setSelectedMusicId(null);
+        // Note: customMusicFile stays null since the file is already on server
+      }
+      
       // Check if project is already paid - enable Download button
       if (projectData.paidAt) {
         setDownloadEnabled(true);
@@ -1177,11 +1221,12 @@ export default function Editor() {
       }
     }
     
-    // Initialize default music for video templates
-    if (templateData && (templateData as any).defaultMusic && !selectedMusicId && !customMusicUrl) {
+    // Initialize default music for video templates (only for new templates, not when editing)
+    // When editing a project, music is loaded from projectData effect
+    if (templateData && (templateData as any).defaultMusic && !selectedMusicId && !customMusicUrl && !isEditingProject) {
       setSelectedMusicId((templateData as any).defaultMusic.id);
     }
-  }, [templateData]);
+  }, [templateData, isEditingProject]);
 
   const handleReorderConfirm = (newOrder: string[]) => {
     // Save current state for undo
@@ -1270,20 +1315,55 @@ export default function Editor() {
 
       customizationData.images = imagePreviews;
 
+      // Prepare music data
+      // If custom music file is selected (not yet uploaded), we'll upload after project creation
+      // If stock music is selected, include selectedMusicId
+      // If custom music URL is already on server (editing), preserve it
+      // If no music changed, the backend will use template's default music
+      let musicPayload: { selectedMusicId?: string | null; customMusicUrl?: string | null } = {};
+      
+      if (customMusicFile) {
+        // Custom music will be uploaded after project creation
+        // Don't send selectedMusicId since we're using custom
+        musicPayload.selectedMusicId = null;
+      } else if (customMusicUrl && customMusicUrl.startsWith('/api/media/')) {
+        // Custom music is already on server (from previous save) - preserve it
+        musicPayload.customMusicUrl = customMusicUrl;
+        musicPayload.selectedMusicId = null;
+      } else if (selectedMusicId) {
+        musicPayload.selectedMusicId = selectedMusicId;
+      }
+
       if (projectId) {
+        // First update project with customization
         const response = await apiRequest("PUT", `/api/projects/${projectId}`, {
           customization: customizationData,
           status: "preview_requested",
+          ...musicPayload,
         });
+        
+        // If custom music file exists, upload it now
+        if (customMusicFile) {
+          await uploadCustomMusicToStorage(projectId, customMusicFile);
+        }
+        
         return response.json();
       } else {
+        // Create new project
         const response = await apiRequest("POST", "/api/projects", {
           templateId: templateData!.id,
           customization: customizationData,
           status: "preview_requested",
+          ...musicPayload,
         });
         const newProject = await response.json();
         setProjectId(newProject.id);
+        
+        // If custom music file exists, upload it now using the new project ID
+        if (customMusicFile) {
+          await uploadCustomMusicToStorage(newProject.id, customMusicFile);
+        }
+        
         return newProject;
       }
     },

@@ -111,6 +111,7 @@ export const projects = pgTable("projects", {
   previewUrl: varchar("preview_url"),
   finalUrl: varchar("final_url"),
   customMusicUrl: varchar("custom_music_url"),
+  selectedMusicId: varchar("selected_music_id").references(() => music.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   paidAt: timestamp("paid_at"),
@@ -217,6 +218,10 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   template: one(templates, {
     fields: [projects.templateId],
     references: [templates.id],
+  }),
+  selectedMusic: one(music, {
+    fields: [projects.selectedMusicId],
+    references: [music.id],
   }),
   userTemplates: many(userTemplates),
   orders: many(orders),

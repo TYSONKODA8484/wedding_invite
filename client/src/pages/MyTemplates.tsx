@@ -3,12 +3,20 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Edit, Share2, Eye, FileImage, Film } from "lucide-react";
+import { Download, Edit, Share2, Eye, FileImage, Film, Music } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VideoPreviewModal } from "@/components/VideoPreviewModal";
 import { PaymentModal } from "@/components/PaymentModal";
 import { queryClient } from "@/lib/queryClient";
+
+interface MusicInfo {
+  id: string;
+  name: string;
+  url: string;
+  duration: number;
+  category: string;
+}
 
 interface Project {
   id: string;
@@ -29,6 +37,9 @@ interface Project {
   createdAt: Date;
   updatedAt: Date;
   paidAt: Date | null;
+  selectedMusicId: string | null;
+  customMusicUrl: string | null;
+  selectedMusic: MusicInfo | null;
 }
 
 export default function MyTemplates() {
@@ -234,7 +245,7 @@ export default function MyTemplates() {
           )}
         </div>
         
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 left-3 flex flex-col gap-1">
           <Badge 
             variant="secondary" 
             className="bg-black/60 backdrop-blur-sm text-white border-none"
@@ -246,6 +257,21 @@ export default function MyTemplates() {
               <><Film className="h-3 w-3 mr-1" /> Video</>
             )}
           </Badge>
+          {/* Show music badge for video templates */}
+          {project.templateType === "video" && (project.selectedMusic || project.customMusicUrl) && (
+            <Badge 
+              variant="secondary" 
+              className="bg-black/60 backdrop-blur-sm text-white border-none text-[10px]"
+              data-testid={`badge-music-${project.id}`}
+            >
+              <Music className="h-2.5 w-2.5 mr-1" />
+              {project.selectedMusic ? (
+                <span className="truncate max-w-[80px]">{project.selectedMusic.name}</span>
+              ) : (
+                <span>Custom Music</span>
+              )}
+            </Badge>
+          )}
         </div>
       </div>
       
