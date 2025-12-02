@@ -1612,7 +1612,7 @@ export default function Editor() {
       <ReorderPagesModal
         isOpen={showReorderModal}
         onClose={() => setShowReorderModal(false)}
-        pages={rawPages}
+        pages={pages}
         onConfirm={handleReorderConfirm}
       />
 
