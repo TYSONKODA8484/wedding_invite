@@ -719,12 +719,16 @@ export default function Editor() {
   // Get current music name
   const getCurrentMusicName = useCallback(() => {
     if (customMusicFile) return customMusicFile.name;
+    // Check for saved custom music URL (from server)
+    if (customMusicUrl && customMusicUrl.startsWith('/api/media/')) {
+      return 'Custom Music';
+    }
     if (selectedMusicId && musicLibrary?.music) {
       const track = musicLibrary.music.find(m => m.id === selectedMusicId);
       return track?.name || 'Default Music';
     }
     return 'No music selected';
-  }, [selectedMusicId, musicLibrary, customMusicFile]);
+  }, [selectedMusicId, musicLibrary, customMusicFile, customMusicUrl]);
   
   // Get current music duration from library (for stock tracks) or from audio element (for custom uploads)
   const getDisplayDuration = useCallback(() => {
@@ -1179,6 +1183,7 @@ export default function Editor() {
       }
       
       // Load music selection from existing project
+      // Priority: selectedMusicId > customMusicUrl > selectedMusic (hydrated) > template default
       if (projectData.selectedMusicId) {
         setSelectedMusicId(projectData.selectedMusicId);
         setCustomMusicUrl(null);
@@ -1188,6 +1193,11 @@ export default function Editor() {
         setCustomMusicUrl(projectData.customMusicUrl);
         setSelectedMusicId(null);
         // Note: customMusicFile stays null since the file is already on server
+      } else if (projectData.selectedMusic?.id) {
+        // Use hydrated selectedMusic if available (for display consistency)
+        setSelectedMusicId(projectData.selectedMusic.id);
+        setCustomMusicUrl(null);
+        setCustomMusicFile(null);
       }
       
       // Check if project is already paid - enable Download button
@@ -1221,12 +1231,13 @@ export default function Editor() {
       }
     }
     
-    // Initialize default music for video templates (only for new templates, not when editing)
-    // When editing a project, music is loaded from projectData effect
-    if (templateData && (templateData as any).defaultMusic && !selectedMusicId && !customMusicUrl && !isEditingProject) {
+    // Initialize default music for video templates
+    // For new templates: use template's default music
+    // For editing projects: only use template default if project has no music saved (fallback for older projects)
+    if (templateData && (templateData as any).defaultMusic && !selectedMusicId && !customMusicUrl) {
       setSelectedMusicId((templateData as any).defaultMusic.id);
     }
-  }, [templateData, isEditingProject]);
+  }, [templateData, selectedMusicId, customMusicUrl]);
 
   const handleReorderConfirm = (newOrder: string[]) => {
     // Save current state for undo
@@ -1950,7 +1961,7 @@ export default function Editor() {
               data-testid="button-upload-music"
             >
               <Music className="w-4 h-4 mr-2" />
-              {selectedMusicId || customMusicFile ? 'Change Music' : 'Add Music'}
+              {selectedMusicId || customMusicFile || (customMusicUrl && customMusicUrl.startsWith('/api/media/')) ? 'Change Music' : 'Add Music'}
             </Button>
           )}
           <Button 
