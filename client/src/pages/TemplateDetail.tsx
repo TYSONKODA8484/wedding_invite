@@ -193,15 +193,16 @@ export default function TemplateDetail() {
         ogImage={template.thumbnailUrl}
       />
 
-      <section className="py-3 lg:py-4 bg-background border-b">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+      <section className="py-4 lg:py-6 bg-background border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Preview Section - Takes 2/3 of the width on desktop */}
             <div 
-              className="w-full lg:flex-[1.5] lg:max-w-[380px]"
+              className="lg:col-span-2"
               data-testid="template-preview"
             >
               {template.templateType === "video" ? (
-                <div className="aspect-[16/9] rounded-lg overflow-hidden shadow-lg bg-black">
+                <div className="aspect-[16/9] rounded-xl overflow-hidden shadow-xl bg-black border border-border/50">
                   <iframe
                     className="w-full h-full"
                     src={youtubeVideoId 
@@ -216,9 +217,10 @@ export default function TemplateDetail() {
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center">
-                  <div className="relative w-full max-w-[280px]">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-3">
+                <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
+                  {/* Main Card Preview */}
+                  <div className="relative w-full max-w-[320px] lg:max-w-[360px]">
+                    <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4">
                       <div className="relative w-full h-full">
                         {pages.length > 1 && (
                           <>
@@ -239,60 +241,24 @@ export default function TemplateDetail() {
                     </div>
                     
                     {pages.length > 1 && (
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
+                      <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
                         <Layers className="w-3.5 h-3.5" />
                         <span className="text-xs font-medium">{pages.length} pages</span>
                       </div>
                     )}
                   </div>
                   
+                  {/* Page Thumbnails - Vertical on desktop */}
                   {pages.length > 1 && (
-                    <>
-                      <div className="flex items-center justify-center gap-2 mt-2 w-full">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-full"
-                          onClick={() => setSelectedPageIndex(prev => prev > 0 ? prev - 1 : pages.length - 1)}
-                          data-testid="button-prev-page"
-                        >
-                          <ChevronLeft className="h-3 w-3" />
-                        </Button>
-                        
-                        <div className="flex gap-1.5">
-                          {pages.map((_: any, index: number) => (
-                            <button
-                              key={index}
-                              onClick={() => setSelectedPageIndex(index)}
-                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                selectedPageIndex === index 
-                                  ? 'bg-primary scale-110' 
-                                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-                              }`}
-                              data-testid={`button-page-${index}`}
-                            />
-                          ))}
-                        </div>
-                        
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-full"
-                          onClick={() => setSelectedPageIndex(prev => prev < pages.length - 1 ? prev + 1 : 0)}
-                          data-testid="button-next-page"
-                        >
-                          <ChevronRight className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      
-                      <div className="flex gap-1.5 mt-3 justify-center w-full">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex lg:flex-col gap-2">
                         {pages.map((page: any, index: number) => (
                           <button
                             key={index}
                             onClick={() => setSelectedPageIndex(index)}
-                            className={`flex-shrink-0 w-10 h-14 rounded overflow-hidden border-2 transition-all duration-200 ${
+                            className={`flex-shrink-0 w-12 h-16 lg:w-14 lg:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 shadow-sm ${
                               selectedPageIndex === index 
-                                ? 'border-primary ring-1 ring-primary/20' 
+                                ? 'border-primary ring-2 ring-primary/20 scale-105' 
                                 : 'border-border hover:border-primary/50'
                             }`}
                             data-testid={`thumbnail-page-${index}`}
@@ -305,7 +271,31 @@ export default function TemplateDetail() {
                           </button>
                         ))}
                       </div>
-                    </>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => setSelectedPageIndex(prev => prev > 0 ? prev - 1 : pages.length - 1)}
+                          data-testid="button-prev-page"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        <span className="text-xs text-muted-foreground min-w-[40px] text-center">
+                          {selectedPageIndex + 1} / {pages.length}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-full"
+                          onClick={() => setSelectedPageIndex(prev => prev < pages.length - 1 ? prev + 1 : 0)}
+                          data-testid="button-next-page"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -330,7 +320,8 @@ export default function TemplateDetail() {
               </div>
             </div>
 
-            <div className="lg:flex-1">
+            {/* Info Section - Takes 1/3 of the width on desktop */}
+            <div className="lg:col-span-1">
               <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2" data-testid="text-template-title">
                 {template.templateName}
               </h1>
