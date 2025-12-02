@@ -154,10 +154,10 @@ export default function CulturePage() {
   const culture = cultureData[slug] || cultureData["indian-wedding-video-invitation"];
 
   const templates = [
-    { id: "1", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: culture.heroImage, isPremium: true, templateType: "video" as const },
-    { id: "2", title: "Cultural Heritage", slug: "cultural-heritage", category: "wedding", duration: 50, thumbnailUrl: culture.heroImage, isPremium: true, templateType: "video" as const },
-    { id: "3", title: "Modern Fusion", slug: "modern-fusion", category: "wedding", duration: 45, thumbnailUrl: culture.heroImage, isPremium: false, templateType: "card" as const },
-    { id: "4", title: "Classic Traditions", slug: "classic-traditions", category: "wedding", duration: 55, thumbnailUrl: culture.heroImage, isPremium: false, templateType: "video" as const },
+    { id: "1", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: culture.heroImage, isPremium: true, templateType: "video" as const, pageCount: 1 },
+    { id: "2", title: "Cultural Heritage", slug: "cultural-heritage", category: "wedding", duration: 50, thumbnailUrl: culture.heroImage, isPremium: true, templateType: "video" as const, pageCount: 1 },
+    { id: "3", title: "Modern Fusion", slug: "modern-fusion", category: "wedding", duration: 45, thumbnailUrl: culture.heroImage, isPremium: false, templateType: "card" as const, pageCount: 4 },
+    { id: "4", title: "Classic Traditions", slug: "classic-traditions", category: "wedding", duration: 55, thumbnailUrl: culture.heroImage, isPremium: false, templateType: "video" as const, pageCount: 1 },
   ];
 
   return (

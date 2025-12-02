@@ -20,7 +20,10 @@ import {
   Download,
   Globe,
   Palette,
-  Phone
+  Phone,
+  ChevronLeft,
+  ChevronRight,
+  Layers
 } from "lucide-react";
 import type { Template } from "@shared/schema";
 
@@ -52,6 +55,7 @@ export default function TemplateDetail() {
   const [, navigate] = useLocation();
   const slug = params?.slug;
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [selectedPageIndex, setSelectedPageIndex] = useState(0);
 
   const { data: template, isLoading, error } = useQuery<any>({
     queryKey: ["/api/templates", slug],
@@ -182,8 +186,8 @@ export default function TemplateDetail() {
   return (
     <>
       <SEOHead
-        title={`${template.templateName} | ${templateType} Video Invitation`}
-        description={`${template.templateName} - Beautiful ${templateType} video invitation template. Perfect for WhatsApp sharing. Download in HD. ${displayPrice}.`}
+        title={`${template.templateName} | ${template.templateType === "video" ? "Video" : "Digital Card"} Invitation`}
+        description={`${template.templateName} - Beautiful ${template.templateType === "video" ? "video" : "digital card"} invitation template. Perfect for WhatsApp sharing. ${template.templateType === "video" ? "Download in HD" : `${pages.length} beautifully designed pages`}. ${displayPrice}.`}
         keywords={tags.join(", ")}
         schema={[videoSchema, productSchema]}
         ogImage={template.thumbnailUrl}
@@ -196,21 +200,118 @@ export default function TemplateDetail() {
               className="w-full lg:flex-[2] lg:max-w-[550px]"
               data-testid="template-preview"
             >
-              <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg bg-black">
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/WvfNvhFcjK8?rel=0"
-                  title={template.templateName}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  data-testid="youtube-video"
-                />
-              </div>
+              {template.templateType === "video" ? (
+                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg bg-black">
+                  <iframe
+                    className="w-full h-full"
+                    src={youtubeVideoId 
+                      ? `https://www.youtube.com/embed/${youtubeVideoId}?rel=0`
+                      : "https://www.youtube.com/embed/WvfNvhFcjK8?rel=0"
+                    }
+                    title={template.templateName}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    data-testid="youtube-video"
+                  />
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4">
+                    <div className="relative w-full h-full">
+                      {pages.length > 1 && (
+                        <>
+                          <div className="absolute inset-0 rounded-lg shadow-lg transform rotate-2 translate-x-2 -translate-y-1 opacity-40 bg-card border border-border" />
+                          <div className="absolute inset-0 rounded-lg shadow-lg transform -rotate-1 -translate-x-1 translate-y-1 opacity-60 bg-card border border-border" />
+                        </>
+                      )}
+                      <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl border border-border/50 bg-white dark:bg-card">
+                        <img
+                          src={pages[selectedPageIndex]?.thumbnailUrl || template.thumbnailUrl}
+                          alt={`${template.templateName} - Page ${selectedPageIndex + 1}`}
+                          className="w-full h-full object-cover"
+                          data-testid="card-preview-image"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {pages.length > 1 && (
+                    <>
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
+                        <Layers className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">{pages.length} pages</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-center gap-3 mt-4">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 rounded-full"
+                          onClick={() => setSelectedPageIndex(prev => prev > 0 ? prev - 1 : pages.length - 1)}
+                          data-testid="button-prev-page"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        
+                        <div className="flex gap-2">
+                          {pages.map((_: any, index: number) => (
+                            <button
+                              key={index}
+                              onClick={() => setSelectedPageIndex(index)}
+                              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                                selectedPageIndex === index 
+                                  ? 'bg-primary scale-110' 
+                                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                              }`}
+                              data-testid={`button-page-${index}`}
+                            />
+                          ))}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 rounded-full"
+                          onClick={() => setSelectedPageIndex(prev => prev < pages.length - 1 ? prev + 1 : 0)}
+                          data-testid="button-next-page"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                        {pages.map((page: any, index: number) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedPageIndex(index)}
+                            className={`flex-shrink-0 w-14 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                              selectedPageIndex === index 
+                                ? 'border-primary ring-2 ring-primary/20' 
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                            data-testid={`thumbnail-page-${index}`}
+                          >
+                            <img
+                              src={page.thumbnailUrl || template.thumbnailUrl}
+                              alt={`Page ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               
               <div className="mt-4">
                 <p className="text-sm text-muted-foreground">
-                  This {template.templateName} video will best fit & visible on every screen. Easy to share, Try this new, elegant, and unique style of invitation.
+                  {template.templateType === "video" 
+                    ? `This ${template.templateName} video will best fit & visible on every screen. Easy to share, Try this new, elegant, and unique style of invitation.`
+                    : `This beautiful ${template.templateName} card invitation features ${pages.length} elegantly designed pages. Perfect for sharing via WhatsApp or print.`
+                  }
                 </p>
                 <button 
                   onClick={() => setShowFullDescription(!showFullDescription)}
@@ -260,7 +361,11 @@ export default function TemplateDetail() {
                 </div>
                 <div className="flex items-start gap-3">
                   <Download className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">Download high quality video.</span>
+                  <span className="text-sm text-foreground">
+                    {template.templateType === "video" 
+                      ? "Download high quality video."
+                      : "Download high quality digital cards."}
+                  </span>
                 </div>
               </div>
 
@@ -290,29 +395,54 @@ export default function TemplateDetail() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">What to do next ?</h2>
           <div className="space-y-3">
+            {template.templateType === "video" ? (
+              <>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-sm text-foreground">Click on "Start Free Customization" to edit video yourself.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-sm text-foreground">Upload your event details, photos and music and click on "Generate Preview" to create video.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-sm text-foreground">System will create the video in minutes and provide an instant preview.</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-sm text-foreground">Click on "Start Free Customization" to personalize your card invitation.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-sm text-foreground">Edit each page with your event details, names, dates, and photos.</p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                  <p className="text-sm text-foreground">Preview your complete {pages.length}-page card and download high-quality images.</p>
+                </div>
+              </>
+            )}
             <div className="flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-white" />
               </div>
-              <p className="text-sm text-foreground">Click on "Customize by myself video" to edit video yourself.</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-sm text-foreground">Upload your event details, photos and music and click on "Preview video" to create video.</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-sm text-foreground">System will create the video in minutes and provide an instant preview.</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-              <p className="text-sm text-foreground">Click on "Expert create" to request 247Invites team to create video for you with additional customization.</p>
+              <p className="text-sm text-foreground">Click on "Expert create" to request our team to create it for you with additional customization.</p>
             </div>
           </div>
         </div>

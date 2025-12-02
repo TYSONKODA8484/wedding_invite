@@ -398,23 +398,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limitNum = limit ? parseInt(limit as string, 10) : 25;
       const paginatedTemplates = filteredTemplates.slice(offsetNum, offsetNum + limitNum);
       
-      const templateList = paginatedTemplates.map(t => ({
-        id: t.id,
-        title: t.templateName,
-        slug: t.slug,
-        templateType: t.templateType,
-        category: t.category,
-        subcategory: t.subcategory,
-        duration: t.durationSec,
-        thumbnailUrl: t.thumbnailUrl,
-        demoVideoUrl: t.previewVideoUrl,
-        priceInr: Math.floor(parseFloat(t.price) * 100),
-        tags: t.templateTags,
-        orientation: t.orientation,
-        photoOption: t.photoOption,
-        isPremium: parseFloat(t.price) >= 2000,
-        popularityScore: t.popularityScore || 0,
-      }));
+      const templateList = paginatedTemplates.map(t => {
+        const templateJson = typeof t.templateJson === 'string' 
+          ? JSON.parse(t.templateJson) 
+          : t.templateJson;
+        const pageCount = templateJson?.pages?.length || 1;
+        
+        return {
+          id: t.id,
+          title: t.templateName,
+          slug: t.slug,
+          templateType: t.templateType,
+          category: t.category,
+          subcategory: t.subcategory,
+          duration: t.durationSec,
+          thumbnailUrl: t.thumbnailUrl,
+          demoVideoUrl: t.previewVideoUrl,
+          priceInr: Math.floor(parseFloat(t.price) * 100),
+          tags: t.templateTags,
+          orientation: t.orientation,
+          photoOption: t.photoOption,
+          isPremium: parseFloat(t.price) >= 2000,
+          popularityScore: t.popularityScore || 0,
+          pageCount: pageCount,
+        };
+      });
       
       // Return paginated response with metadata
       res.json({

@@ -667,6 +667,7 @@ export default function Templates() {
                     demoVideoUrl={template.demoVideoUrl}
                     templateType={template.templateType}
                     isPremium={template.isPremium}
+                    pageCount={template.pageCount}
                   />
                 ))}
                 

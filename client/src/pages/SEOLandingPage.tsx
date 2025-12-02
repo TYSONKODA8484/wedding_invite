@@ -602,6 +602,7 @@ export default function SEOLandingPage() {
                   demoVideoUrl={template.previewVideoUrl}
                   templateType={template.templateType as "video" | "card"}
                   isPremium={Number(template.price) > 150000}
+                  pageCount={(template.templateJson as any)?.pages?.length || 1}
                 />
               ))}
             </div>
