@@ -484,7 +484,11 @@ export default function MyTemplates() {
       <VideoPreviewModal
         open={showVideoModal}
         onOpenChange={setShowVideoModal}
-        videoUrl={selectedVideoProject?.previewVideoUrl || null}
+        videoUrl={
+          selectedVideoProject?.isPaid 
+            ? (selectedVideoProject?.finalUrl || selectedVideoProject?.previewUrl || selectedVideoProject?.previewVideoUrl || null)
+            : (selectedVideoProject?.previewUrl || selectedVideoProject?.previewVideoUrl || null)
+        }
         templateName={selectedVideoProject?.templateName || ""}
         orientation={selectedVideoProject?.orientation || "portrait"}
       />
