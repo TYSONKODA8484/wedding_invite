@@ -216,35 +216,39 @@ export default function TemplateDetail() {
                   />
                 </div>
               ) : (
-                <div className="relative">
-                  <div className="aspect-[3/4] max-h-[50vh] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-3">
-                    <div className="relative w-full h-full">
-                      {pages.length > 1 && (
-                        <>
-                          <div className="absolute inset-0 rounded-lg shadow-lg transform rotate-2 translate-x-2 -translate-y-1 opacity-40 bg-card border border-border" />
-                          <div className="absolute inset-0 rounded-lg shadow-lg transform -rotate-1 -translate-x-1 translate-y-1 opacity-60 bg-card border border-border" />
-                        </>
-                      )}
-                      <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl border border-border/50 bg-white dark:bg-card">
-                        <img
-                          src={pages[selectedPageIndex]?.thumbnailUrl || template.thumbnailUrl}
-                          alt={`${template.templateName} - Page ${selectedPageIndex + 1}`}
-                          className="w-full h-full object-cover"
-                          data-testid="card-preview-image"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                <div className="flex flex-col items-center">
+                  <div className="relative w-full max-w-[280px]">
+                    <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-3">
+                      <div className="relative w-full h-full">
+                        {pages.length > 1 && (
+                          <>
+                            <div className="absolute inset-0 rounded-lg shadow-lg transform rotate-2 translate-x-2 -translate-y-1 opacity-40 bg-card border border-border" />
+                            <div className="absolute inset-0 rounded-lg shadow-lg transform -rotate-1 -translate-x-1 translate-y-1 opacity-60 bg-card border border-border" />
+                          </>
+                        )}
+                        <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl border border-border/50 bg-white dark:bg-card">
+                          <img
+                            src={pages[selectedPageIndex]?.thumbnailUrl || template.thumbnailUrl}
+                            alt={`${template.templateName} - Page ${selectedPageIndex + 1}`}
+                            className="w-full h-full object-cover"
+                            data-testid="card-preview-image"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {pages.length > 1 && (
-                    <>
+                    
+                    {pages.length > 1 && (
                       <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
                         <Layers className="w-3.5 h-3.5" />
                         <span className="text-xs font-medium">{pages.length} pages</span>
                       </div>
-                      
-                      <div className="flex items-center justify-center gap-2 mt-2">
+                    )}
+                  </div>
+                  
+                  {pages.length > 1 && (
+                    <>
+                      <div className="flex items-center justify-center gap-2 mt-2 w-full">
                         <Button
                           variant="outline"
                           size="icon"
@@ -281,7 +285,7 @@ export default function TemplateDetail() {
                         </Button>
                       </div>
                       
-                      <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1 justify-center">
+                      <div className="flex gap-1.5 mt-3 justify-center w-full">
                         {pages.map((page: any, index: number) => (
                           <button
                             key={index}
