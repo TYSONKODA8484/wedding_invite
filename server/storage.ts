@@ -194,15 +194,13 @@ export class DatabaseStorage implements IStorage {
       // Use project-specific URLs if available, fall back to template video
       const videoUrl = row.project.previewUrl || row.project.finalUrl || row.template?.previewVideoUrl;
       
-      // Object storage URLs for card/video preview/final files
-      // These are only populated when files actually exist in object storage
-      // Currently using legacy previewUrl/finalUrl until object storage integration is complete
-      // Future: These will be populated by the generation pipeline when files are uploaded
+      // Read type-specific URLs directly from database columns
+      // These are populated by the generation pipeline when files are uploaded to object storage
       // Pattern: /objects/projects/{projectId}/{card|video}_{preview|final}.{ext}
-      const cardPreviewUrl = templateType === 'card' ? row.project.previewUrl : null;
-      const cardFinalUrl = templateType === 'card' ? row.project.finalUrl : null;
-      const videoPreviewUrl = templateType === 'video' ? row.project.previewUrl : null;
-      const videoFinalUrl = templateType === 'video' ? row.project.finalUrl : null;
+      const cardPreviewUrl = row.project.cardPreviewUrl || null;
+      const cardFinalUrl = row.project.cardFinalUrl || null;
+      const videoPreviewUrl = row.project.videoPreviewUrl || null;
+      const videoFinalUrl = row.project.videoFinalUrl || null;
       
       return {
         id: row.project.id,

@@ -329,6 +329,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to update this project" });
       }
       
+      // If previewUrl or finalUrl are being set, also set the type-specific columns
+      // based on template type (card vs video)
+      if (updates.previewUrl || updates.finalUrl) {
+        const template = await storage.getTemplateById(existingProject.templateId);
+        const isCard = template?.templateType === 'card';
+        
+        if (updates.previewUrl) {
+          if (isCard) {
+            updates.cardPreviewUrl = updates.previewUrl;
+          } else {
+            updates.videoPreviewUrl = updates.previewUrl;
+          }
+        }
+        
+        if (updates.finalUrl) {
+          if (isCard) {
+            updates.cardFinalUrl = updates.finalUrl;
+          } else {
+            updates.videoFinalUrl = updates.finalUrl;
+          }
+        }
+      }
+      
       const updatedProject = await storage.updateProject(id, updates);
       
       res.json(updatedProject);
@@ -879,11 +902,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedProject = await storage.getProjectById(order.projectId);
       const template = await storage.getTemplateById(order.templateId);
       
+      // Determine download URL based on template type (card vs video)
+      const isCard = template?.templateType === 'card';
+      const downloadUrl = isCard
+        ? (updatedProject?.cardFinalUrl || updatedProject?.finalUrl || updatedProject?.previewUrl)
+        : (updatedProject?.videoFinalUrl || updatedProject?.finalUrl || updatedProject?.previewUrl || template?.previewVideoUrl);
+      
       res.json({
         success: true,
         message: "Payment verified successfully",
         projectId: order.projectId,
-        downloadUrl: updatedProject?.finalUrl || updatedProject?.previewUrl || template?.previewVideoUrl || null,
+        downloadUrl: downloadUrl || null,
         templateName: template?.templateName || "Video",
       });
     } catch (error) {
