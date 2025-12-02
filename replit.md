@@ -59,6 +59,28 @@ Features:
 - **Actual File Download**: Uses `finalUrl` or `previewUrl` for paid template downloads
 - **Cross-Platform Share**: Web Share API with clipboard fallback for all devices
 
+### Music System (December 2025)
+Video templates now include background music support with:
+
+**Database Schema:**
+- `music` table: Stock music library with id, name, url, duration, category (wedding/birthday)
+- `templates.defaultMusicId`: Links video templates to default background music
+- `projects.customMusicUrl`: User-uploaded custom music stored per-project
+
+**Stock Music Library (6 tracks in object storage):**
+- Wedding: Epic Love Romantic, Hopeful Acoustic, Enchanted Music
+- Birthday: Magical Orchestral, Orchestral Joy, Uplifting Corporate
+
+**API Endpoints:**
+- GET `/api/music` - Returns full music library
+- GET `/api/music/:id` - Returns single music track details
+- GET `/api/templates/:id` now includes `defaultMusic` object for video templates
+
+**Next: Editor UI Implementation**
+- Music playback controls (play/pause, progress bar)
+- Music library selection modal
+- Custom music upload via Uppy
+
 ### Design System & SEO
 The design emphasizes a premium, cinematic aesthetic with generous whitespace, elegant animations, and video-centric layouts optimized for mobile. Culturally authentic elements are incorporated. SEO targets India, UAE, and Saudi Arabia with an enhanced `SEOHead` component, WhatsApp-optimized Open Graph tags, mobile-first meta tags, `hreflang`, and comprehensive schema markup.
 
