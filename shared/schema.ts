@@ -110,6 +110,11 @@ export const projects = pgTable("projects", {
   status: varchar("status").notNull().default("draft"), // draft, preview_requested, rendering, completed
   previewUrl: varchar("preview_url"),
   finalUrl: varchar("final_url"),
+  // Type-specific URLs for object storage (card vs video templates)
+  cardPreviewUrl: varchar("card_preview_url"),
+  cardFinalUrl: varchar("card_final_url"),
+  videoPreviewUrl: varchar("video_preview_url"),
+  videoFinalUrl: varchar("video_final_url"),
   customMusicUrl: varchar("custom_music_url"),
   selectedMusicId: varchar("selected_music_id").references(() => music.id),
   createdAt: timestamp("created_at").defaultNow(),
