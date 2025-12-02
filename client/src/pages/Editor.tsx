@@ -1180,6 +1180,11 @@ export default function Editor() {
         if (projectData.customization.images) {
           setImagePreviews(projectData.customization.images);
         }
+        
+        // Load saved page order (includes deletions and reordering)
+        if (projectData.customization.pageOrder && Array.isArray(projectData.customization.pageOrder)) {
+          setOrderedPageIds(projectData.customization.pageOrder);
+        }
       }
       
       // Load music selection from existing project
@@ -1226,6 +1231,9 @@ export default function Editor() {
         }
       });
       
+      // Set default page order:
+      // - For new templates: use all template pages in order
+      // - For editing projects: use saved pageOrder, or fall back to template pages if not saved (older projects)
       if (orderedPageIds.length === 0) {
         setOrderedPageIds(templateData.pages.map((p: any) => p.id));
       }
@@ -1237,7 +1245,7 @@ export default function Editor() {
     if (templateData && (templateData as any).defaultMusic && !selectedMusicId && !customMusicUrl) {
       setSelectedMusicId((templateData as any).defaultMusic.id);
     }
-  }, [templateData, selectedMusicId, customMusicUrl]);
+  }, [templateData, selectedMusicId, customMusicUrl, isEditingProject, orderedPageIds.length]);
 
   const handleReorderConfirm = (newOrder: string[]) => {
     // Save current state for undo
@@ -1308,13 +1316,15 @@ export default function Editor() {
         throw new Error("Not authenticated");
       }
 
-      const pages = templateData!.pages || [];
+      const allPages = templateData!.pages || [];
       const customizationData: Record<string, any> = {
         pages: {},
         images: {},
+        pageOrder: orderedPageIds, // Save the current page order (includes deletions)
       };
 
-      for (const page of pages) {
+      // Save field values for all pages (in case user undoes deletion later)
+      for (const page of allPages) {
         const pageFieldValues: Record<string, string> = {};
         for (const field of page.editableFields) {
           const fieldKey = `${page.id}_${field.id}`;
