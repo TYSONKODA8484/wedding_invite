@@ -6,12 +6,14 @@ import {
   userTemplates,
   orders,
   payments,
+  music,
   type InsertUser, 
   type InsertTemplate,
   type InsertProject,
   type InsertUserTemplate,
   type InsertOrder,
-  type InsertPayment
+  type InsertPayment,
+  type InsertMusic
 } from "@shared/schema";
 import * as bcrypt from "bcryptjs";
 
@@ -19,6 +21,24 @@ export async function seed() {
   console.log("🌱 Seeding database...");
 
   try {
+    // Seed Music Library (stock music for video templates)
+    const musicTracks: InsertMusic[] = [
+      { name: "Epic Love Romantic", url: "Ind/music/epic-love-inspirational-romantic-cinematic-30-seconds-406069.mp3", duration: 30, category: "wedding" },
+      { name: "Hopeful Acoustic", url: "Ind/music/hopeful-acoustic-travel-30-seconds-368800.mp3", duration: 30, category: "wedding" },
+      { name: "Magical Orchestral", url: "Ind/music/magical-dramedy-orchestral-sneaky-spell-30-sec-375796.mp3", duration: 30, category: "birthday" },
+      { name: "Orchestral Joy", url: "Ind/music/orchestral-joy-30-sec-423312.mp3", duration: 30, category: "birthday" },
+      { name: "Enchanted Music", url: "Ind/music/sneaky-art-30-sec-enchanted-music-426698.mp3", duration: 30, category: "wedding" },
+      { name: "Uplifting Corporate", url: "Ind/music/uplifting-feelgood-30-seconds-corporate-430728.mp3", duration: 30, category: "birthday" },
+    ];
+
+    const insertedMusic = await db
+      .insert(music)
+      .values(musicTracks)
+      .onConflictDoNothing()
+      .returning();
+    
+    console.log(`✅ ${insertedMusic.length} music tracks seeded`);
+
     // Create User 1: Has PAID for a template
     const user1PasswordHash = await bcrypt.hash("Test@1234", 10);
     const [user1] = await db
@@ -1159,6 +1179,7 @@ export async function seed() {
 
     console.log("✅ Database seeded successfully!");
     console.log("\n📊 Summary:");
+    console.log("- 6 Music tracks: wedding & birthday categories");
     console.log("- 2 Users: Aarti (PAID), Rajesh (NOT PAID)");
     console.log("- 2 Templates: Indian Hindu Wedding templates");
     console.log("- 2 Projects: 1 completed & paid, 1 draft");

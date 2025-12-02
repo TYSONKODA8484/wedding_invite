@@ -7,6 +7,7 @@ import {
   orders,
   payments,
   userTemplates,
+  music,
   type User,
   type InsertUser,
   type Template,
@@ -19,6 +20,8 @@ import {
   type InsertPayment,
   type UserTemplate,
   type InsertUserTemplate,
+  type Music,
+  type InsertMusic,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -60,6 +63,10 @@ export interface IStorage {
   // Popularity tracking operations
   incrementTemplateGeneration(templateId: string): Promise<Template | undefined>;
   incrementTemplatePurchase(templateId: string): Promise<Template | undefined>;
+  
+  // Music operations
+  getMusicLibrary(category?: string): Promise<Music[]>;
+  getMusicById(id: string): Promise<Music | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -324,6 +331,25 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated || undefined;
+  }
+
+  // Music operations
+  async getMusicLibrary(category?: string): Promise<Music[]> {
+    if (category) {
+      return await db
+        .select()
+        .from(music)
+        .where(eq(music.category, category));
+    }
+    return await db.select().from(music);
+  }
+
+  async getMusicById(id: string): Promise<Music | undefined> {
+    const [track] = await db
+      .select()
+      .from(music)
+      .where(eq(music.id, id));
+    return track || undefined;
   }
 }
 

@@ -477,6 +477,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const priceInr = parseFloat(template.price);
       
+      // Fetch default music if template is a video
+      let defaultMusic = null;
+      if (template.templateType === 'video' && (template as any).defaultMusicId) {
+        defaultMusic = await storage.getMusicById((template as any).defaultMusicId);
+      }
+      
       res.json({
         id: template.id,
         templateName: template.templateName,
@@ -504,10 +510,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pageCount: pages.length,
         templateJson: template.templateJson,
         pages: pages, // Add pages array for editor
+        defaultMusicId: (template as any).defaultMusicId,
+        defaultMusic: defaultMusic ? {
+          id: defaultMusic.id,
+          name: defaultMusic.name,
+          url: defaultMusic.url,
+          duration: defaultMusic.duration,
+          category: defaultMusic.category,
+        } : null,
       });
     } catch (error) {
       console.error("Error fetching template:", error);
       res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  // ==================== MUSIC ROUTES ====================
+  
+  app.get("/api/music", async (req, res) => {
+    try {
+      const { category } = req.query;
+      const musicList = await storage.getMusicLibrary(category as string | undefined);
+      
+      res.json({
+        music: musicList.map(m => ({
+          id: m.id,
+          name: m.name,
+          url: m.url,
+          duration: m.duration,
+          category: m.category,
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching music:", error);
+      res.status(500).json({ error: "Failed to fetch music library" });
+    }
+  });
+
+  app.get("/api/music/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const track = await storage.getMusicById(id);
+      
+      if (!track) {
+        return res.status(404).json({ error: "Music track not found" });
+      }
+      
+      res.json({
+        id: track.id,
+        name: track.name,
+        url: track.url,
+        duration: track.duration,
+        category: track.category,
+      });
+    } catch (error) {
+      console.error("Error fetching music track:", error);
+      res.status(500).json({ error: "Failed to fetch music track" });
     }
   });
 

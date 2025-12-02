@@ -47,6 +47,24 @@ export const insertUserSchema = createInsertSchema(users).omit({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Music library table (stock/default music for video templates)
+export const music = pgTable("music", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  url: varchar("url").notNull(),
+  duration: integer("duration").notNull().default(30),
+  category: varchar("category").notNull().default("wedding"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertMusicSchema = createInsertSchema(music).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertMusic = z.infer<typeof insertMusicSchema>;
+export type Music = typeof music.$inferSelect;
+
 // Templates table
 export const templates = pgTable("templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -71,6 +89,7 @@ export const templates = pgTable("templates", {
   popularityScore: integer("popularity_score").notNull().default(0),
   totalGenerations: integer("total_generations").notNull().default(0),
   totalPurchases: integer("total_purchases").notNull().default(0),
+  defaultMusicId: varchar("default_music_id").references(() => music.id),
 });
 
 export const insertTemplateSchema = createInsertSchema(templates).omit({
@@ -91,6 +110,7 @@ export const projects = pgTable("projects", {
   status: varchar("status").notNull().default("draft"), // draft, preview_requested, rendering, completed
   previewUrl: varchar("preview_url"),
   finalUrl: varchar("final_url"),
+  customMusicUrl: varchar("custom_music_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   paidAt: timestamp("paid_at"),
@@ -176,9 +196,17 @@ export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
 }));
 
-export const templatesRelations = relations(templates, ({ many }) => ({
+export const musicRelations = relations(music, ({ many }) => ({
+  templates: many(templates),
+}));
+
+export const templatesRelations = relations(templates, ({ one, many }) => ({
   projects: many(projects),
   orders: many(orders),
+  defaultMusic: one(music, {
+    fields: [templates.defaultMusicId],
+    references: [music.id],
+  }),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
