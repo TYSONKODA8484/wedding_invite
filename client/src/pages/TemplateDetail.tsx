@@ -193,15 +193,15 @@ export default function TemplateDetail() {
         ogImage={template.thumbnailUrl}
       />
 
-      <section className="py-4 lg:py-6 bg-background border-b">
+      <section className="py-3 lg:py-4 bg-background border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             <div 
-              className="w-full lg:flex-[2] lg:max-w-[550px]"
+              className="w-full lg:flex-[1.5] lg:max-w-[380px]"
               data-testid="template-preview"
             >
               {template.templateType === "video" ? (
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-lg bg-black">
+                <div className="aspect-[16/9] rounded-lg overflow-hidden shadow-lg bg-black">
                   <iframe
                     className="w-full h-full"
                     src={youtubeVideoId 
@@ -217,7 +217,7 @@ export default function TemplateDetail() {
                 </div>
               ) : (
                 <div className="relative">
-                  <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4">
+                  <div className="aspect-[3/4] max-h-[50vh] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-3">
                     <div className="relative w-full h-full">
                       {pages.length > 1 && (
                         <>
@@ -244,23 +244,23 @@ export default function TemplateDetail() {
                         <span className="text-xs font-medium">{pages.length} pages</span>
                       </div>
                       
-                      <div className="flex items-center justify-center gap-3 mt-4">
+                      <div className="flex items-center justify-center gap-2 mt-2">
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9 rounded-full"
+                          className="h-7 w-7 rounded-full"
                           onClick={() => setSelectedPageIndex(prev => prev > 0 ? prev - 1 : pages.length - 1)}
                           data-testid="button-prev-page"
                         >
-                          <ChevronLeft className="h-4 w-4" />
+                          <ChevronLeft className="h-3 w-3" />
                         </Button>
                         
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5">
                           {pages.map((_: any, index: number) => (
                             <button
                               key={index}
                               onClick={() => setSelectedPageIndex(index)}
-                              className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
                                 selectedPageIndex === index 
                                   ? 'bg-primary scale-110' 
                                   : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
@@ -273,22 +273,22 @@ export default function TemplateDetail() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9 rounded-full"
+                          className="h-7 w-7 rounded-full"
                           onClick={() => setSelectedPageIndex(prev => prev < pages.length - 1 ? prev + 1 : 0)}
                           data-testid="button-next-page"
                         >
-                          <ChevronRight className="h-4 w-4" />
+                          <ChevronRight className="h-3 w-3" />
                         </Button>
                       </div>
                       
-                      <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                      <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
                         {pages.map((page: any, index: number) => (
                           <button
                             key={index}
                             onClick={() => setSelectedPageIndex(index)}
-                            className={`flex-shrink-0 w-14 h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                            className={`flex-shrink-0 w-10 h-14 rounded overflow-hidden border-2 transition-all duration-200 ${
                               selectedPageIndex === index 
-                                ? 'border-primary ring-2 ring-primary/20' 
+                                ? 'border-primary ring-1 ring-primary/20' 
                                 : 'border-border hover:border-primary/50'
                             }`}
                             data-testid={`thumbnail-page-${index}`}
