@@ -28,6 +28,29 @@ interface MusicInfo {
   category: string;
 }
 
+// Helper to get the correct URLs based on template type and payment status
+function getProjectUrls(project: Project) {
+  const isCard = project.templateType === "card";
+  
+  // Preview URL: used for viewing generated (unpaid) templates
+  const previewUrl = isCard
+    ? project.cardPreviewUrl || project.previewUrl || project.previewImageUrl
+    : project.videoPreviewUrl || project.previewUrl || project.previewVideoUrl;
+  
+  // Final URL: used for viewing paid templates AND for downloading
+  const finalUrl = isCard
+    ? project.cardFinalUrl || project.finalUrl || project.previewUrl
+    : project.videoFinalUrl || project.finalUrl || project.previewUrl || project.previewVideoUrl;
+  
+  // View URL: final for paid, preview for generated
+  const viewUrl = project.isPaid ? finalUrl : previewUrl;
+  
+  // Download URL: always use final (requires payment to download)
+  const downloadUrl = finalUrl;
+  
+  return { previewUrl, finalUrl, viewUrl, downloadUrl };
+}
+
 interface Project {
   id: string;
   templateId: string;
@@ -150,21 +173,14 @@ export default function MyTemplates() {
   };
 
   const triggerDownload = (project: Project) => {
-    // Use card_final or video_final from object storage based on template type
-    // Fall back to legacy URLs if not available
-    let urlToDownload: string | null = null;
+    // Use the helper to get the correct download URL (always final)
+    const { downloadUrl } = getProjectUrls(project);
     
-    if (project.templateType === "card") {
-      urlToDownload = project.cardFinalUrl || project.finalUrl || project.previewUrl;
-    } else {
-      urlToDownload = project.videoFinalUrl || project.finalUrl || project.previewUrl || project.previewVideoUrl;
-    }
-    
-    if (urlToDownload) {
+    if (downloadUrl) {
       const link = document.createElement("a");
-      link.href = urlToDownload;
+      link.href = downloadUrl;
       // For cards, download as image; for videos, download as mp4
-      const extension = project.templateType === "card" ? "jpg" : "mp4";
+      const extension = project.templateType === "card" ? "png" : "mp4";
       link.download = `${project.templateName}.${extension}`;
       document.body.appendChild(link);
       link.click();
@@ -228,28 +244,21 @@ export default function MyTemplates() {
   };
 
   const handleShare = async (project: Project) => {
-    // Share the actual final file from object storage (card_final or video_final)
-    // Fall back to legacy URLs if not available
-    let fileUrl: string | null = null;
-    
-    if (project.templateType === "card") {
-      fileUrl = project.cardFinalUrl || project.finalUrl || project.previewUrl;
-    } else {
-      fileUrl = project.videoFinalUrl || project.finalUrl || project.previewUrl || project.previewVideoUrl;
-    }
+    // Share the final file using the helper (always use finalUrl for sharing)
+    const { finalUrl } = getProjectUrls(project);
     
     const marketingText = `Check out my ${project.templateType === "card" ? "invitation card" : "video invitation"} - ${project.templateName}! Created with WeddingInvite.AI`;
     
-    if (navigator.share && fileUrl) {
+    if (navigator.share && finalUrl) {
       try {
         await navigator.share({
           title: `${project.templateName} - WeddingInvite.AI`,
           text: marketingText,
-          url: fileUrl,
+          url: finalUrl,
         });
       } catch (error) {
         // User cancelled or share failed - fall back to clipboard
-        await navigator.clipboard.writeText(`${marketingText}\n\n${fileUrl}`);
+        await navigator.clipboard.writeText(`${marketingText}\n\n${finalUrl}`);
         toast({
           title: "Link copied!",
           description: "Share text and link copied to clipboard",
@@ -257,8 +266,8 @@ export default function MyTemplates() {
       }
     } else {
       // Fallback: copy to clipboard with marketing text
-      const shareText = fileUrl 
-        ? `${marketingText}\n\n${fileUrl}` 
+      const shareText = finalUrl 
+        ? `${marketingText}\n\n${finalUrl}` 
         : marketingText;
       await navigator.clipboard.writeText(shareText);
       toast({
@@ -502,17 +511,10 @@ export default function MyTemplates() {
       <VideoPreviewModal
         open={showVideoModal}
         onOpenChange={setShowVideoModal}
-        videoUrl={(() => {
-          if (!selectedVideoProject) return null;
-          // Use card_preview or video_preview from object storage based on template type
-          if (selectedVideoProject.templateType === "card") {
-            return selectedVideoProject.cardPreviewUrl || selectedVideoProject.previewUrl || selectedVideoProject.previewImageUrl || null;
-          } else {
-            return selectedVideoProject.videoPreviewUrl || selectedVideoProject.previewUrl || selectedVideoProject.previewVideoUrl || null;
-          }
-        })()}
+        videoUrl={selectedVideoProject ? getProjectUrls(selectedVideoProject).viewUrl || null : null}
         templateName={selectedVideoProject?.templateName || ""}
         orientation={selectedVideoProject?.orientation || "portrait"}
+        mediaType={selectedVideoProject?.templateType || "video"}
       />
       {selectedProject && (
         <PaymentModal
