@@ -281,7 +281,7 @@ export default function TemplateDetail() {
                         </Button>
                       </div>
                       
-                      <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
+                      <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1 justify-center">
                         {pages.map((page: any, index: number) => (
                           <button
                             key={index}
