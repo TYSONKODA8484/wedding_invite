@@ -56,17 +56,8 @@ The My Templates page (`/my-templates`) displays user's projects in two sections
 
 Features:
 - **VideoPreviewModal**: Responsive video preview adapting to portrait/landscape orientation
-- **Actual File Download**: Uses type-specific URLs for downloads
+- **Actual File Download**: Uses `finalUrl` or `previewUrl` for paid template downloads
 - **Cross-Platform Share**: Web Share API with clipboard fallback for all devices
-
-**Type-Specific URL Columns (December 2025):**
-Projects now store URLs in type-specific database columns:
-- `card_preview_url`: Preview image for card templates
-- `card_final_url`: Final downloadable file for paid card templates
-- `video_preview_url`: Preview video for video templates
-- `video_final_url`: Final downloadable file for paid video templates
-
-The PUT `/api/projects/:id` endpoint automatically routes `previewUrl`/`finalUrl` to the correct type-specific column based on template type (card vs video). This ensures proper file management for downloading and sharing.
 
 ### Music System (December 2025)
 Video templates now include complete background music support:

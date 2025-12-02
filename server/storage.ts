@@ -48,7 +48,6 @@ export interface IStorage {
   getProjectById(id: string): Promise<Project | undefined>;
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: string, updates: Partial<Project>): Promise<Project | undefined>;
-  deleteProject(id: string): Promise<boolean>;
   
   // Order operations
   createOrder(order: InsertOrder): Promise<Order>;
@@ -187,20 +186,12 @@ export class DatabaseStorage implements IStorage {
         (row.payment && row.payment.status === 'success') ||
         !!row.project.paidAt;
       
-      // Determine template type (card or video)
-      const rawType = row.template?.templateType || 'video';
-      const templateType = rawType === 'card' ? 'card' : 'video';
-      
       // Use project-specific URLs if available, fall back to template video
       const videoUrl = row.project.previewUrl || row.project.finalUrl || row.template?.previewVideoUrl;
       
-      // Read type-specific URLs directly from database columns
-      // These are populated by the generation pipeline when files are uploaded to object storage
-      // Pattern: /objects/projects/{projectId}/{card|video}_{preview|final}.{ext}
-      const cardPreviewUrl = row.project.cardPreviewUrl || null;
-      const cardFinalUrl = row.project.cardFinalUrl || null;
-      const videoPreviewUrl = row.project.videoPreviewUrl || null;
-      const videoFinalUrl = row.project.videoFinalUrl || null;
+      // Determine template type (card or video)
+      const rawType = row.template?.templateType || 'video';
+      const templateType = rawType === 'card' ? 'card' : 'video';
       
       return {
         id: row.project.id,
@@ -218,10 +209,6 @@ export class DatabaseStorage implements IStorage {
         paymentStatus: row.payment?.status || row.order?.status || 'pending',
         previewUrl: row.project.previewUrl,
         finalUrl: row.project.finalUrl,
-        cardPreviewUrl,
-        cardFinalUrl,
-        videoPreviewUrl,
-        videoFinalUrl,
         createdAt: row.project.createdAt,
         updatedAt: row.project.updatedAt,
         paidAt: row.project.paidAt,
@@ -255,14 +242,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(projects.id, id))
       .returning();
     return updated || undefined;
-  }
-
-  async deleteProject(id: string): Promise<boolean> {
-    const result = await db
-      .delete(projects)
-      .where(eq(projects.id, id))
-      .returning();
-    return result.length > 0;
   }
 
   // Order operations

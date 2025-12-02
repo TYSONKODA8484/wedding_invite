@@ -329,29 +329,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to update this project" });
       }
       
-      // If previewUrl or finalUrl are being set, also set the type-specific columns
-      // based on template type (card vs video)
-      if (updates.previewUrl || updates.finalUrl) {
-        const template = await storage.getTemplateById(existingProject.templateId);
-        const isCard = template?.templateType === 'card';
-        
-        if (updates.previewUrl) {
-          if (isCard) {
-            updates.cardPreviewUrl = updates.previewUrl;
-          } else {
-            updates.videoPreviewUrl = updates.previewUrl;
-          }
-        }
-        
-        if (updates.finalUrl) {
-          if (isCard) {
-            updates.cardFinalUrl = updates.finalUrl;
-          } else {
-            updates.videoFinalUrl = updates.finalUrl;
-          }
-        }
-      }
-      
       const updatedProject = await storage.updateProject(id, updates);
       
       res.json(updatedProject);
@@ -394,39 +371,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get project error:", error);
       res.status(500).json({ error: "Failed to fetch project" });
-    }
-  });
-
-  // Delete a project (only unpaid/generated projects can be deleted)
-  app.delete("/api/projects/:id", authMiddleware, async (req: any, res) => {
-    try {
-      const userId = req.user.userId;
-      const { id } = req.params;
-      
-      const project = await storage.getProjectById(id);
-      if (!project) {
-        return res.status(404).json({ error: "Project not found" });
-      }
-      
-      if (project.userId !== userId) {
-        return res.status(403).json({ error: "Not authorized to delete this project" });
-      }
-      
-      // Prevent deletion of paid projects
-      if (project.paidAt) {
-        return res.status(400).json({ error: "Cannot delete paid projects" });
-      }
-      
-      const deleted = await storage.deleteProject(id);
-      
-      if (deleted) {
-        res.json({ success: true, message: "Project deleted successfully" });
-      } else {
-        res.status(500).json({ error: "Failed to delete project" });
-      }
-    } catch (error) {
-      console.error("Delete project error:", error);
-      res.status(500).json({ error: "Failed to delete project" });
     }
   });
 
@@ -902,17 +846,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedProject = await storage.getProjectById(order.projectId);
       const template = await storage.getTemplateById(order.templateId);
       
-      // Determine download URL based on template type (card vs video)
-      const isCard = template?.templateType === 'card';
-      const downloadUrl = isCard
-        ? (updatedProject?.cardFinalUrl || updatedProject?.finalUrl || updatedProject?.previewUrl)
-        : (updatedProject?.videoFinalUrl || updatedProject?.finalUrl || updatedProject?.previewUrl || template?.previewVideoUrl);
-      
       res.json({
         success: true,
         message: "Payment verified successfully",
         projectId: order.projectId,
-        downloadUrl: downloadUrl || null,
+        downloadUrl: updatedProject?.finalUrl || updatedProject?.previewUrl || template?.previewVideoUrl || null,
         templateName: template?.templateName || "Video",
       });
     } catch (error) {

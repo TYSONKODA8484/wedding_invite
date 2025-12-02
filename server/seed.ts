@@ -1043,7 +1043,7 @@ export async function seed() {
       return;
     }
 
-    // Project 1: User 1 customizing Template 1 (PAID - VIDEO)
+    // Project 1: User 1 customizing Template 1 (PAID)
     const [project1] = await db
       .insert(projects)
       .values({
@@ -1082,9 +1082,7 @@ export async function seed() {
         },
         status: "completed",
         previewUrl: "/api/media/Ind/IndWedVid_a.mp4",
-        finalUrl: "/api/media/Ind/IndWedVid_a.mp4",
-        videoPreviewUrl: "/api/media/Ind/IndWedVid_a.mp4",
-        videoFinalUrl: "/api/media/Ind/IndWedVid_a.mp4",
+        finalUrl: "/downloads/user1_final_wedding.mp4",
         paidAt: new Date(),
       })
       .returning();

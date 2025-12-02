@@ -1,24 +1,14 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Edit, Share2, Eye, FileImage, Film, Music, Trash2 } from "lucide-react";
+import { Download, Edit, Share2, Eye, FileImage, Film, Music } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { VideoPreviewModal } from "@/components/VideoPreviewModal";
 import { PaymentModal } from "@/components/PaymentModal";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { queryClient } from "@/lib/queryClient";
 
 interface MusicInfo {
   id: string;
@@ -26,29 +16,6 @@ interface MusicInfo {
   url: string;
   duration: number;
   category: string;
-}
-
-// Helper to get the correct URLs based on template type and payment status
-function getProjectUrls(project: Project) {
-  const isCard = project.templateType === "card";
-  
-  // Preview URL: used for viewing generated (unpaid) templates
-  const previewUrl = isCard
-    ? project.cardPreviewUrl || project.previewUrl || project.previewImageUrl
-    : project.videoPreviewUrl || project.previewUrl || project.previewVideoUrl;
-  
-  // Final URL: used for viewing paid templates AND for downloading
-  const finalUrl = isCard
-    ? project.cardFinalUrl || project.finalUrl || project.previewUrl
-    : project.videoFinalUrl || project.finalUrl || project.previewUrl || project.previewVideoUrl;
-  
-  // View URL: final for paid, preview for generated
-  const viewUrl = project.isPaid ? finalUrl : previewUrl;
-  
-  // Download URL: always use final (requires payment to download)
-  const downloadUrl = finalUrl;
-  
-  return { previewUrl, finalUrl, viewUrl, downloadUrl };
 }
 
 interface Project {
@@ -67,10 +34,6 @@ interface Project {
   paymentStatus: string;
   previewUrl: string | null;
   finalUrl: string | null;
-  cardPreviewUrl: string | null;
-  cardFinalUrl: string | null;
-  videoPreviewUrl: string | null;
-  videoFinalUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   paidAt: Date | null;
@@ -86,8 +49,6 @@ export default function MyTemplates() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideoProject, setSelectedVideoProject] = useState<Project | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects/mine"],
@@ -122,65 +83,17 @@ export default function MyTemplates() {
     refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
-  const deleteProjectMutation = useMutation({
-    mutationFn: async (projectId: string) => {
-      const token = localStorage.getItem("auth_token");
-      const response = await fetch(`/api/projects/${projectId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to delete project");
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
-      toast({
-        title: "Project Deleted",
-        description: "Your project has been deleted successfully.",
-      });
-      setShowDeleteDialog(false);
-      setProjectToDelete(null);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Delete Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleDelete = (project: Project) => {
-    setProjectToDelete(project);
-    setShowDeleteDialog(true);
-  };
-
-  const confirmDelete = () => {
-    if (projectToDelete) {
-      deleteProjectMutation.mutate(projectToDelete.id);
-    }
-  };
-
   const handleEdit = (project: Project) => {
     navigate(`/editor/${project.id}?from=my-templates`);
   };
 
   const triggerDownload = (project: Project) => {
-    // Use the helper to get the correct download URL (always final)
-    const { downloadUrl } = getProjectUrls(project);
-    
-    if (downloadUrl) {
+    const urlToDownload = project.finalUrl || project.previewUrl || project.previewVideoUrl;
+    if (urlToDownload) {
       const link = document.createElement("a");
-      link.href = downloadUrl;
+      link.href = urlToDownload;
       // For cards, download as image; for videos, download as mp4
-      const extension = project.templateType === "card" ? "png" : "mp4";
+      const extension = project.templateType === "card" ? "jpg" : "mp4";
       link.download = `${project.templateName}.${extension}`;
       document.body.appendChild(link);
       link.click();
@@ -243,36 +156,20 @@ export default function MyTemplates() {
     setShowVideoModal(true);
   };
 
-  const handleShare = async (project: Project) => {
-    // Share the final file using the helper (always use finalUrl for sharing)
-    const { finalUrl } = getProjectUrls(project);
+  const handleShare = (project: Project) => {
+    const shareUrl = `${window.location.origin}/template/${project.templateId}`;
     
-    const marketingText = `Check out my ${project.templateType === "card" ? "invitation card" : "video invitation"} - ${project.templateName}! Created with WeddingInvite.AI`;
-    
-    if (navigator.share && finalUrl) {
-      try {
-        await navigator.share({
-          title: `${project.templateName} - WeddingInvite.AI`,
-          text: marketingText,
-          url: finalUrl,
-        });
-      } catch (error) {
-        // User cancelled or share failed - fall back to clipboard
-        await navigator.clipboard.writeText(`${marketingText}\n\n${finalUrl}`);
-        toast({
-          title: "Link copied!",
-          description: "Share text and link copied to clipboard",
-        });
-      }
+    if (navigator.share) {
+      navigator.share({
+        title: project.templateName,
+        text: `Check out this ${project.templateName} video invitation!`,
+        url: shareUrl,
+      }).catch(() => {});
     } else {
-      // Fallback: copy to clipboard with marketing text
-      const shareText = finalUrl 
-        ? `${marketingText}\n\n${finalUrl}` 
-        : marketingText;
-      await navigator.clipboard.writeText(shareText);
+      navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Link copied!",
-        description: "Share text copied to clipboard",
+        description: "Share link copied to clipboard",
       });
     }
   };
@@ -455,15 +352,6 @@ export default function MyTemplates() {
               >
                 <Download className="h-4 w-4" />
               </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => handleDelete(project)}
-                data-testid={`button-delete-${project.id}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </>
           )}
         </div>
@@ -511,10 +399,9 @@ export default function MyTemplates() {
       <VideoPreviewModal
         open={showVideoModal}
         onOpenChange={setShowVideoModal}
-        videoUrl={selectedVideoProject ? getProjectUrls(selectedVideoProject).viewUrl || null : null}
+        videoUrl={selectedVideoProject?.previewVideoUrl || null}
         templateName={selectedVideoProject?.templateName || ""}
         orientation={selectedVideoProject?.orientation || "portrait"}
-        mediaType={selectedVideoProject?.templateType || "video"}
       />
       {selectedProject && (
         <PaymentModal
@@ -530,30 +417,6 @@ export default function MyTemplates() {
           onSuccess={handlePaymentSuccess}
         />
       )}
-      
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Project?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{projectToDelete?.templateName}"? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setProjectToDelete(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteProjectMutation.isPending}
-              data-testid="button-confirm-delete"
-            >
-              {deleteProjectMutation.isPending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
