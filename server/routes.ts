@@ -781,6 +781,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== MEDIA SERVING ENDPOINT ====================
   
+  // Helper function to get content type from filename
+  const getContentType = (filename: string): string => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      'mp4': 'video/mp4',
+      'webm': 'video/webm',
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'mp3': 'audio/mpeg',
+      'wav': 'audio/wav',
+      'm4a': 'audio/mp4',
+      'aac': 'audio/aac',
+      'ogg': 'audio/ogg',
+    };
+    return mimeTypes[ext || ''] || 'application/octet-stream';
+  };
+  
+  // Handle media files in subdirectories (e.g., Ind/music/filename.mp3)
+  app.get("/api/media/Ind/music/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const client = new Client();
+      const fileKey = `Ind/music/${filename}`;
+      
+      const contentType = getContentType(filename);
+      
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000',
+        'Accept-Ranges': 'bytes',
+      });
+      
+      const stream = client.downloadAsStream(fileKey);
+      
+      stream.on('error', (error) => {
+        console.error("Stream error for", fileKey, ":", error);
+        if (!res.headersSent) {
+          res.status(404).json({ error: "File not found" });
+        }
+      });
+      
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving music file:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve music file" });
+      }
+    }
+  });
+  
   app.get("/api/media/Ind/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
@@ -789,12 +843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const client = new Client();
       const fileKey = `Ind/${filename}`;
       
-      // Set appropriate content type based on file extension
-      const contentType = filename.endsWith('.mp4') 
-        ? 'video/mp4' 
-        : filename.endsWith('.png') 
-          ? 'image/png' 
-          : 'application/octet-stream';
+      const contentType = getContentType(filename);
       
       // Set headers for video/image streaming
       res.set({

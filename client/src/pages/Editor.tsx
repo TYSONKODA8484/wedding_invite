@@ -697,6 +697,10 @@ export default function Editor() {
   });
   
   const formatTime = (seconds: number) => {
+    // Handle edge cases: NaN, Infinity, undefined, or negative values
+    if (!Number.isFinite(seconds) || seconds < 0) {
+      return '0:00';
+    }
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -721,6 +725,16 @@ export default function Editor() {
     }
     return 'No music selected';
   }, [selectedMusicId, musicLibrary, customMusicFile]);
+  
+  // Get current music duration from library (for stock tracks) or from audio element (for custom uploads)
+  const getDisplayDuration = useCallback(() => {
+    if (selectedMusicId && musicLibrary?.music && !customMusicFile) {
+      const track = musicLibrary.music.find(m => m.id === selectedMusicId);
+      if (track) return track.duration;
+    }
+    // For custom uploads or when audio metadata is available
+    return audioDurationSeconds;
+  }, [selectedMusicId, musicLibrary, customMusicFile, audioDurationSeconds]);
   
   // Helper to safely revoke object URL
   const revokeCustomMusicUrl = useCallback(() => {
@@ -759,6 +773,14 @@ export default function Editor() {
     setIsPlaying(false);
     setAudioProgress(0);
     setAudioCurrentSeconds(0);
+    
+    // Use duration from library instead of relying on streamed audio metadata
+    if (musicLibrary?.music) {
+      const track = musicLibrary.music.find(m => m.id === musicId);
+      if (track) {
+        setAudioDurationSeconds(track.duration);
+      }
+    }
   };
   
   // Cleanup audio when modal closes (preserves selection, just stops playback)
@@ -810,8 +832,9 @@ export default function Editor() {
   };
   
   const handleSeek = (value: number[]) => {
-    if (audioRef.current && audioDurationSeconds > 0) {
-      const newTime = (value[0] / 100) * audioDurationSeconds;
+    const duration = getDisplayDuration();
+    if (audioRef.current && duration > 0) {
+      const newTime = (value[0] / 100) * duration;
       audioRef.current.currentTime = newTime;
       setAudioCurrentSeconds(newTime);
       setAudioProgress(value[0]);
@@ -842,11 +865,17 @@ export default function Editor() {
       setAudioCurrentSeconds(0);
     };
     
+    const handleError = (e: Event) => {
+      console.warn('Audio error:', e);
+      setIsPlaying(false);
+    };
+    
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
     
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
@@ -854,8 +883,31 @@ export default function Editor() {
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, []);
+  
+  // Reload audio when source changes
+  const currentMusicUrl = getCurrentMusicUrl();
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    // Reset playback state when source changes
+    setAudioProgress(0);
+    setAudioCurrentSeconds(0);
+    setIsPlaying(false);
+    // Note: Don't reset duration here - handleSelectStockMusic sets it from library
+    // Only reset if we don't have a selected track
+    if (!selectedMusicId && !customMusicFile) {
+      setAudioDurationSeconds(0);
+    }
+    
+    if (currentMusicUrl) {
+      // Force reload the audio with the new source
+      audio.load();
+    }
+  }, [currentMusicUrl, selectedMusicId, customMusicFile]);
   
   // Undo/Redo history
   type HistoryAction = 
@@ -1604,7 +1656,7 @@ export default function Editor() {
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
                         <span>{formatTime(audioCurrentSeconds)}</span>
                         <span>/</span>
-                        <span>{formatTime(audioDurationSeconds)}</span>
+                        <span>{formatTime(getDisplayDuration())}</span>
                       </div>
                       <Slider
                         value={[audioProgress]}
@@ -1690,7 +1742,7 @@ export default function Editor() {
                   data-testid="button-upload-custom-music"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Your Music
+                  Upload Music
                 </Button>
                 
                 {/* Action Buttons */}
