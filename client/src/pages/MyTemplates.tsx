@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Edit, Share2, Eye, FileImage, Film, Music, Trash2 } from "lucide-react";
+import { Download, Edit, Eye, FileImage, Film, Music, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { MediaPreviewModal } from "@/components/MediaPreviewModal";
@@ -241,26 +241,6 @@ export default function MyTemplates() {
     setShowMediaModal(true);
   };
 
-  // Share for paid templates - shares finalUrl with promo text
-  const handleShare = (project: Project) => {
-    const fileUrl = project.finalUrl || `${window.location.origin}/template/${project.templateId}`;
-    const promoText = `Check out my beautiful ${project.templateType === "card" ? "invitation card" : "video invitation"} created with WeddingInvite.ai!\n\n${project.templateName}\n\nCreate your own stunning invitations at WeddingInvite.ai`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: project.templateName,
-        text: promoText,
-        url: fileUrl,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(`${promoText}\n\n${fileUrl}`);
-      toast({
-        title: "Link copied!",
-        description: "Share message copied to clipboard",
-      });
-    }
-  };
-
   // Delete handler
   const handleDeleteClick = (project: Project) => {
     setProjectToDelete(project);
@@ -388,7 +368,7 @@ export default function MyTemplates() {
           </p>
         </div>
         
-        {/* Paid Templates: View (finalUrl), Download (finalUrl), Share (finalUrl + promo) */}
+        {/* Paid Templates: View (finalUrl), Download (finalUrl) */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -406,14 +386,6 @@ export default function MyTemplates() {
             data-testid={`button-download-${project.id}`}
           >
             <Download className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => handleShare(project)}
-            data-testid={`button-share-${project.id}`}
-          >
-            <Share2 className="h-4 w-4" />
           </Button>
         </div>
       </div>

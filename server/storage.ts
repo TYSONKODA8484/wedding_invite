@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, lt, isNull } from "drizzle-orm";
 import {
   users,
   templates,
@@ -69,6 +69,9 @@ export interface IStorage {
   // Music operations
   getMusicLibrary(category?: string): Promise<Music[]>;
   getMusicById(id: string): Promise<Music | undefined>;
+  
+  // Cleanup operations
+  deleteOldUnpaidProjects(daysOld: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -363,6 +366,28 @@ export class DatabaseStorage implements IStorage {
       .from(music)
       .where(eq(music.id, id));
     return track || undefined;
+  }
+
+  // Cleanup operations
+  async deleteOldUnpaidProjects(daysOld: number): Promise<number> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    
+    // Delete projects that are:
+    // 1. Not paid (paidAt is NULL) - this is the canonical payment indicator
+    // 2. Last updated more than daysOld days ago (so active projects aren't deleted)
+    // Note: status "completed" doesn't mean paid - only paidAt indicates payment
+    const result = await db
+      .delete(projects)
+      .where(
+        and(
+          isNull(projects.paidAt),
+          lt(projects.updatedAt, cutoffDate)
+        )
+      )
+      .returning({ id: projects.id });
+    
+    return result.length;
   }
 }
 

@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
 
 const app = express();
 
@@ -77,5 +78,29 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Start scheduled cleanup job for old unpaid templates
+    // Runs every 24 hours to delete unpaid projects older than 30 days
+    const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const DAYS_TO_KEEP = 30;
+    
+    const runCleanup = async () => {
+      try {
+        const deletedCount = await storage.deleteOldUnpaidProjects(DAYS_TO_KEEP);
+        if (deletedCount > 0) {
+          log(`[Cleanup] Deleted ${deletedCount} unpaid projects older than ${DAYS_TO_KEEP} days`);
+        }
+      } catch (error) {
+        console.error("[Cleanup] Error during scheduled cleanup:", error);
+      }
+    };
+    
+    // Run cleanup once on startup (after a short delay)
+    setTimeout(runCleanup, 5000);
+    
+    // Then run every 24 hours
+    setInterval(runCleanup, CLEANUP_INTERVAL_MS);
+    
+    log(`[Cleanup] Scheduled job: delete unpaid projects older than ${DAYS_TO_KEEP} days (runs daily)`);
   });
 })();
