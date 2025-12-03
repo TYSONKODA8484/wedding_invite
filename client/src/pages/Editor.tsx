@@ -2239,6 +2239,17 @@ export default function Editor() {
                   <p className="text-muted-foreground text-sm">No preview</p>
                 </div>
               )}
+              
+              {/* Preview Loading Overlay */}
+              {isPreviewLoading && (
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center z-10">
+                  <div className="bg-card/90 rounded-xl p-6 flex flex-col items-center gap-3 shadow-lg">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-foreground">Generating Preview...</p>
+                    <p className="text-xs text-muted-foreground">Rendering page with your customizations</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
