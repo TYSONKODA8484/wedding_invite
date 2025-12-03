@@ -677,6 +677,11 @@ export default function Editor() {
   // Preview coming soon modal
   const [showPreviewComingSoon, setShowPreviewComingSoon] = useState(false);
   
+  // Page preview state - tracks preview index per page (cycles 0-3) and rendered preview URLs
+  const [pagePreviewIndices, setPagePreviewIndices] = useState<Record<string, number>>({});
+  const [pagePreviewUrls, setPagePreviewUrls] = useState<Record<string, string>>({});
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  
   // Music modal state
   const [showMusicModal, setShowMusicModal] = useState(false);
   const [selectedMusicId, setSelectedMusicId] = useState<string | null>(null);
@@ -1191,6 +1196,11 @@ export default function Editor() {
         if (projectData.customization.pageOrder && Array.isArray(projectData.customization.pageOrder)) {
           setOrderedPageIds(projectData.customization.pageOrder);
         }
+        
+        // Load saved page preview URLs (rendered previews)
+        if (projectData.customization.pagePreviewUrls) {
+          setPagePreviewUrls(projectData.customization.pagePreviewUrls);
+        }
       }
       
       // Load music selection from existing project
@@ -1341,6 +1351,11 @@ export default function Editor() {
       }
 
       customizationData.images = imagePreviews;
+      
+      // Include rendered page preview URLs if any exist
+      if (Object.keys(pagePreviewUrls).length > 0) {
+        customizationData.pagePreviewUrls = pagePreviewUrls;
+      }
 
       // Prepare music data
       // If custom music file is selected (not yet uploaded), we'll upload after project creation
@@ -1440,6 +1455,72 @@ export default function Editor() {
     if (pendingPreview) {
       setPendingPreview(false);
       saveProjectMutation.mutate();
+    }
+  };
+
+  // Handle page preview - renders current page with customizations
+  const handlePreviewPage = async () => {
+    // Check if user is logged in first
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setPendingPreview(true);
+      setShowAuthModal(true);
+      return;
+    }
+    
+    // Make sure we have a project ID (save project first if needed)
+    if (!projectId) {
+      toast({
+        title: "Save Required",
+        description: "Please generate your project first before previewing individual pages.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const currentPage = pages[currentPageIndex];
+    if (!currentPage) return;
+    
+    setIsPreviewLoading(true);
+    
+    try {
+      const currentIndex = pagePreviewIndices[currentPage.id] || 0;
+      
+      const response = await apiRequest("POST", "/api/preview/page", {
+        projectId,
+        pageId: currentPage.id,
+        previewIndex: currentIndex,
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update the preview URL for this page
+        setPagePreviewUrls(prev => ({
+          ...prev,
+          [currentPage.id]: result.previewUrl,
+        }));
+        
+        // Update the preview index for next cycle
+        setPagePreviewIndices(prev => ({
+          ...prev,
+          [currentPage.id]: result.nextIndex,
+        }));
+        
+        toast({
+          title: "Preview Generated",
+          description: "Page preview has been updated.",
+        });
+      }
+    } catch (error) {
+      console.error("Preview error:", error);
+      toast({
+        title: "Preview Failed",
+        description: "Failed to generate page preview. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPreviewLoading(false);
     }
   };
 
@@ -1610,7 +1691,9 @@ export default function Editor() {
     }
   };
 
-  const backgroundImage = currentPage?.media?.find((m: any) => m.position === 'background')?.url || 
+  // Use rendered preview URL if available, otherwise fall back to template media
+  const backgroundImage = (currentPage && pagePreviewUrls[currentPage.id]) ||
+    currentPage?.media?.find((m: any) => m.position === 'background')?.url || 
     currentPage?.media?.find((m: any) => m.type === 'image')?.url || 
     currentPage?.thumbnailUrl || '';
 
@@ -2099,7 +2182,7 @@ export default function Editor() {
                   >
                     <div className="aspect-[9/16] bg-muted relative">
                       <img
-                        src={page.thumbnailUrl}
+                        src={pagePreviewUrls[page.id] || page.thumbnailUrl}
                         alt={page.pageName}
                         className="w-full h-full object-cover"
                         loading="eager"
@@ -2175,16 +2258,16 @@ export default function Editor() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  toast({
-                    title: "Coming Soon",
-                    description: "Field preview feature is currently being developed. Stay tuned!",
-                  });
-                }}
+                onClick={handlePreviewPage}
+                disabled={isPreviewLoading}
                 data-testid="button-preview"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
+                {isPreviewLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Eye className="w-4 h-4 mr-2" />
+                )}
+                {isPreviewLoading ? 'Rendering...' : 'Preview'}
               </Button>
               
               {/* Zoom Controls */}
