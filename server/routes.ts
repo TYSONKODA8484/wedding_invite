@@ -1003,6 +1003,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Handle generated files in subdirectory (e.g., Ind/generated/video_final.mp4)
+  app.get("/api/media/Ind/generated/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const client = new Client();
+      const fileKey = `Ind/generated/${filename}`;
+      
+      const contentType = getContentType(filename);
+      
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000',
+        'Accept-Ranges': 'bytes',
+      });
+      
+      const stream = client.downloadAsStream(fileKey);
+      
+      stream.on('error', (error) => {
+        console.error("Stream error for generated file", fileKey, ":", error);
+        if (!res.headersSent) {
+          res.status(404).json({ error: "File not found" });
+        }
+      });
+      
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving generated file:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve generated file" });
+      }
+    }
+  });
+  
   // Handle media files in subdirectories (e.g., Ind/music/filename.mp3)
   app.get("/api/media/Ind/music/:filename", async (req, res) => {
     try {
