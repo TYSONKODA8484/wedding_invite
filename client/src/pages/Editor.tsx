@@ -732,8 +732,8 @@ export default function Editor() {
     return 'No music selected';
   }, [selectedMusicId, musicLibrary, customMusicFile, customMusicUrl]);
   
-  // Get current music duration from library (for stock tracks) or from audio element (for custom uploads)
-  const getDisplayDuration = useCallback(() => {
+  // Get raw music duration from library (for stock tracks) or from audio element (for custom uploads)
+  const getRawMusicDuration = useCallback(() => {
     if (selectedMusicId && musicLibrary?.music && !customMusicFile) {
       const track = musicLibrary.music.find(m => m.id === selectedMusicId);
       if (track) return track.duration;
@@ -857,6 +857,11 @@ export default function Editor() {
     if (isPlaying) {
       audioRef.current.pause();
     } else {
+      // Start from the trim start time when musicStartTime is set
+      // (templateData check happens at render time after it's defined)
+      if (musicStartTime > 0) {
+        audioRef.current.currentTime = musicStartTime;
+      }
       audioRef.current.play().catch((error) => {
         console.warn('Audio playback error:', error);
         setIsPlaying(false);
@@ -872,60 +877,19 @@ export default function Editor() {
   };
   
   const handleSeek = (value: number[]) => {
-    const duration = getDisplayDuration();
-    if (audioRef.current && duration > 0) {
-      const newTime = (value[0] / 100) * duration;
-      audioRef.current.currentTime = newTime;
-      setAudioCurrentSeconds(newTime);
+    // Calculate duration inline to avoid TDZ (templateData defined later)
+    const rawDuration = getRawMusicDuration();
+    if (audioRef.current && rawDuration > 0) {
+      // For seeking in the audio player modal, use raw duration
+      const seekDuration = rawDuration;
+      const relativeTime = (value[0] / 100) * seekDuration;
+      audioRef.current.currentTime = relativeTime;
+      setAudioCurrentSeconds(relativeTime);
       setAudioProgress(value[0]);
     }
   };
   
-  // Audio event handlers
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    
-    const handleTimeUpdate = () => {
-      if (audio.duration) {
-        setAudioCurrentSeconds(audio.currentTime);
-        setAudioProgress((audio.currentTime / audio.duration) * 100);
-      }
-    };
-    
-    const handleLoadedMetadata = () => {
-      setAudioDurationSeconds(audio.duration);
-    };
-    
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-    const handleEnded = () => {
-      setIsPlaying(false);
-      setAudioProgress(0);
-      setAudioCurrentSeconds(0);
-    };
-    
-    const handleError = (e: Event) => {
-      console.warn('Audio error:', e);
-      setIsPlaying(false);
-    };
-    
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-    
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-    };
-  }, []);
+  // Note: Audio event handlers with templateData dependency moved to after templateData query
   
   // Reload audio when source changes
   const currentMusicUrl = getCurrentMusicUrl();
@@ -1166,6 +1130,75 @@ export default function Editor() {
   });
 
   const isLoading = isEditingProject ? (projectIsLoading || templateIsLoading) : templateIsLoading;
+
+  // Get display duration for audio player (template duration for video templates, raw music duration otherwise)
+  const displayDuration = templateData?.templateType === "video" 
+    ? templateData?.duration ?? getRawMusicDuration() 
+    : getRawMusicDuration();
+
+  // Audio event handlers - needs access to templateData for video templates
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const handleTimeUpdate = () => {
+      if (audio.duration) {
+        // For video templates, calculate time relative to the trim selection
+        if (templateData?.templateType === "video") {
+          const templateDuration = templateData.duration || 30;
+          const relativeTime = Math.max(0, audio.currentTime - musicStartTime);
+          const progress = Math.min((relativeTime / templateDuration) * 100, 100);
+          
+          setAudioCurrentSeconds(relativeTime);
+          setAudioProgress(progress);
+          
+          // Stop playback at end of template duration
+          if (audio.currentTime >= musicStartTime + templateDuration) {
+            audio.pause();
+            audio.currentTime = musicStartTime;
+            setAudioProgress(0);
+            setAudioCurrentSeconds(0);
+          }
+        } else {
+          setAudioCurrentSeconds(audio.currentTime);
+          setAudioProgress((audio.currentTime / audio.duration) * 100);
+        }
+      }
+    };
+    
+    const handleLoadedMetadata = () => {
+      setAudioDurationSeconds(audio.duration);
+    };
+    
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setAudioProgress(0);
+      setAudioCurrentSeconds(0);
+    };
+    
+    const handleError = (e: Event) => {
+      console.warn('Audio error:', e);
+      setIsPlaying(false);
+    };
+    
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+    
+    return () => {
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [musicStartTime, templateData?.templateType, templateData?.duration]);
 
   useEffect(() => {
     if (projectData) {
@@ -1773,7 +1806,7 @@ export default function Editor() {
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
                         <span>{formatTime(audioCurrentSeconds)}</span>
                         <span>/</span>
-                        <span>{formatTime(getDisplayDuration())}</span>
+                        <span>{formatTime(displayDuration)}</span>
                       </div>
                       <Slider
                         value={[audioProgress]}
@@ -1803,6 +1836,18 @@ export default function Editor() {
                   </div>
                 </div>
                 
+                {/* Music Trimmer - Show when music is selected and template has duration */}
+                {templateData?.templateType === "video" && (selectedMusicId || customMusicUrl || customMusicFile) && (
+                  <div className="mb-4 sm:mb-6">
+                    <MusicTrimmer
+                      audioUrl={getCurrentMusicUrl()}
+                      templateDuration={templateData?.duration || 30}
+                      startTime={musicStartTime}
+                      onStartTimeChange={setMusicStartTime}
+                    />
+                  </div>
+                )}
+
                 {/* Music Library */}
                 <div className="mb-4 sm:mb-6">
                   <Label className="text-sm text-muted-foreground mb-2 block">Music Library</Label>
