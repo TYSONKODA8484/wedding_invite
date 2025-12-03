@@ -691,6 +691,9 @@ export default function Editor() {
   const musicFileInputRef = useRef<HTMLInputElement>(null);
   const customMusicUrlRef = useRef<string | null>(null); // Track URL for cleanup
   
+  // Helper to check if custom music is active (either local file or saved URL from server)
+  const hasCustomMusic = customMusicFile !== null || (customMusicUrl !== null && customMusicUrl.startsWith('/api/media/'));
+  
   // Fetch music library
   const { data: musicLibrary, isLoading: musicLoading } = useQuery<{ music: MusicType[] }>({
     queryKey: ["/api/music"],
