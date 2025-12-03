@@ -1,14 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Edit, Share2, Eye, FileImage, Film, Music } from "lucide-react";
+import { Download, Edit, Share2, Eye, FileImage, Film, Music, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { VideoPreviewModal } from "@/components/VideoPreviewModal";
+import { MediaPreviewModal } from "@/components/MediaPreviewModal";
 import { PaymentModal } from "@/components/PaymentModal";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MusicInfo {
   id: string;
@@ -47,8 +57,15 @@ export default function MyTemplates() {
   const { toast } = useToast();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [showVideoModal, setShowVideoModal] = useState(false);
-  const [selectedVideoProject, setSelectedVideoProject] = useState<Project | null>(null);
+  const [showMediaModal, setShowMediaModal] = useState(false);
+  const [mediaModalData, setMediaModalData] = useState<{
+    url: string | null;
+    type: "image" | "video";
+    name: string;
+    orientation: "portrait" | "landscape";
+  } | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   
   const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects/mine"],
@@ -78,22 +95,51 @@ export default function MyTemplates() {
       
       return response.json();
     },
-    staleTime: 0, // Always consider data stale - refetch when needed
-    refetchOnMount: true, // Refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        navigate("/login");
+        throw new Error("Not authenticated");
+      }
+      const response = await apiRequest("DELETE", `/api/projects/${projectId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
+      toast({
+        title: "Template Deleted",
+        description: `"${projectToDelete?.templateName}" has been removed.`,
+      });
+      setShowDeleteDialog(false);
+      setProjectToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Delete Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const handleEdit = (project: Project) => {
     navigate(`/editor/${project.id}?from=my-templates`);
   };
 
-  const triggerDownload = (project: Project) => {
-    const urlToDownload = project.finalUrl || project.previewUrl || project.previewVideoUrl;
+  // Download for paid templates - uses finalUrl
+  const triggerPaidDownload = (project: Project) => {
+    const urlToDownload = project.finalUrl;
     if (urlToDownload) {
       const link = document.createElement("a");
       link.href = urlToDownload;
-      // For cards, download as image; for videos, download as mp4
-      const extension = project.templateType === "card" ? "jpg" : "mp4";
+      const extension = project.templateType === "card" ? "png" : "mp4";
       link.download = `${project.templateName}.${extension}`;
       document.body.appendChild(link);
       link.click();
@@ -111,20 +157,15 @@ export default function MyTemplates() {
     }
   };
 
-  const handleDownload = (project: Project) => {
-    if (!project.isPaid) {
-      setSelectedProject(project);
-      setShowPaymentModal(true);
-    } else {
-      triggerDownload(project);
-    }
+  // For generated (unpaid) templates - triggers payment first
+  const handleGeneratedDownload = (project: Project) => {
+    setSelectedProject(project);
+    setShowPaymentModal(true);
   };
 
   const handlePaymentSuccess = async () => {
-    // Refresh the projects list and wait for it
     await queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
     
-    // Auto-download after payment - fetch fresh project data
     if (selectedProject) {
       try {
         const token = localStorage.getItem("auth_token");
@@ -139,38 +180,96 @@ export default function MyTemplates() {
           const updatedProject = freshProjects.find(p => p.id === selectedProject.id);
           
           if (updatedProject && updatedProject.isPaid) {
-            // Use fresh data with finalUrl for download
-            triggerDownload(updatedProject);
+            triggerPaidDownload(updatedProject);
           }
         }
       } catch (error) {
         console.error("Failed to fetch updated project for download:", error);
-        // Fallback to original project data
-        triggerDownload(selectedProject);
       }
     }
   };
 
-  const handleViewVideo = (project: Project) => {
-    setSelectedVideoProject(project);
-    setShowVideoModal(true);
+  // View for Paid templates - uses finalUrl with fallbacks
+  const handleViewPaid = (project: Project) => {
+    const mediaType = project.templateType === "card" ? "image" : "video";
+    // Fallback chain: finalUrl -> previewUrl -> template assets
+    const url = project.finalUrl || project.previewUrl || 
+      (mediaType === "image" ? project.previewImageUrl : project.previewVideoUrl) ||
+      project.thumbnailUrl;
+    
+    if (!url) {
+      toast({
+        title: "Preview unavailable",
+        description: "The file is not ready yet. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setMediaModalData({
+      url,
+      type: mediaType,
+      name: project.templateName,
+      orientation: project.orientation,
+    });
+    setShowMediaModal(true);
   };
 
+  // View for Generated templates - uses previewUrl with fallbacks
+  const handleViewGenerated = (project: Project) => {
+    const mediaType = project.templateType === "card" ? "image" : "video";
+    // Fallback chain: previewUrl -> template assets
+    const url = project.previewUrl || 
+      (mediaType === "image" ? project.previewImageUrl : project.previewVideoUrl) ||
+      project.thumbnailUrl;
+    
+    if (!url) {
+      toast({
+        title: "Preview unavailable",
+        description: "The preview is not ready yet. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setMediaModalData({
+      url,
+      type: mediaType,
+      name: project.templateName,
+      orientation: project.orientation,
+    });
+    setShowMediaModal(true);
+  };
+
+  // Share for paid templates - shares finalUrl with promo text
   const handleShare = (project: Project) => {
-    const shareUrl = `${window.location.origin}/template/${project.templateId}`;
+    const fileUrl = project.finalUrl || `${window.location.origin}/template/${project.templateId}`;
+    const promoText = `Check out my beautiful ${project.templateType === "card" ? "invitation card" : "video invitation"} created with WeddingInvite.ai!\n\n${project.templateName}\n\nCreate your own stunning invitations at WeddingInvite.ai`;
     
     if (navigator.share) {
       navigator.share({
         title: project.templateName,
-        text: `Check out this ${project.templateName} video invitation!`,
-        url: shareUrl,
+        text: promoText,
+        url: fileUrl,
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(shareUrl);
+      navigator.clipboard.writeText(`${promoText}\n\n${fileUrl}`);
       toast({
         title: "Link copied!",
-        description: "Share link copied to clipboard",
+        description: "Share message copied to clipboard",
       });
+    }
+  };
+
+  // Delete handler
+  const handleDeleteClick = (project: Project) => {
+    setProjectToDelete(project);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (projectToDelete) {
+      deleteMutation.mutate(projectToDelete.id);
     }
   };
 
@@ -189,13 +288,12 @@ export default function MyTemplates() {
     );
   }
 
-  // Partition projects into Paid and Generated sections
   const paidProjects = projects
     ?.filter((p) => p.isPaid)
     .sort((a, b) => {
       const dateA = a.paidAt ? new Date(a.paidAt).getTime() : 0;
       const dateB = b.paidAt ? new Date(b.paidAt).getTime() : 0;
-      return dateB - dateA; // Newest paid first
+      return dateB - dateA;
     }) || [];
 
   const generatedProjects = projects
@@ -203,7 +301,7 @@ export default function MyTemplates() {
     .sort((a, b) => {
       const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
       const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
-      return dateB - dateA; // Newest updated first
+      return dateB - dateA;
     }) || [];
 
   if (!projects || projects.length === 0) {
@@ -220,7 +318,8 @@ export default function MyTemplates() {
     );
   }
 
-  const renderProjectCard = (project: Project) => (
+  // Render card for PAID templates
+  const renderPaidProjectCard = (project: Project) => (
     <Card 
       key={project.id} 
       className="group overflow-hidden transition-all duration-300"
@@ -237,15 +336,9 @@ export default function MyTemplates() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
         <div className="absolute top-3 right-3">
-          {project.isPaid ? (
-            <Badge className="bg-green-600 text-white font-semibold" data-testid={`badge-paid-${project.id}`}>
-              Paid
-            </Badge>
-          ) : (
-            <Badge variant="secondary" className="bg-black/60 backdrop-blur-sm text-white border-none" data-testid={`badge-preview-${project.id}`}>
-              Preview
-            </Badge>
-          )}
+          <Badge className="bg-green-600 text-white font-semibold" data-testid={`badge-paid-${project.id}`}>
+            Paid
+          </Badge>
         </div>
         
         <div className="absolute bottom-3 left-3 flex flex-col gap-1">
@@ -260,7 +353,6 @@ export default function MyTemplates() {
               <><Film className="h-3 w-3 mr-1" /> Video</>
             )}
           </Badge>
-          {/* Show music badge for video templates */}
           {project.templateType === "video" && (project.selectedMusic || project.customMusicUrl) && (
             <Badge 
               variant="secondary" 
@@ -296,64 +388,140 @@ export default function MyTemplates() {
           </p>
         </div>
         
+        {/* Paid Templates: View (finalUrl), Download (finalUrl), Share (finalUrl + promo) */}
         <div className="flex items-center gap-2">
-          {project.isPaid ? (
-            <>
-              <Button
-                size="sm"
-                variant="default"
-                className="flex-1"
-                onClick={() => handleViewVideo(project)}
-                data-testid={`button-view-${project.id}`}
-              >
-                <Eye className="h-4 w-4 mr-1" /> View
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => handleDownload(project)}
-                data-testid={`button-download-${project.id}`}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => handleShare(project)}
-                data-testid={`button-share-${project.id}`}
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                size="sm"
-                variant="default"
-                className="flex-1"
-                onClick={() => handleEdit(project)}
-                data-testid={`button-edit-${project.id}`}
-              >
-                <Edit className="h-4 w-4 mr-1" /> Edit
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => handleViewVideo(project)}
-                data-testid={`button-view-${project.id}`}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={() => handleDownload(project)}
-                data-testid={`button-download-${project.id}`}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </>
+          <Button
+            size="sm"
+            variant="default"
+            className="flex-1"
+            onClick={() => handleViewPaid(project)}
+            data-testid={`button-view-${project.id}`}
+          >
+            <Eye className="h-4 w-4 mr-1" /> View
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => triggerPaidDownload(project)}
+            data-testid={`button-download-${project.id}`}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => handleShare(project)}
+            data-testid={`button-share-${project.id}`}
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+
+  // Render card for GENERATED (unpaid) templates
+  const renderGeneratedProjectCard = (project: Project) => (
+    <Card 
+      key={project.id} 
+      className="group overflow-hidden transition-all duration-300"
+      data-testid={`card-project-${project.id}`}
+    >
+      <div className="relative aspect-[9/16] overflow-hidden bg-muted">
+        <img
+          src={project.thumbnailUrl || project.previewImageUrl}
+          alt={project.templateName}
+          className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+          data-testid={`img-thumbnail-${project.id}`}
+        />
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        <div className="absolute top-3 right-3">
+          <Badge variant="secondary" className="bg-black/60 backdrop-blur-sm text-white border-none" data-testid={`badge-preview-${project.id}`}>
+            Preview
+          </Badge>
+        </div>
+        
+        <div className="absolute bottom-3 left-3 flex flex-col gap-1">
+          <Badge 
+            variant="secondary" 
+            className="bg-black/60 backdrop-blur-sm text-white border-none"
+            data-testid={`badge-type-${project.id}`}
+          >
+            {project.templateType === "card" ? (
+              <><FileImage className="h-3 w-3 mr-1" /> Card</>
+            ) : (
+              <><Film className="h-3 w-3 mr-1" /> Video</>
+            )}
+          </Badge>
+          {project.templateType === "video" && (project.selectedMusic || project.customMusicUrl) && (
+            <Badge 
+              variant="secondary" 
+              className="bg-black/60 backdrop-blur-sm text-white border-none text-[10px]"
+              data-testid={`badge-music-${project.id}`}
+            >
+              <Music className="h-2.5 w-2.5 mr-1" />
+              {project.selectedMusic ? (
+                <span className="truncate max-w-[80px]">{project.selectedMusic.name}</span>
+              ) : (
+                <span>Custom Music</span>
+              )}
+            </Badge>
           )}
+        </div>
+      </div>
+      
+      <div className="p-3 lg:p-4">
+        <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-name-${project.id}`}>
+          {project.templateName}
+        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-muted-foreground capitalize">
+            {project.templateType}
+          </p>
+          <p className="text-base lg:text-lg font-semibold text-primary" data-testid={`text-price-${project.id}`}>
+            {formatPrice(project.price, project.currency)}
+          </p>
+        </div>
+        
+        {/* Generated Templates: Edit, View (previewUrl), Download (payment), Delete */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="default"
+            className="flex-1"
+            onClick={() => handleEdit(project)}
+            data-testid={`button-edit-${project.id}`}
+          >
+            <Edit className="h-4 w-4 mr-1" /> Edit
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => handleViewGenerated(project)}
+            data-testid={`button-view-${project.id}`}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => handleGeneratedDownload(project)}
+            data-testid={`button-download-${project.id}`}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => handleDeleteClick(project)}
+            disabled={deleteMutation.isPending}
+            data-testid={`button-delete-${project.id}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </Card>
@@ -362,7 +530,8 @@ export default function MyTemplates() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
       <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8" data-testid="heading-my-videos">My Templates</h1>
-      {/* Paid Templates Section - Only show if there are paid templates */}
+      
+      {/* Paid Templates Section */}
       {paidProjects.length > 0 && (
         <section className="mb-10" data-testid="section-paid-templates">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-paid-templates">
@@ -372,17 +541,17 @@ export default function MyTemplates() {
             </Badge>
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
-            {paidProjects.map(renderProjectCard)}
+            {paidProjects.map(renderPaidProjectCard)}
           </div>
         </section>
       )}
       
-      {/* Separator between sections */}
+      {/* Separator */}
       {paidProjects.length > 0 && generatedProjects.length > 0 && (
         <hr className="border-t border-border mb-10" />
       )}
       
-      {/* Generated Templates Section - Only show if there are generated templates */}
+      {/* Generated Templates Section */}
       {generatedProjects.length > 0 && (
         <section data-testid="section-generated-templates">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-generated-templates">
@@ -392,17 +561,22 @@ export default function MyTemplates() {
             </Badge>
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
-            {generatedProjects.map(renderProjectCard)}
+            {generatedProjects.map(renderGeneratedProjectCard)}
           </div>
         </section>
       )}
-      <VideoPreviewModal
-        open={showVideoModal}
-        onOpenChange={setShowVideoModal}
-        videoUrl={selectedVideoProject?.previewVideoUrl || null}
-        templateName={selectedVideoProject?.templateName || ""}
-        orientation={selectedVideoProject?.orientation || "portrait"}
+
+      {/* Media Preview Modal */}
+      <MediaPreviewModal
+        open={showMediaModal}
+        onOpenChange={setShowMediaModal}
+        mediaUrl={mediaModalData?.url || null}
+        mediaType={mediaModalData?.type || "video"}
+        templateName={mediaModalData?.name || ""}
+        orientation={mediaModalData?.orientation || "portrait"}
       />
+
+      {/* Payment Modal */}
       {selectedProject && (
         <PaymentModal
           isOpen={showPaymentModal}
@@ -417,6 +591,28 @@ export default function MyTemplates() {
           onSuccess={handlePaymentSuccess}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Template?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{projectToDelete?.templateName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProjectToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

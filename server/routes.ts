@@ -5,6 +5,7 @@ import * as bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Client } from "@replit/object-storage";
 import { adminAuth } from "./firebase-admin";
+import { renderProject } from "./render-service";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -274,13 +275,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.userId;
-      const { templateId, customization, selectedMusicId, customMusicUrl } = req.body;
+      const { templateId, customization, selectedMusicId, customMusicUrl, status } = req.body;
       
       if (!templateId || !customization) {
         return res.status(400).json({ error: "Template ID and customization are required" });
       }
       
-      // Get template to check for default music
+      // Get template to check for default music and type
       const template = await storage.getTemplateById(templateId);
       
       // Determine music to use:
@@ -295,14 +296,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         finalSelectedMusicId = template.defaultMusicId;
       }
       
-      const project = await storage.createProject({
+      // Create the initial project
+      let project = await storage.createProject({
         userId,
         templateId,
         customization,
-        status: "draft",
+        status: status || "draft",
         selectedMusicId: finalSelectedMusicId,
         customMusicUrl: finalCustomMusicUrl,
       });
+      
+      // If status is preview_requested, run the dummy render service
+      if (status === "preview_requested" && template) {
+        const renderResult = await renderProject(project.id, template.templateType);
+        project = await storage.updateProject(project.id, {
+          previewUrl: renderResult.previewUrl,
+          finalUrl: renderResult.finalUrl,
+          status: "completed",
+        }) || project;
+      }
       
       // Increment template generation count for popularity tracking
       await storage.incrementTemplateGeneration(templateId);
@@ -329,7 +341,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Not authorized to update this project" });
       }
       
-      const updatedProject = await storage.updateProject(id, updates);
+      // First apply the updates
+      let updatedProject = await storage.updateProject(id, updates);
+      
+      // If status changed to preview_requested, run the dummy render service
+      if (updates.status === "preview_requested" && updatedProject) {
+        const template = await storage.getTemplateById(existingProject.templateId);
+        if (template) {
+          const renderResult = await renderProject(id, template.templateType);
+          updatedProject = await storage.updateProject(id, {
+            previewUrl: renderResult.previewUrl,
+            finalUrl: renderResult.finalUrl,
+            status: "completed",
+          }) || updatedProject;
+        }
+      }
       
       res.json(updatedProject);
     } catch (error) {
@@ -371,6 +397,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get project error:", error);
       res.status(500).json({ error: "Failed to fetch project" });
+    }
+  });
+
+  // Delete a project (only allowed for unpaid/generated templates)
+  app.delete("/api/projects/:id", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { id } = req.params;
+      
+      const project = await storage.getProjectById(id);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to delete this project" });
+      }
+      
+      // Only allow deleting unpaid projects
+      if (project.paidAt) {
+        return res.status(400).json({ error: "Cannot delete paid templates" });
+      }
+      
+      await storage.deleteProject(id);
+      
+      res.json({ success: true, message: "Project deleted successfully" });
+    } catch (error) {
+      console.error("Delete project error:", error);
+      res.status(500).json({ error: "Failed to delete project" });
+    }
+  });
+
+  // Backfill endpoint to populate NULL previewUrl/finalUrl for existing projects
+  app.post("/api/admin/backfill-project-urls", async (req, res) => {
+    try {
+      const allProjects = await storage.getAllProjects();
+      let updatedCount = 0;
+      
+      for (const project of allProjects) {
+        // Only update projects that have NULL URLs
+        if (!project.previewUrl || !project.finalUrl) {
+          const template = await storage.getTemplateById(project.templateId);
+          if (template) {
+            const renderResult = await renderProject(project.id, template.templateType);
+            await storage.updateProject(project.id, {
+              previewUrl: renderResult.previewUrl,
+              finalUrl: renderResult.finalUrl,
+            });
+            updatedCount++;
+          }
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Backfilled ${updatedCount} projects with preview/final URLs`,
+        totalProjects: allProjects.length,
+        updatedCount
+      });
+    } catch (error) {
+      console.error("Backfill error:", error);
+      res.status(500).json({ error: "Failed to backfill project URLs" });
     }
   });
 
