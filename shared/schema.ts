@@ -112,6 +112,7 @@ export const projects = pgTable("projects", {
   finalUrl: varchar("final_url"),
   customMusicUrl: varchar("custom_music_url"),
   selectedMusicId: varchar("selected_music_id").references(() => music.id),
+  musicStartTime: decimal("music_start_time", { precision: 10, scale: 2 }).default("0"), // Music offset in seconds (Instagram-style trim)
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   paidAt: timestamp("paid_at"),
