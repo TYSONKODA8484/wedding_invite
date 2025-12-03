@@ -691,8 +691,9 @@ export default function Editor() {
   const musicFileInputRef = useRef<HTMLInputElement>(null);
   const customMusicUrlRef = useRef<string | null>(null); // Track URL for cleanup
   
-  // Helper to check if custom music is active (either local file or saved URL from server)
-  const hasCustomMusic = customMusicFile !== null || (customMusicUrl !== null && customMusicUrl.startsWith('/api/media/'));
+  // Helper to check if custom music is active (either local file or any saved URL from server)
+  // Treat any non-null customMusicUrl as custom music (handles /api/media/, absolute URLs, signed URLs, etc.)
+  const hasCustomMusic = customMusicFile !== null || customMusicUrl !== null;
   
   // Fetch music library
   const { data: musicLibrary, isLoading: musicLoading } = useQuery<{ music: MusicType[] }>({
@@ -722,8 +723,8 @@ export default function Editor() {
   // Get current music name
   const getCurrentMusicName = useCallback(() => {
     if (customMusicFile) return customMusicFile.name;
-    // Check for saved custom music URL (from server)
-    if (customMusicUrl && customMusicUrl.startsWith('/api/media/')) {
+    // Check for any saved custom music URL (from server)
+    if (customMusicUrl) {
       return 'Custom Music';
     }
     if (selectedMusicId && musicLibrary?.music) {
@@ -1352,8 +1353,9 @@ export default function Editor() {
         // Custom music will be uploaded after project creation
         // Don't send selectedMusicId since we're using custom
         musicPayload.selectedMusicId = null;
-      } else if (customMusicUrl && customMusicUrl.startsWith('/api/media/')) {
+      } else if (customMusicUrl && !customMusicUrl.startsWith('blob:')) {
         // Custom music is already on server (from previous save) - preserve it
+        // Check it's not a blob URL (local preview) - server URLs can be /api/media/*, absolute URLs, etc.
         musicPayload.customMusicUrl = customMusicUrl;
         musicPayload.selectedMusicId = null;
       } else if (selectedMusicId) {
@@ -1736,11 +1738,41 @@ export default function Editor() {
                   <div className="flex items-center gap-2 p-3 rounded-md border border-border bg-muted/30">
                     <Music className="w-4 h-4 text-primary flex-shrink-0" />
                     <span className="text-sm font-medium truncate">{getCurrentMusicName()}</span>
-                    {customMusicFile && (
+                    {hasCustomMusic && (
                       <Badge variant="secondary" className="ml-auto flex-shrink-0">Custom</Badge>
                     )}
                   </div>
                 </div>
+                
+                {/* Saved Custom Music Section - shows when we have a server-saved custom music URL but no local file */}
+                {customMusicUrl && !customMusicFile && (
+                  <div className="mb-4 sm:mb-6">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Your Uploaded Music</Label>
+                    <div className="flex items-center gap-3 p-3 rounded-md border border-primary bg-primary/5">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
+                        <Music className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">Custom Music</p>
+                        <p className="text-xs text-muted-foreground">Previously uploaded</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          revokeCustomMusicUrl(); // Clean up any blob URLs
+                          setCustomMusicUrl(null);
+                          setCustomMusicFile(null);
+                        }}
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+                        data-testid="button-remove-saved-music"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                    </div>
+                  </div>
+                )}
                 
                 {/* Audio Player */}
                 <div className="bg-muted/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
@@ -1808,14 +1840,14 @@ export default function Editor() {
                           key={track.id}
                           onClick={() => handleSelectStockMusic(track.id)}
                           className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
-                            selectedMusicId === track.id && !customMusicFile
+                            selectedMusicId === track.id && !hasCustomMusic
                               ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-muted-foreground/50'
                           }`}
                           data-testid={`music-track-${track.id}`}
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            selectedMusicId === track.id && !customMusicFile
+                            selectedMusicId === track.id && !hasCustomMusic
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
                           }`}>
@@ -1825,7 +1857,7 @@ export default function Editor() {
                             <p className="text-sm font-medium truncate">{track.name}</p>
                             <p className="text-xs text-muted-foreground capitalize">{track.category} • {track.duration}s</p>
                           </div>
-                          {selectedMusicId === track.id && !customMusicFile && (
+                          {selectedMusicId === track.id && !hasCustomMusic && (
                             <Check className="w-4 h-4 text-primary flex-shrink-0" />
                           )}
                         </div>
@@ -1978,7 +2010,7 @@ export default function Editor() {
               data-testid="button-upload-music"
             >
               <Music className="w-4 h-4 mr-2" />
-              {selectedMusicId || customMusicFile || (customMusicUrl && customMusicUrl.startsWith('/api/media/')) ? 'Change Music' : 'Add Music'}
+              {selectedMusicId || hasCustomMusic ? 'Change Music' : 'Add Music'}
             </Button>
           )}
           <Button 
