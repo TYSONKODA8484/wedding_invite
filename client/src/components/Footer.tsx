@@ -23,6 +23,8 @@ export function Footer() {
   const cultureLinks = [
     { label: "Indian Weddings", href: "/culture/indian-wedding-video-invitation" },
     { label: "Arabic Weddings", href: "/culture/arabic-wedding-video-uae-saudi" },
+    { label: "Punjabi Weddings", href: "/culture/punjabi" },
+    { label: "Nigerian Weddings", href: "/culture/nigerian-traditional-wedding-video" },
     { label: "All Cultures", href: "/culture" },
   ];
 
