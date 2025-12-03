@@ -442,6 +442,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Render a single page preview with customizations
   // No auth required - preview is available to all users (shows watermarked dummy images)
+  // Data is NOT saved to database - only returned for client-side display
+  // Preview URLs are saved to project only when Generate is clicked (via saveProjectMutation)
   app.post("/api/preview/page", async (req: any, res) => {
     try {
       const { projectId, templateId, pageId, previewIndex, customization } = req.body;
@@ -454,35 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentIndex = previewIndex || 0;
       const result = await renderPagePreview(projectId || templateId, pageId, currentIndex);
       
-      // If projectId is provided and user is authenticated, save to project
-      if (projectId) {
-        try {
-          const token = req.headers.authorization?.replace("Bearer ", "");
-          if (token) {
-            const jwt = await import("jsonwebtoken");
-            const decoded = jwt.verify(token, process.env.SESSION_SECRET!) as { userId: string };
-            const project = await storage.getProjectById(projectId);
-            
-            if (project && project.userId === decoded.userId) {
-              // Save the preview URL to project customization so it persists
-              const existingCustomization = (project.customization as Record<string, any>) || {};
-              const pagePreviewUrls = existingCustomization.pagePreviewUrls || {};
-              pagePreviewUrls[pageId] = result.previewUrl;
-              
-              // Update project with the new page preview URL
-              await storage.updateProject(projectId, {
-                customization: {
-                  ...existingCustomization,
-                  pagePreviewUrls,
-                },
-              });
-            }
-          }
-        } catch (authError) {
-          // Ignore auth errors - preview still works, just won't be saved to project
-        }
-      }
-      
+      // Return preview URL - client will store in state and save to project only on Generate
       res.json({
         success: true,
         previewUrl: result.previewUrl,
@@ -1099,6 +1073,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error serving generated file:", error);
       if (!res.headersSent) {
         res.status(500).json({ error: "Failed to serve generated file" });
+      }
+    }
+  });
+  
+  // Handle preview images in subdirectory (e.g., Ind/preview/ed_p1.png)
+  app.get("/api/media/Ind/preview/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      const client = new Client();
+      const fileKey = `Ind/preview/${filename}`;
+      
+      const contentType = getContentType(filename);
+      
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'public, max-age=31536000',
+        'Accept-Ranges': 'bytes',
+      });
+      
+      const stream = client.downloadAsStream(fileKey);
+      
+      stream.on('error', (error) => {
+        console.error("Stream error for preview file", fileKey, ":", error);
+        if (!res.headersSent) {
+          res.status(404).json({ error: "File not found" });
+        }
+      });
+      
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving preview file:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to serve preview file" });
       }
     }
   });
