@@ -246,12 +246,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.userId;
       const projects = await storage.getUserProjects(userId);
       
-      // Enrich projects with music information
-      const enrichedProjects = await Promise.all(projects.map(async (project: any) => {
-        let selectedMusic = null;
-        if (project.selectedMusicId) {
-          selectedMusic = await storage.getMusicById(project.selectedMusicId);
-        }
+      // Batch fetch all music IDs in a single query (fixes N+1 problem)
+      const musicIds = projects
+        .map((p: any) => p.selectedMusicId)
+        .filter((id: string | null): id is string => id !== null);
+      
+      const musicTracks = musicIds.length > 0 
+        ? await storage.getMusicByIds(musicIds) 
+        : [];
+      
+      // Create a lookup map for O(1) access
+      const musicMap = new Map(musicTracks.map(m => [m.id, m]));
+      
+      // Enrich projects with music information using the map
+      const enrichedProjects = projects.map((project: any) => {
+        const selectedMusic = project.selectedMusicId 
+          ? musicMap.get(project.selectedMusicId) 
+          : null;
         
         return {
           ...project,
@@ -263,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             category: selectedMusic.category,
           } : null,
         };
-      }));
+      });
       
       res.json(enrichedProjects);
     } catch (error) {

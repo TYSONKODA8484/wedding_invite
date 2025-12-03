@@ -115,7 +115,10 @@ export const projects = pgTable("projects", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   paidAt: timestamp("paid_at"),
-});
+}, (table) => [
+  index("idx_projects_user_id").on(table.userId),
+  index("idx_projects_updated_at").on(table.updatedAt),
+]);
 
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
@@ -159,7 +162,10 @@ export const orders = pgTable("orders", {
   providerOrderId: varchar("provider_order_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_orders_project_id").on(table.projectId),
+  index("idx_orders_user_id").on(table.userId),
+]);
 
 export const insertOrderSchema = createInsertSchema(orders).omit({
   id: true,
@@ -180,7 +186,9 @@ export const payments = pgTable("payments", {
   currency: varchar("currency").notNull().default("INR"),
   payload: jsonb("payload").notNull(),
   receivedAt: timestamp("received_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_payments_order_id").on(table.orderId),
+]);
 
 export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,

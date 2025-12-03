@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, sql, and, lt, isNull } from "drizzle-orm";
+import { eq, sql, and, lt, isNull, inArray } from "drizzle-orm";
 import {
   users,
   templates,
@@ -69,6 +69,7 @@ export interface IStorage {
   // Music operations
   getMusicLibrary(category?: string): Promise<Music[]>;
   getMusicById(id: string): Promise<Music | undefined>;
+  getMusicByIds(ids: string[]): Promise<Music[]>;
   
   // Cleanup operations
   deleteOldUnpaidProjects(daysOld: number): Promise<number>;
@@ -366,6 +367,14 @@ export class DatabaseStorage implements IStorage {
       .from(music)
       .where(eq(music.id, id));
     return track || undefined;
+  }
+
+  async getMusicByIds(ids: string[]): Promise<Music[]> {
+    if (ids.length === 0) return [];
+    return db
+      .select()
+      .from(music)
+      .where(inArray(music.id, ids));
   }
 
   // Cleanup operations
