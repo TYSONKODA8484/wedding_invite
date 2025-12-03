@@ -1425,6 +1425,9 @@ export default function Editor() {
           setShowPreviewLoading(false);
           setPreviewUrl(templateData?.pages?.[0]?.thumbnailUrl || '');
           setShowPreviewModal(true);
+          // Enable Download button after generation completes
+          // (clicking it will open payment modal since downloadUrl is not set yet)
+          setDownloadEnabled(true);
           return 100;
         }
         return prev + 10;
