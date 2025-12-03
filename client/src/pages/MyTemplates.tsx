@@ -368,15 +368,12 @@ export default function MyTemplates() {
           {project.templateName}
         </h3>
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-muted-foreground capitalize">
-            {project.templateType}
-            {project.paidAt && (
-              <span className="text-green-600 ml-1">
-                {new Date(project.paidAt).toLocaleDateString()}
-              </span>
-            )}
-          </p>
-          <p className="text-base lg:text-lg font-semibold text-primary" data-testid={`text-price-${project.id}`}>
+          {project.paidAt && (
+            <p className="text-xs text-green-600">
+              {new Date(project.paidAt).toLocaleDateString()}
+            </p>
+          )}
+          <p className="text-base lg:text-lg font-semibold text-primary ml-auto" data-testid={`text-price-${project.id}`}>
             {formatPrice(project.price, project.currency)}
           </p>
         </div>
@@ -461,10 +458,7 @@ export default function MyTemplates() {
         <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-name-${project.id}`}>
           {project.templateName}
         </h3>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-muted-foreground capitalize">
-            {project.templateType}
-          </p>
+        <div className="flex items-center justify-end mb-3">
           <p className="text-base lg:text-lg font-semibold text-primary" data-testid={`text-price-${project.id}`}>
             {formatPrice(project.price, project.currency)}
           </p>
