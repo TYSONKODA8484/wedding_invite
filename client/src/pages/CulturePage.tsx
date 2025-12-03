@@ -1,8 +1,11 @@
 import { useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
 import { HeroSection } from "@/components/HeroSection";
 import { TemplateCard } from "@/components/TemplateCard";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import type { Template } from "@shared/schema";
 import indianPunjabiHero from "@assets/generated_images/Indian_Punjabi_wedding_culture_b8245c44.png";
 import tamilHero from "@assets/generated_images/Tamil_wedding_culture_page_3a868c20.png";
 import arabicHero from "@assets/generated_images/Arabic_UAE_wedding_culture_5fdde5ea.png";
@@ -10,7 +13,22 @@ import nigerianHero from "@assets/generated_images/Nigerian_traditional_wedding_
 import quinceaneraHero from "@assets/generated_images/Quinceañera_culture_page_hero_f3e1cb71.png";
 import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
 
-const cultureData: Record<string, any> = {
+interface CultureInfo {
+  name: string;
+  localName: string;
+  description: string;
+  traditions: string[];
+  symbols: string[];
+  heroImage: string;
+  templateCount: number;
+  region?: string;  // Maps to database region for fetching templates
+  regions?: string[]; // Multiple regions for Arabic (uae, saudi)
+  seoTitle?: string;
+  seoDescription?: string;
+  keywords?: string;
+}
+
+const cultureData: Record<string, CultureInfo> = {
   "indian-wedding-video-invitation": {
     name: "Indian Wedding Video Invitations",
     localName: "भारतीय विवाह निमंत्रण",
@@ -19,6 +37,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Kalash & Coconut", "Marigold Flowers", "Sacred Fire", "Rangoli Designs", "Traditional Attire"],
     heroImage: indianPunjabiHero,
     templateCount: 120,
+    region: "india",
+    seoTitle: "Indian Wedding Video Invitation | WhatsApp Shaadi Invites",
+    seoDescription: "Create beautiful Indian wedding video invitations for WhatsApp. 100+ templates for Hindu, Punjabi, South Indian, Bengali weddings. Mehendi, Sangeet, Haldi ceremony invites.",
+    keywords: "indian wedding invitation video, shaadi video invitation, hindu wedding video, whatsapp wedding invitation india, mehendi invitation, sangeet video",
   },
   "punjabi": {
     name: "Punjabi Wedding Videos",
@@ -28,6 +50,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Red & Gold Colors", "Phulkari Patterns", "Dhol Drums", "Sehra for Groom", "Chooda for Bride"],
     heroImage: indianPunjabiHero,
     templateCount: 45,
+    region: "india",
+    seoTitle: "Punjabi Wedding Video Invitation | Bhangra Style Invites",
+    seoDescription: "Create vibrant Punjabi wedding video invitations with Bhangra beats and colorful traditions. Perfect for Anand Karaj and Sikh weddings.",
+    keywords: "punjabi wedding invitation, sikh wedding video, anand karaj invitation, bhangra wedding video, punjabi shaadi invite",
   },
   "tamil": {
     name: "Tamil Wedding Videos",
@@ -37,6 +63,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Silk Sarees", "Jasmine Garlands", "Temple Architecture", "Thali Mangalsutra", "Banana Leaves"],
     heroImage: tamilHero,
     templateCount: 38,
+    region: "india",
+    seoTitle: "Tamil Wedding Video Invitation | South Indian Invites",
+    seoDescription: "Create traditional Tamil wedding video invitations with temple aesthetics and authentic South Indian customs. Perfect for Brahmin and Hindu weddings.",
+    keywords: "tamil wedding invitation, south indian wedding video, brahmin wedding invite, chennai wedding video, tamil kalyanam invitation",
   },
   "telugu": {
     name: "Telugu Wedding Videos",
@@ -46,6 +76,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Gold Jewelry", "Kanchipuram Silk", "Turmeric Paste", "Mango Leaves", "Traditional Kolam"],
     heroImage: tamilHero,
     templateCount: 32,
+    region: "india",
+    seoTitle: "Telugu Wedding Video Invitation | Andhra & Telangana Invites",
+    seoDescription: "Create elegant Telugu wedding video invitations for Andhra Pradesh and Telangana weddings. Traditional Pellikuthuru and ceremony invites.",
+    keywords: "telugu wedding invitation, andhra wedding video, telangana wedding invite, hyderabad wedding video, telugu pelli invitation",
   },
   "gujarati": {
     name: "Gujarati Wedding Videos",
@@ -55,6 +89,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Bandhani Prints", "Mirror Work", "Dandiya Sticks", "Swastik Symbol", "Coconut & Dates"],
     heroImage: indianPunjabiHero,
     templateCount: 28,
+    region: "india",
+    seoTitle: "Gujarati Wedding Video Invitation | Garba Night Invites",
+    seoDescription: "Create colorful Gujarati wedding video invitations with Garba and Dandiya themes. Perfect for traditional Gujarat weddings.",
+    keywords: "gujarati wedding invitation, garba wedding video, dandiya night invite, ahmedabad wedding video, gujarati lagna invitation",
   },
   "bengali": {
     name: "Bengali Wedding Videos",
@@ -64,6 +102,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Red & White Saree", "Shankha Pola Bangles", "Alpana Designs", "Topor Crown", "Betel Leaves"],
     heroImage: tamilHero,
     templateCount: 26,
+    region: "india",
+    seoTitle: "Bengali Wedding Video Invitation | Biye Invites",
+    seoDescription: "Create artistic Bengali wedding video invitations with traditional Alpana designs and authentic customs. Perfect for Kolkata weddings.",
+    keywords: "bengali wedding invitation, kolkata wedding video, biye invitation, bengali shaadi video, subho drishti invitation",
   },
   "muslim-nikah": {
     name: "Muslim Nikah Videos",
@@ -73,6 +115,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Crescent & Star", "Arabic Calligraphy", "Henna Designs", "Green & Gold", "Floral Patterns"],
     heroImage: arabicHero,
     templateCount: 42,
+    region: "india",
+    seoTitle: "Muslim Nikah Video Invitation | Islamic Wedding Invites",
+    seoDescription: "Create elegant Muslim Nikah video invitations with Islamic patterns and traditional designs. Perfect for Walima and Mehendi ceremonies.",
+    keywords: "nikah invitation video, muslim wedding video, islamic wedding invitation, walima invitation, mehendi ceremony video",
   },
   "christian": {
     name: "Christian Wedding Videos",
@@ -82,6 +128,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Cross & Bible", "White Dove", "Wedding Bells", "Church Architecture", "White & Ivory"],
     heroImage: homepageHero,
     templateCount: 35,
+    region: "india",
+    seoTitle: "Christian Wedding Video Invitation | Church Wedding Invites",
+    seoDescription: "Create sacred Christian wedding video invitations for church ceremonies. Beautiful designs for holy matrimony celebrations.",
+    keywords: "christian wedding invitation, church wedding video, holy matrimony invitation, christian marriage video",
   },
   "arabic-wedding-video-uae-saudi": {
     name: "Arabic Wedding Videos - UAE & Saudi",
@@ -91,6 +141,10 @@ const cultureData: Record<string, any> = {
     symbols: ["Gold Decor", "Arabic Calligraphy", "Oud Perfume", "Luxurious Fabrics", "Intricate Patterns"],
     heroImage: arabicHero,
     templateCount: 55,
+    regions: ["uae", "saudi"],
+    seoTitle: "Arabic Wedding Video Invitation | UAE & Saudi Wedding Invites",
+    seoDescription: "Create luxury Arabic wedding videos for UAE and Saudi Arabia. Dubai, Abu Dhabi, Riyadh templates with traditional Islamic designs.",
+    keywords: "arabic wedding invitation video, uae wedding video, saudi wedding invitation, dubai wedding video, دعوة زفاف عربية",
   },
   "nigerian-traditional-wedding-video": {
     name: "Nigerian Traditional Wedding Videos",
@@ -100,6 +154,9 @@ const cultureData: Record<string, any> = {
     symbols: ["Ankara Fabric", "Gele Headwrap", "Coral Beads", "Aso Ebi", "Traditional Drums"],
     heroImage: nigerianHero,
     templateCount: 48,
+    seoTitle: "Nigerian Traditional Wedding Video Invitation | African Wedding Invites",
+    seoDescription: "Create vibrant Nigerian traditional wedding video invitations with authentic African heritage designs. Aso Ebi and cultural customs.",
+    keywords: "nigerian wedding invitation, african wedding video, traditional nigerian wedding, aso ebi invitation, yoruba wedding video",
   },
   "quinceanera-video-invitation": {
     name: "Quinceañera Video Invitations",
@@ -109,6 +166,9 @@ const cultureData: Record<string, any> = {
     symbols: ["Tiara & Crown", "Pink & Gold", "Roses", "Butterfly Theme", "Ball Gown"],
     heroImage: quinceaneraHero,
     templateCount: 40,
+    seoTitle: "Quinceañera Video Invitation | 15th Birthday Invites",
+    seoDescription: "Create beautiful quinceañera video invitations for 15th birthday celebrations. Traditional Latin American designs with tiara and rose themes.",
+    keywords: "quinceanera invitation video, 15 birthday invitation, quince años video, mis quince invitation, latin birthday video",
   },
   "chinese-tea-ceremony-video": {
     name: "Chinese Tea Ceremony Videos",
@@ -118,6 +178,9 @@ const cultureData: Record<string, any> = {
     symbols: ["Red & Gold Colors", "Dragon & Phoenix", "Double Happiness", "Peonies", "Lanterns"],
     heroImage: homepageHero,
     templateCount: 36,
+    seoTitle: "Chinese Wedding Video Invitation | Tea Ceremony Invites",
+    seoDescription: "Create traditional Chinese wedding video invitations with tea ceremony and Double Happiness themes. Red and gold designs.",
+    keywords: "chinese wedding invitation, tea ceremony video, double happiness invitation, chinese wedding video, 中国婚礼邀请",
   },
   "korean-pyebaek-video": {
     name: "Korean Pyebaek Ceremony Videos",
@@ -127,6 +190,9 @@ const cultureData: Record<string, any> = {
     symbols: ["Hanbok Attire", "Red & Blue Colors", "Korean Knots", "Ducks Symbolism", "Traditional Table"],
     heroImage: tamilHero,
     templateCount: 30,
+    seoTitle: "Korean Wedding Video Invitation | Pyebaek Ceremony Invites",
+    seoDescription: "Create elegant Korean wedding video invitations with Hanbok and Pyebaek ceremony traditions. Traditional Korean designs.",
+    keywords: "korean wedding invitation, pyebaek video, hanbok wedding invitation, korean ceremony video, 한국 결혼식 초대장",
   },
   "filipino-debut-video": {
     name: "Filipino Debut Videos",
@@ -136,6 +202,9 @@ const cultureData: Record<string, any> = {
     symbols: ["Gown & Tiara", "Roses", "Pearls", "Butterfly Theme", "Gold Accents"],
     heroImage: quinceaneraHero,
     templateCount: 32,
+    seoTitle: "Filipino Debut Video Invitation | 18th Birthday Invites",
+    seoDescription: "Create festive Filipino debut video invitations for 18th birthday celebrations. 18 Roses and 18 Candles traditions.",
+    keywords: "filipino debut invitation, 18th birthday video, debut party invitation, filipino birthday video, debutante invitation",
   },
   "jewish-bar-bat-mitzvah-video-invitation": {
     name: "Jewish Bar/Bat Mitzvah Videos",
@@ -145,27 +214,115 @@ const cultureData: Record<string, any> = {
     symbols: ["Star of David", "Torah Scroll", "Tallit & Kippah", "Blue & Silver", "Hamsa Hand"],
     heroImage: homepageHero,
     templateCount: 34,
+    seoTitle: "Bar/Bat Mitzvah Video Invitation | Jewish Celebration Invites",
+    seoDescription: "Create meaningful Bar and Bat Mitzvah video invitations with Star of David and Torah themes. Jewish coming of age celebrations.",
+    keywords: "bar mitzvah invitation video, bat mitzvah video, jewish celebration invitation, torah reading invitation, בר מצווה הזמנה",
   },
 };
 
+interface TemplateResponse {
+  templates: Template[];
+  pagination: { total: number; offset: number; limit: number; hasMore: boolean };
+}
+
 export default function CulturePage() {
   const [, params] = useRoute("/culture/:slug");
-  const slug = params?.slug || "indian-wedding-video-invitation";
+  const [, subParams] = useRoute("/culture/:parent/:slug");
+  
+  // Handle nested routes like /culture/indian-wedding-video-invitation/punjabi
+  const slug = subParams?.slug || params?.slug || "indian-wedding-video-invitation";
   const culture = cultureData[slug] || cultureData["indian-wedding-video-invitation"];
 
-  const templates = [
-    { id: "1", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: culture.heroImage, isPremium: true, templateType: "video" as const, pageCount: 1 },
-    { id: "2", title: "Cultural Heritage", slug: "cultural-heritage", category: "wedding", duration: 50, thumbnailUrl: culture.heroImage, isPremium: true, templateType: "video" as const, pageCount: 1 },
-    { id: "3", title: "Modern Fusion", slug: "modern-fusion", category: "wedding", duration: 45, thumbnailUrl: culture.heroImage, isPremium: false, templateType: "card" as const, pageCount: 4 },
-    { id: "4", title: "Classic Traditions", slug: "classic-traditions", category: "wedding", duration: 55, thumbnailUrl: culture.heroImage, isPremium: false, templateType: "video" as const, pageCount: 1 },
-  ];
+  // Build region query for API
+  const regionQuery = culture.regions 
+    ? culture.regions.join(',') 
+    : culture.region || '';
+
+  // Fetch real templates from database based on culture's region
+  const { data, isLoading } = useQuery<TemplateResponse>({
+    queryKey: ["/api/templates", { region: regionQuery }],
+    queryFn: async () => {
+      const url = regionQuery 
+        ? `/api/templates?region=${regionQuery}&limit=20`
+        : `/api/templates?limit=20`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch templates");
+      return response.json();
+    },
+  });
+  
+  const templates = data?.templates || [];
+
+  // SEO Schema markup
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: culture.seoTitle || culture.name,
+    description: culture.seoDescription || culture.description,
+    url: `https://weddinginvite.ai/culture/${slug}`,
+    about: {
+      "@type": "Thing",
+      name: culture.name,
+      description: culture.description
+    },
+    numberOfItems: templates.length || culture.templateCount
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://weddinginvite.ai"
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Cultures",
+        item: "https://weddinginvite.ai/culture"
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: culture.name,
+        item: `https://weddinginvite.ai/culture/${slug}`
+      }
+    ]
+  };
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: `How do I create a ${culture.name.toLowerCase()}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Choose from our ${culture.templateCount}+ ${culture.name.toLowerCase()} templates, customize with your details, and share instantly via WhatsApp or download in HD quality.`
+        }
+      },
+      {
+        "@type": "Question",
+        name: `What ceremonies are included in ${culture.name.toLowerCase()}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `Our ${culture.name.toLowerCase()} include templates for: ${culture.traditions.join(', ')}.`
+        }
+      }
+    ]
+  };
 
   return (
     <>
       <SEOHead
-        title={culture.name}
-        description={`${culture.description} Browse ${culture.templateCount}+ authentic video invitation templates.`}
-        keywords={`${culture.name}, ${slug}, cultural wedding video, ${culture.localName}, traditional invitation`}
+        title={culture.seoTitle || culture.name}
+        description={culture.seoDescription || `${culture.description} Browse ${culture.templateCount}+ authentic video invitation templates.`}
+        keywords={culture.keywords || `${culture.name}, ${slug}, cultural wedding video, ${culture.localName}, traditional invitation`}
+        schema={[collectionSchema, breadcrumbSchema, faqSchema]}
       />
 
       <HeroSection
@@ -216,14 +373,43 @@ export default function CulturePage() {
             <h3 className="font-playfair text-3xl lg:text-4xl font-bold text-foreground mb-2 text-center">
               {culture.name} Templates
             </h3>
-            <p className="text-muted-foreground text-center text-lg">{culture.templateCount} culturally authentic templates available</p>
+            <p className="text-muted-foreground text-center text-lg">
+              {isLoading ? "Loading templates..." : `${templates.length > 0 ? templates.length : culture.templateCount} culturally authentic templates available`}
+            </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
-            {templates.map((template) => (
-              <TemplateCard key={template.id} {...template} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            </div>
+          ) : templates.length === 0 ? (
+            <Card className="p-12 text-center">
+              <p className="text-muted-foreground text-lg mb-4">
+                Templates for {culture.name} are coming soon!
+              </p>
+              <p className="text-sm text-muted-foreground">
+                In the meantime, explore our general wedding templates.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
+              {templates.map((template) => (
+                <TemplateCard
+                  key={template.id}
+                  id={template.id}
+                  title={template.templateName}
+                  slug={template.slug}
+                  category={template.category}
+                  duration={template.durationSec}
+                  thumbnailUrl={template.thumbnailUrl}
+                  demoVideoUrl={template.previewVideoUrl}
+                  templateType={template.templateType as "video" | "card"}
+                  isPremium={Number(template.price) > 150000}
+                  pageCount={(template.templateJson as any)?.pages?.length || 1}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>

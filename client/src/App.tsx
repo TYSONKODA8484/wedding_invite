@@ -61,8 +61,24 @@ function Router() {
       <Route path="/culture/indian-wedding-video-invitation/gujarati" component={CulturePage} />
       <Route path="/culture/indian-wedding-video-invitation/bengali" component={CulturePage} />
       <Route path="/culture/indian-wedding-video-invitation/muslim-nikah" component={CulturePage} />
+      <Route path="/culture/indian-wedding-video-invitation/christian" component={CulturePage} />
+      {/* Direct culture routes (for cleaner URLs) */}
+      <Route path="/culture/punjabi" component={CulturePage} />
+      <Route path="/culture/tamil" component={CulturePage} />
+      <Route path="/culture/telugu" component={CulturePage} />
+      <Route path="/culture/gujarati" component={CulturePage} />
+      <Route path="/culture/bengali" component={CulturePage} />
+      <Route path="/culture/muslim-nikah" component={CulturePage} />
+      <Route path="/culture/christian" component={CulturePage} />
       {/* Arabic Wedding Cultures */}
       <Route path="/culture/arabic-wedding-video-uae-saudi" component={CulturePage} />
+      {/* Global Cultures */}
+      <Route path="/culture/nigerian-traditional-wedding-video" component={CulturePage} />
+      <Route path="/culture/quinceanera-video-invitation" component={CulturePage} />
+      <Route path="/culture/chinese-tea-ceremony-video" component={CulturePage} />
+      <Route path="/culture/korean-pyebaek-video" component={CulturePage} />
+      <Route path="/culture/filipino-debut-video" component={CulturePage} />
+      <Route path="/culture/jewish-bar-bat-mitzvah-video-invitation" component={CulturePage} />
       
       {/* Focus Markets: India + UAE/Arabic Countries */}
       <Route path="/countries/india" component={CountryPage} />
