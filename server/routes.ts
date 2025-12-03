@@ -5,7 +5,7 @@ import * as bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Client } from "@replit/object-storage";
 import { adminAuth } from "./firebase-admin";
-import { renderProject } from "./render-service";
+import { renderProject, renderPagePreview } from "./render-service";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -437,6 +437,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete project error:", error);
       res.status(500).json({ error: "Failed to delete project" });
+    }
+  });
+
+  // Render a single page preview with customizations
+  app.post("/api/preview/page", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { projectId, pageId, previewIndex, customization } = req.body;
+      
+      if (!projectId || !pageId) {
+        return res.status(400).json({ error: "projectId and pageId are required" });
+      }
+      
+      // Verify user owns this project
+      const project = await storage.getProjectById(projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized to preview this project" });
+      }
+      
+      // Render the page preview (cycles through dummy images for now)
+      const currentIndex = previewIndex || 0;
+      const result = await renderPagePreview(projectId, pageId, currentIndex);
+      
+      // Save the preview URL to project customization so it persists
+      const existingCustomization = (project.customization as Record<string, any>) || {};
+      const pagePreviewUrls = existingCustomization.pagePreviewUrls || {};
+      pagePreviewUrls[pageId] = result.previewUrl;
+      
+      // Update project with the new page preview URL
+      await storage.updateProject(projectId, {
+        customization: {
+          ...existingCustomization,
+          pagePreviewUrls,
+        },
+      });
+      
+      res.json({
+        success: true,
+        previewUrl: result.previewUrl,
+        nextIndex: result.nextIndex,
+        pageId,
+      });
+    } catch (error) {
+      console.error("Page preview error:", error);
+      res.status(500).json({ error: "Failed to generate page preview" });
     }
   });
 
