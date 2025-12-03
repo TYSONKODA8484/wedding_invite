@@ -67,7 +67,7 @@ export default function MyTemplates() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   
-  const { data: projects, isLoading } = useQuery<Project[]>({
+  const { data: projects, isLoading, isFetching } = useQuery<Project[]>({
     queryKey: ["/api/projects/mine"],
     queryFn: async () => {
       const token = localStorage.getItem("auth_token");
@@ -95,9 +95,9 @@ export default function MyTemplates() {
       
       return response.json();
     },
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 30000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Delete mutation
@@ -164,28 +164,28 @@ export default function MyTemplates() {
   };
 
   const handlePaymentSuccess = async () => {
+    // Invalidate cache so next render gets fresh data
     await queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
     
+    // After payment success, trigger download using the selected project's finalUrl
     if (selectedProject) {
-      try {
-        const token = localStorage.getItem("auth_token");
-        const response = await fetch("/api/projects/mine", {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-          },
-        });
-        
-        if (response.ok) {
-          const freshProjects: Project[] = await response.json();
-          const updatedProject = freshProjects.find(p => p.id === selectedProject.id);
-          
-          if (updatedProject && updatedProject.isPaid) {
-            triggerPaidDownload(updatedProject);
+      // Short delay to allow backend to update finalUrl after payment
+      setTimeout(async () => {
+        try {
+          // Refetch the data to get the updated project with finalUrl
+          const freshProjects = await queryClient.fetchQuery<Project[]>({ 
+            queryKey: ["/api/projects/mine"] 
+          });
+          if (freshProjects) {
+            const updatedProject = freshProjects.find(p => p.id === selectedProject.id);
+            if (updatedProject && updatedProject.isPaid && updatedProject.finalUrl) {
+              triggerPaidDownload(updatedProject);
+            }
           }
+        } catch {
+          // Silently fail - user can manually download from My Templates
         }
-      } catch (error) {
-        console.error("Failed to fetch updated project for download:", error);
-      }
+      }, 500);
     }
   };
 
@@ -260,10 +260,23 @@ export default function MyTemplates() {
     return `${currency} ${parseFloat(price).toFixed(2)}`;
   };
 
-  if (isLoading) {
+  // Only show full loading state on initial load (no cached data)
+  if (isLoading && !projects) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <div className="text-center">Loading your templates...</div>
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8">My Templates</h1>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="overflow-hidden animate-pulse">
+              <div className="aspect-[9/16] bg-muted" />
+              <div className="p-3 lg:p-4 space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
+                <div className="h-8 bg-muted rounded" />
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -501,7 +514,12 @@ export default function MyTemplates() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-      <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8" data-testid="heading-my-videos">My Templates</h1>
+      <div className="flex items-center gap-3 mb-6 lg:mb-8">
+        <h1 className="font-playfair text-2xl sm:text-3xl font-bold" data-testid="heading-my-videos">My Templates</h1>
+        {isFetching && !isLoading && (
+          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        )}
+      </div>
       
       {/* Paid Templates Section */}
       {paidProjects.length > 0 && (
