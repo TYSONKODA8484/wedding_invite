@@ -1,4 +1,4 @@
-import { useRoute } from "wouter";
+import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
 import { HeroSection } from "@/components/HeroSection";
@@ -226,11 +226,15 @@ interface TemplateResponse {
 }
 
 export default function CulturePage() {
-  const [, params] = useRoute("/culture/:slug");
-  const [, subParams] = useRoute("/culture/:parent/:slug");
+  const [location] = useLocation();
   
-  // Handle nested routes like /culture/indian-wedding-video-invitation/punjabi
-  const slug = subParams?.slug || params?.slug || "indian-wedding-video-invitation";
+  // Parse the culture slug from the URL path
+  // Handles: /culture/punjabi, /culture/indian-wedding-video-invitation, /culture/indian-wedding-video-invitation/punjabi
+  const pathParts = location.replace("/culture/", "").split("/").filter(Boolean);
+  
+  // For nested routes like /culture/indian-wedding-video-invitation/punjabi, use the last segment
+  // For direct routes like /culture/punjabi, use the single segment
+  const slug = pathParts.length > 1 ? pathParts[pathParts.length - 1] : pathParts[0] || "indian-wedding-video-invitation";
   const culture = cultureData[slug] || cultureData["indian-wedding-video-invitation"];
 
   // Build region query for API
