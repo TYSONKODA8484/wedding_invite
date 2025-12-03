@@ -89,6 +89,38 @@ Video templates now include complete background music support:
 ### Design System & SEO
 The design emphasizes a premium, cinematic aesthetic with generous whitespace, elegant animations, and video-centric layouts optimized for mobile. Culturally authentic elements are incorporated. SEO targets India, UAE, and Saudi Arabia with an enhanced `SEOHead` component, WhatsApp-optimized Open Graph tags, mobile-first meta tags, `hreflang`, and comprehensive schema markup.
 
+### Culture Pages System (December 2025)
+Comprehensive culture-specific landing pages for SEO and user experience:
+
+**Culture Routes:**
+- `/culture` - All cultures listing page with grid of culture cards
+- `/culture/:slug` - Individual culture pages (e.g., /culture/punjabi)
+- `/culture/:parent/:slug` - Nested culture routes (e.g., /culture/indian-wedding-video-invitation/punjabi)
+
+**Supported Cultures:**
+- Indian: indian-wedding-video-invitation, punjabi, tamil, telugu, gujarati, bengali
+- Religious: muslim-nikah, christian
+- Arabic: arabic-wedding-video-uae-saudi
+- African: nigerian-traditional-wedding-video
+- Latin American: quinceanera-video-invitation
+- Asian: chinese-tea-ceremony-video, korean-pyebaek-video, filipino-debut-video
+- Jewish: jewish-bar-bat-mitzvah-video-invitation
+
+**Region-Based Template Filtering:**
+- Indian cultures → filter by region "india"
+- Arabic cultures → filter by regions "uae,saudi"
+- Other cultures → show all templates
+
+**SEO Schema Markup:**
+- CollectionPage schema with numberOfItems
+- BreadcrumbList schema for navigation
+- FAQPage schema with culture-specific Q&A
+
+**Technical Implementation:**
+- CulturePage uses useLocation to parse full URL path
+- Extracts last segment for nested routes
+- Falls back to indian-wedding-video-invitation if slug not found
+
 ### SEO Landing Pages (November 2025)
 Comprehensive SEO landing page system targeting regional and category-specific search traffic:
 
