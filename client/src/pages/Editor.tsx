@@ -447,9 +447,10 @@ interface SortablePageItemProps {
   index: number;
   isFirst: boolean;
   isLast: boolean;
+  previewUrl?: string;
 }
 
-function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProps) {
+function SortablePageItem({ page, index, isFirst, isLast, previewUrl }: SortablePageItemProps) {
   const {
     attributes,
     listeners,
@@ -464,6 +465,9 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
     transition,
     zIndex: isDragging ? 10 : 1,
   };
+
+  // Use preview URL if available, otherwise fall back to thumbnail
+  const imageUrl = previewUrl || page.thumbnailUrl;
 
   return (
     <div ref={setNodeRef} style={style} className="flex flex-col items-center w-full">
@@ -481,7 +485,7 @@ function SortablePageItem({ page, index, isFirst, isLast }: SortablePageItemProp
         {/* Responsive page thumbnail - smaller on mobile, larger on desktop */}
         <div className="w-28 xs:w-32 sm:w-40 md:w-44 aspect-[9/16] bg-muted flex-shrink-0">
           <img
-            src={page.thumbnailUrl}
+            src={imageUrl}
             alt={page.pageName || `Page ${page.pageNumber}`}
             className="w-full h-full object-cover pointer-events-none"
             draggable={false}
@@ -514,9 +518,10 @@ interface ReorderPagesModalProps {
   onClose: () => void;
   pages: any[];
   onConfirm: (newOrder: string[]) => void;
+  pagePreviewUrls?: Record<string, string>;
 }
 
-function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesModalProps) {
+function ReorderPagesModal({ isOpen, onClose, pages, onConfirm, pagePreviewUrls = {} }: ReorderPagesModalProps) {
   const [orderedPages, setOrderedPages] = useState(pages);
 
   useEffect(() => {
@@ -619,6 +624,7 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm }: ReorderPagesMo
                       index={index}
                       isFirst={index === 0}
                       isLast={index === orderedPages.length - 1}
+                      previewUrl={pagePreviewUrls[page.id]}
                     />
                   ))}
                 </div>
@@ -1720,6 +1726,7 @@ export default function Editor() {
         onClose={() => setShowReorderModal(false)}
         pages={pages}
         onConfirm={handleReorderConfirm}
+        pagePreviewUrls={pagePreviewUrls}
       />
 
       {projectId && (
