@@ -286,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.userId;
-      const { templateId, customization, selectedMusicId, customMusicUrl, status } = req.body;
+      const { templateId, customization, selectedMusicId, customMusicUrl, musicStartTime, status } = req.body;
       
       if (!templateId || !customization) {
         return res.status(400).json({ error: "Template ID and customization are required" });
@@ -315,6 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: status || "draft",
         selectedMusicId: finalSelectedMusicId,
         customMusicUrl: finalCustomMusicUrl,
+        musicStartTime: musicStartTime?.toString() || "0", // Store as string for decimal field
       });
       
       // If status is preview_requested, run the dummy render service

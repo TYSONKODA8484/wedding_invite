@@ -38,6 +38,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { AuthModal } from "@/components/AuthModal";
 import { PaymentModal as PaymentModalComponent } from "@/components/PaymentModal";
+import { MusicTrimmer } from "@/components/MusicTrimmer";
 import {
   DndContext,
   closestCenter,
@@ -687,6 +688,7 @@ export default function Editor() {
   const [customMusicFile, setCustomMusicFile] = useState<File | null>(null);
   const [customMusicUrl, setCustomMusicUrl] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [musicStartTime, setMusicStartTime] = useState(0); // Instagram-style music trim offset in seconds
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicFileInputRef = useRef<HTMLInputElement>(null);
   const customMusicUrlRef = useRef<string | null>(null); // Track URL for cleanup
@@ -792,10 +794,11 @@ export default function Editor() {
       customMusicUrlRef.current = url; // Track for cleanup
       setCustomMusicUrl(url);
       setSelectedMusicId(null); // Clear stock music selection
-      // Reset playback state
+      // Reset playback state and music trim offset
       setIsPlaying(false);
       setAudioProgress(0);
       setAudioCurrentSeconds(0);
+      setMusicStartTime(0); // Reset trim offset for new music
       toast({ title: "Music uploaded", description: file.name });
     }
   };
@@ -809,6 +812,7 @@ export default function Editor() {
     setIsPlaying(false);
     setAudioProgress(0);
     setAudioCurrentSeconds(0);
+    setMusicStartTime(0); // Reset trim offset for new music
     
     // Use duration from library instead of relying on streamed audio metadata
     if (musicLibrary?.music) {
@@ -1207,6 +1211,11 @@ export default function Editor() {
         setCustomMusicFile(null);
       }
       
+      // Load music start time (Instagram-style trim offset)
+      if (projectData.musicStartTime !== undefined && projectData.musicStartTime !== null) {
+        setMusicStartTime(parseFloat(projectData.musicStartTime) || 0);
+      }
+      
       // Check if project is already paid - enable Download button
       if (projectData.paidAt) {
         setDownloadEnabled(true);
@@ -1343,7 +1352,7 @@ export default function Editor() {
       // If stock music is selected, include selectedMusicId
       // If custom music URL is already on server (editing), preserve it
       // If no music changed, the backend will use template's default music
-      let musicPayload: { selectedMusicId?: string | null; customMusicUrl?: string | null } = {};
+      let musicPayload: { selectedMusicId?: string | null; customMusicUrl?: string | null; musicStartTime?: number } = {};
       
       if (customMusicFile) {
         // Custom music will be uploaded after project creation
@@ -1356,6 +1365,9 @@ export default function Editor() {
       } else if (selectedMusicId) {
         musicPayload.selectedMusicId = selectedMusicId;
       }
+      
+      // Always include music start time (Instagram-style trim offset)
+      musicPayload.musicStartTime = musicStartTime;
 
       if (projectId) {
         // First update project with customization
