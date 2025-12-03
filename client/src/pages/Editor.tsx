@@ -1459,25 +1459,8 @@ export default function Editor() {
   };
 
   // Handle page preview - renders current page with customizations
+  // Does NOT require authentication - just cycles through preview images
   const handlePreviewPage = async () => {
-    // Check if user is logged in first
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      setPendingPreview(true);
-      setShowAuthModal(true);
-      return;
-    }
-    
-    // Make sure we have a project ID (save project first if needed)
-    if (!projectId) {
-      toast({
-        title: "Save Required",
-        description: "Please generate your project first before previewing individual pages.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     const currentPage = pages[currentPageIndex];
     if (!currentPage) return;
     
@@ -1486,10 +1469,28 @@ export default function Editor() {
     try {
       const currentIndex = pagePreviewIndices[currentPage.id] || 0;
       
-      const response = await apiRequest("POST", "/api/preview/page", {
-        projectId,
-        pageId: currentPage.id,
-        previewIndex: currentIndex,
+      // Build customization data for this page
+      const pageFieldValues: Record<string, string> = {};
+      for (const field of currentPage.editableFields || []) {
+        const fieldKey = `${currentPage.id}_${field.id}`;
+        const value = fieldValues[fieldKey] || field.defaultValue || '';
+        pageFieldValues[field.id] = value;
+      }
+      
+      const response = await fetch("/api/preview/page", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId: projectId || undefined,
+          templateId: templateData?.id,
+          pageId: currentPage.id,
+          previewIndex: currentIndex,
+          customization: {
+            pageOrder: orderedPageIds,
+            pages: { [currentPage.id]: pageFieldValues },
+            images: imagePreviews,
+          },
+        }),
       });
       
       const result = await response.json();

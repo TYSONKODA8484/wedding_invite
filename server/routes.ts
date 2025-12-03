@@ -441,41 +441,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Render a single page preview with customizations
-  app.post("/api/preview/page", authMiddleware, async (req: any, res) => {
+  // No auth required - preview is available to all users (shows watermarked dummy images)
+  app.post("/api/preview/page", async (req: any, res) => {
     try {
-      const userId = req.user.userId;
-      const { projectId, pageId, previewIndex, customization } = req.body;
+      const { projectId, templateId, pageId, previewIndex, customization } = req.body;
       
-      if (!projectId || !pageId) {
-        return res.status(400).json({ error: "projectId and pageId are required" });
-      }
-      
-      // Verify user owns this project
-      const project = await storage.getProjectById(projectId);
-      if (!project) {
-        return res.status(404).json({ error: "Project not found" });
-      }
-      
-      if (project.userId !== userId) {
-        return res.status(403).json({ error: "Not authorized to preview this project" });
+      if (!pageId) {
+        return res.status(400).json({ error: "pageId is required" });
       }
       
       // Render the page preview (cycles through dummy images for now)
       const currentIndex = previewIndex || 0;
-      const result = await renderPagePreview(projectId, pageId, currentIndex);
+      const result = await renderPagePreview(projectId || templateId, pageId, currentIndex);
       
-      // Save the preview URL to project customization so it persists
-      const existingCustomization = (project.customization as Record<string, any>) || {};
-      const pagePreviewUrls = existingCustomization.pagePreviewUrls || {};
-      pagePreviewUrls[pageId] = result.previewUrl;
-      
-      // Update project with the new page preview URL
-      await storage.updateProject(projectId, {
-        customization: {
-          ...existingCustomization,
-          pagePreviewUrls,
-        },
-      });
+      // If projectId is provided and user is authenticated, save to project
+      if (projectId) {
+        try {
+          const token = req.headers.authorization?.replace("Bearer ", "");
+          if (token) {
+            const jwt = await import("jsonwebtoken");
+            const decoded = jwt.verify(token, process.env.SESSION_SECRET!) as { userId: string };
+            const project = await storage.getProjectById(projectId);
+            
+            if (project && project.userId === decoded.userId) {
+              // Save the preview URL to project customization so it persists
+              const existingCustomization = (project.customization as Record<string, any>) || {};
+              const pagePreviewUrls = existingCustomization.pagePreviewUrls || {};
+              pagePreviewUrls[pageId] = result.previewUrl;
+              
+              // Update project with the new page preview URL
+              await storage.updateProject(projectId, {
+                customization: {
+                  ...existingCustomization,
+                  pagePreviewUrls,
+                },
+              });
+            }
+          }
+        } catch (authError) {
+          // Ignore auth errors - preview still works, just won't be saved to project
+        }
+      }
       
       res.json({
         success: true,
