@@ -404,8 +404,13 @@ interface PreviewModalProps {
 
 function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: PreviewModalProps) {
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent 
+        className="max-w-2xl"
+        onPointerDownOutside={onClose}
+        onEscapeKeyDown={onClose}
+        data-testid="modal-preview-generated"
+      >
         <DialogHeader>
           <DialogTitle>Preview</DialogTitle>
         </DialogHeader>
@@ -426,8 +431,8 @@ function PreviewModal({ previewUrl, onClose, onDownload, downloadEnabled }: Prev
         </div>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>Close</Button>
-          <Button onClick={onDownload} disabled={!downloadEnabled}>
+          <Button variant="outline" onClick={onClose} data-testid="button-close-preview">Close</Button>
+          <Button onClick={onDownload} disabled={!downloadEnabled} data-testid="button-download-hd">
             <Download className="w-4 h-4 mr-2" />
             Download HD
           </Button>
