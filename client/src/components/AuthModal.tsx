@@ -403,32 +403,32 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   // Main Auth View (Sign In / Sign Up)
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[480px]" data-testid="modal-auth">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-playfair text-center">
+      <DialogContent className="w-[95vw] max-w-[420px] sm:max-w-[480px] p-4 sm:p-6 rounded-2xl sm:rounded-lg" data-testid="modal-auth">
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="text-xl sm:text-2xl font-playfair text-center">
             {activeTab === "signin" ? "Welcome Back" : "Create Account"}
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="text-center text-xs sm:text-sm">
             {activeTab === "signin" 
               ? "Sign in to continue creating your wedding invitation" 
-              : "Join WeddingInvite.ai and create stunning video invitations"}
+              : "Join WeddingInvite.ai to create stunning invitations"}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2" data-testid="tabs-auth">
-            <TabsTrigger value="signin" data-testid="tab-signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 h-10 sm:h-9" data-testid="tabs-auth">
+            <TabsTrigger value="signin" className="text-sm" data-testid="tab-signin">Sign In</TabsTrigger>
+            <TabsTrigger value="signup" className="text-sm" data-testid="tab-signup">Sign Up</TabsTrigger>
           </TabsList>
 
           {/* Sign In Tab */}
-          <TabsContent value="signin">
-            <div className="space-y-4 mt-4">
+          <TabsContent value="signin" className="mt-3 sm:mt-4">
+            <div className="space-y-3">
               {/* Google Sign-In Button */}
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-11 sm:h-10 text-sm"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
                 data-testid="button-google-signin"
@@ -442,11 +442,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 Continue with Google
               </Button>
               
-              <div className="relative">
+              <div className="relative py-1">
                 <div className="absolute inset-0 flex items-center">
                   <Separator className="w-full" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
+                <div className="relative flex justify-center text-[10px] sm:text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
                     Or continue with email
                   </span>
@@ -454,9 +454,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSignIn} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
+            <form onSubmit={handleSignIn} className="space-y-3 mt-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="signin-email" className="text-xs sm:text-sm">Email</Label>
                 <Input
                   id="signin-email"
                   type="email"
@@ -465,12 +465,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   onChange={(e) => setSignInEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-11 sm:h-10 text-base sm:text-sm"
                   data-testid="input-signin-email"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="signin-password">Password</Label>
+                  <Label htmlFor="signin-password" className="text-xs sm:text-sm">Password</Label>
                   <button
                     type="button"
                     onClick={() => setViewState("forgot-input")}
@@ -488,12 +489,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   onChange={(e) => setSignInPassword(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-11 sm:h-10 text-base sm:text-sm"
                   data-testid="input-signin-password"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full h-11 sm:h-10 text-sm mt-4" 
                 disabled={isLoading}
                 data-testid="button-signin-submit"
               >
@@ -510,13 +512,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
           </TabsContent>
 
           {/* Sign Up Tab */}
-          <TabsContent value="signup">
-            <div className="space-y-4 mt-4">
+          <TabsContent value="signup" className="mt-3 sm:mt-4">
+            <div className="space-y-3">
               {/* Google Sign-In Button */}
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-11 sm:h-10 text-sm"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
                 data-testid="button-google-signup"
@@ -530,11 +532,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 Continue with Google
               </Button>
               
-              <div className="relative">
+              <div className="relative py-1">
                 <div className="absolute inset-0 flex items-center">
                   <Separator className="w-full" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
+                <div className="relative flex justify-center text-[10px] sm:text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
                     Or sign up with email
                   </span>
@@ -542,9 +544,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSignUp} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Full Name</Label>
+            <form onSubmit={handleSignUp} className="space-y-2.5 sm:space-y-3 mt-3">
+              <div className="space-y-1">
+                <Label htmlFor="signup-name" className="text-xs">Full Name</Label>
                 <Input
                   id="signup-name"
                   type="text"
@@ -553,11 +555,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   onChange={(e) => setSignUpName(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-10 text-base sm:text-sm"
                   data-testid="input-signup-name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
+              <div className="space-y-1">
+                <Label htmlFor="signup-email" className="text-xs">Email</Label>
                 <Input
                   id="signup-email"
                   type="email"
@@ -566,11 +569,12 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   onChange={(e) => setSignUpEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="h-10 text-base sm:text-sm"
                   data-testid="input-signup-email"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-phone">Phone Number (Optional)</Label>
+              <div className="space-y-1">
+                <Label htmlFor="signup-phone" className="text-xs">Phone (Optional)</Label>
                 <Input
                   id="signup-phone"
                   type="tel"
@@ -578,45 +582,50 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   value={signUpPhone}
                   onChange={(e) => setSignUpPhone(e.target.value)}
                   disabled={isLoading}
+                  className="h-10 text-base sm:text-sm"
                   data-testid="input-signup-phone"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={signUpPassword}
-                  onChange={(e) => setSignUpPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  data-testid="input-signup-password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                <Input
-                  id="signup-confirm-password"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={signUpConfirmPassword}
-                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  data-testid="input-signup-confirm-password"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="signup-password" className="text-xs">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    placeholder="Password"
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-10 text-base sm:text-sm"
+                    data-testid="input-signup-password"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="signup-confirm-password" className="text-xs">Confirm</Label>
+                  <Input
+                    id="signup-confirm-password"
+                    type="password"
+                    placeholder="Confirm"
+                    value={signUpConfirmPassword}
+                    onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-10 text-base sm:text-sm"
+                    data-testid="input-signup-confirm-password"
+                  />
+                </div>
               </div>
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full h-11 sm:h-10 text-sm mt-3" 
                 disabled={isLoading}
                 data-testid="button-signup-submit"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating account...
+                    Creating...
                   </>
                 ) : (
                   "Create Account"

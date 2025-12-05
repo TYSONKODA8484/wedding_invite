@@ -497,14 +497,15 @@ function SortablePageItem({ page, index, isFirst, isLast, previewUrl }: Sortable
           />
         </div>
         
-        {/* Page number badge */}
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
-          <span className="text-xs font-semibold text-foreground">Page {page.pageNumber}</span>
+        {/* Page number badge - smaller circle on mobile */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 sm:w-auto sm:h-auto sm:px-3 sm:py-1 bg-background/95 backdrop-blur-sm rounded-full shadow-sm flex items-center justify-center">
+          <span className="text-[10px] sm:text-xs font-semibold text-foreground sm:hidden">{page.pageNumber}</span>
+          <span className="hidden sm:inline text-xs font-semibold text-foreground">Page {page.pageNumber}</span>
         </div>
         
-        {/* Drag handle indicator */}
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        {/* Drag handle indicator - smaller on mobile */}
+        <div className="absolute top-1.5 sm:top-2 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-sm rounded-full p-1 sm:px-2 sm:py-0.5">
+          <GripVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
         </div>
       </div>
       
@@ -1856,7 +1857,7 @@ export default function Editor() {
         preload="metadata"
       />
 
-      {/* Upload Music Modal */}
+      {/* Upload Music Modal - Redesigned for Mobile */}
       <Dialog open={showMusicModal} onOpenChange={(open) => {
         if (!open) {
           handleMusicModalClose();
@@ -1864,7 +1865,174 @@ export default function Editor() {
           setShowMusicModal(true);
         }
       }}>
-        <DialogContent className="w-[95vw] max-w-4xl p-0 overflow-hidden max-h-[90vh]">
+        {/* Mobile Music Modal */}
+        <DialogContent className="w-[95vw] max-w-lg p-0 overflow-hidden max-h-[85vh] md:hidden rounded-2xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Background Music</DialogTitle>
+          </DialogHeader>
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
+            <h2 className="text-base font-semibold">Background Music</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleMusicModalClose}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          
+          <ScrollArea className="max-h-[calc(85vh-120px)]">
+            <div className="p-4 space-y-4">
+              {/* Compact Current Selection + Player */}
+              <div className="bg-muted/30 rounded-xl p-3">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Music className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{getCurrentMusicName()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasCustomMusic ? 'Custom upload' : 'From library'}
+                    </p>
+                  </div>
+                  {hasCustomMusic && (
+                    <Badge variant="secondary" className="text-[10px] px-2">Custom</Badge>
+                  )}
+                </div>
+                
+                {/* Mini Player */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full bg-background shadow-sm flex-shrink-0"
+                    onClick={togglePlayPause}
+                    disabled={!getCurrentMusicUrl()}
+                    data-testid="button-play-music"
+                  >
+                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+                  </Button>
+                  
+                  <div className="flex-1">
+                    <Slider
+                      value={[audioProgress]}
+                      onValueChange={handleSeek}
+                      max={100}
+                      step={0.1}
+                      disabled={!getCurrentMusicUrl()}
+                      className="cursor-pointer"
+                      data-testid="slider-audio-progress"
+                    />
+                  </div>
+                  
+                  <span className="text-[10px] text-muted-foreground w-12 text-right">
+                    {formatTime(audioCurrentSeconds)}/{formatTime(getDisplayDuration())}
+                  </span>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-7 w-7 flex-shrink-0"
+                    onClick={toggleMute}
+                    disabled={!getCurrentMusicUrl()}
+                    data-testid="button-mute-music"
+                  >
+                    {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Music Library - Compact Grid */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Select from library</Label>
+                {musicLoading ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {musicLibrary?.music?.map((track) => (
+                      <div
+                        key={track.id}
+                        onClick={() => handleSelectStockMusic(track.id)}
+                        className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                          selectedMusicId === track.id && !hasCustomMusic
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                            : 'border-border hover:border-muted-foreground/50'
+                        }`}
+                        data-testid={`music-track-${track.id}`}
+                      >
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          selectedMusicId === track.id && !hasCustomMusic
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted'
+                        }`}>
+                          <Music className="w-3 h-3" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{track.name}</p>
+                          <p className="text-[10px] text-muted-foreground capitalize">{track.duration}s</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Upload Custom */}
+              <input
+                ref={musicFileInputRef}
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={handleMusicFileChange}
+                data-testid="input-music-file"
+              />
+              <Button 
+                variant="outline"
+                className="w-full h-10 text-sm"
+                onClick={() => musicFileInputRef.current?.click()}
+                data-testid="button-upload-custom-music"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Your Music
+              </Button>
+              
+              {/* Tips - Collapsed */}
+              <div className="text-[10px] text-muted-foreground text-center px-4">
+                MP3, WAV, AAC, M4A supported. 30s+ recommended.
+              </div>
+            </div>
+          </ScrollArea>
+          
+          {/* Footer Actions */}
+          <div className="flex gap-2 p-4 border-t bg-background">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-10"
+              onClick={handleMusicModalClose}
+              data-testid="button-cancel-music"
+            >
+              Cancel
+            </Button>
+            <Button 
+              className="flex-1 h-10"
+              onClick={() => {
+                handleMusicModalClose();
+                toast({ title: "Music saved" });
+              }}
+              data-testid="button-save-music"
+            >
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+        
+        {/* Desktop Music Modal - Original Layout */}
+        <DialogContent className="hidden md:block w-[95vw] max-w-4xl p-0 overflow-hidden max-h-[90vh]">
           <DialogHeader className="sr-only">
             <DialogTitle>Background Music</DialogTitle>
           </DialogHeader>
@@ -1886,7 +2054,7 @@ export default function Editor() {
                   </div>
                 </div>
                 
-                {/* Saved Custom Music Section - shows when we have a server-saved custom music URL but no local file */}
+                {/* Saved Custom Music Section */}
                 {customMusicUrl && !customMusicFile && (
                   <div className="mb-4 sm:mb-6">
                     <Label className="text-sm text-muted-foreground mb-2 block">Your Uploaded Music</Label>
@@ -1902,7 +2070,7 @@ export default function Editor() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          revokeCustomMusicUrl(); // Clean up any blob URLs
+                          revokeCustomMusicUrl();
                           setCustomMusicUrl(null);
                           setCustomMusicFile(null);
                         }}
@@ -1925,13 +2093,9 @@ export default function Editor() {
                       className="h-10 w-10 rounded-full bg-background shadow-sm flex-shrink-0"
                       onClick={togglePlayPause}
                       disabled={!getCurrentMusicUrl()}
-                      data-testid="button-play-music"
+                      data-testid="button-play-music-desktop"
                     >
-                      {isPlaying ? (
-                        <Pause className="w-4 h-4" />
-                      ) : (
-                        <Play className="w-4 h-4 ml-0.5" />
-                      )}
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                     </Button>
                     
                     <div className="flex-1 min-w-0">
@@ -1947,7 +2111,7 @@ export default function Editor() {
                         step={0.1}
                         disabled={!getCurrentMusicUrl()}
                         className="cursor-pointer"
-                        data-testid="slider-audio-progress"
+                        data-testid="slider-audio-progress-desktop"
                       />
                     </div>
                     
@@ -1957,13 +2121,9 @@ export default function Editor() {
                       className="h-8 w-8 flex-shrink-0"
                       onClick={toggleMute}
                       disabled={!getCurrentMusicUrl()}
-                      data-testid="button-mute-music"
+                      data-testid="button-mute-music-desktop"
                     >
-                      {isMuted ? (
-                        <VolumeX className="w-4 h-4" />
-                      ) : (
-                        <Volume2 className="w-4 h-4" />
-                      )}
+                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                     </Button>
                   </div>
                 </div>
@@ -1986,7 +2146,7 @@ export default function Editor() {
                               ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-muted-foreground/50'
                           }`}
-                          data-testid={`music-track-${track.id}`}
+                          data-testid={`music-track-desktop-${track.id}`}
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                             selectedMusicId === track.id && !hasCustomMusic
@@ -2009,19 +2169,11 @@ export default function Editor() {
                 </div>
                 
                 {/* Upload Button */}
-                <input
-                  ref={musicFileInputRef}
-                  type="file"
-                  accept="audio/*"
-                  className="hidden"
-                  onChange={handleMusicFileChange}
-                  data-testid="input-music-file"
-                />
                 <Button 
                   variant="outline"
                   className="w-full mb-4 sm:mb-6"
                   onClick={() => musicFileInputRef.current?.click()}
-                  data-testid="button-upload-custom-music"
+                  data-testid="button-upload-custom-music-desktop"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Music
@@ -2034,7 +2186,7 @@ export default function Editor() {
                       handleMusicModalClose();
                       toast({ title: "Music saved", description: "Your music selection has been saved." });
                     }}
-                    data-testid="button-save-music"
+                    data-testid="button-save-music-desktop"
                   >
                     <Check className="w-4 h-4 mr-2" />
                     Save Selection
@@ -2042,7 +2194,7 @@ export default function Editor() {
                   <Button 
                     variant="outline" 
                     onClick={handleMusicModalClose}
-                    data-testid="button-cancel-music"
+                    data-testid="button-cancel-music-desktop"
                   >
                     Cancel
                   </Button>
@@ -2477,9 +2629,9 @@ export default function Editor() {
                         loading="eager"
                       />
                     </div>
-                    {/* Page number indicator */}
-                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 bg-background/90 rounded px-1">
-                      <span className="text-[8px] font-medium">{index + 1}</span>
+                    {/* Page number indicator - simple circle */}
+                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-background/95 flex items-center justify-center shadow-sm">
+                      <span className="text-[9px] font-semibold">{index + 1}</span>
                     </div>
                   </div>
                 ))}
@@ -2651,11 +2803,15 @@ export default function Editor() {
         </div>
       </div>
 
-      {/* Mobile Edit Sheet - Slide up from bottom */}
+      {/* Mobile Edit Sheet - Slide up from bottom with dynamic height */}
       <Dialog open={showMobileEditSheet} onOpenChange={setShowMobileEditSheet}>
         <DialogContent 
-          className="w-full max-w-none h-[70vh] fixed bottom-0 top-auto translate-y-0 rounded-t-2xl rounded-b-none p-0 gap-0 border-t border-x border-b-0 md:hidden" 
-          style={{ maxHeight: '70vh' }}
+          className="w-full max-w-none fixed bottom-0 top-auto translate-y-0 rounded-t-2xl rounded-b-none p-0 gap-0 border-t border-x border-b-0 md:hidden" 
+          style={{ 
+            maxHeight: '85vh',
+            height: 'auto',
+            minHeight: editableFields.length === 0 ? '30vh' : `min(${Math.min(35 + editableFields.length * 12, 70)}vh, 85vh)`
+          }}
           hideCloseButton
         >
           <DialogHeader className="sr-only">
@@ -2663,13 +2819,13 @@ export default function Editor() {
           </DialogHeader>
           
           {/* Header with handle bar and close */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+          <div className="flex items-center justify-between px-4 py-2.5 border-b bg-background sticky top-0 z-10">
             <div className="flex items-center gap-3">
               {/* Handle bar indicator */}
-              <div className="w-8 h-1 bg-muted-foreground/30 rounded-full" />
+              <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
               <div>
                 <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
-                <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
+                <p className="text-[11px] text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
               </div>
             </div>
             <Button
@@ -2683,17 +2839,17 @@ export default function Editor() {
             </Button>
           </div>
           
-          {/* Content */}
-          <ScrollArea className="flex-1 h-[calc(75vh-80px)]">
-            <div className="p-4 space-y-4">
+          {/* Content - auto height with max scroll */}
+          <div className="overflow-y-auto flex-1" style={{ maxHeight: 'calc(85vh - 60px)' }}>
+            <div className="p-4 pb-8 space-y-3">
               {editableFields.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-6">
                   <p className="text-muted-foreground text-sm">No editable fields on this page</p>
                 </div>
               ) : (
                 editableFields.filter((field: EditableField) => field?.id).map((field: EditableField, index: number) => (
-                  <div key={index} className="space-y-2" data-testid={`mobile-field-${field.id}`}>
-                    <Label htmlFor={`mobile-${field.id}`} className="text-sm font-medium">
+                  <div key={index} className="space-y-1.5" data-testid={`mobile-field-${field.id}`}>
+                    <Label htmlFor={`mobile-${field.id}`} className="text-xs font-medium text-muted-foreground">
                       {field.label || field.id}
                     </Label>
                     
@@ -2705,13 +2861,13 @@ export default function Editor() {
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           onBlur={() => handleFieldBlur(field.id)}
                           maxLength={field.maxLength}
-                          rows={4}
-                          className="resize-none text-base"
+                          rows={3}
+                          className="resize-none text-base min-h-[80px]"
                           data-testid={`mobile-input-${field.id}`}
                         />
                         {field.maxLength && (
                           <div className="flex justify-end">
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground">
                               {getFieldValue(field.id).length}/{field.maxLength}
                             </span>
                           </div>
@@ -2733,12 +2889,12 @@ export default function Editor() {
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           onBlur={() => handleFieldBlur(field.id)}
                           maxLength={field.maxLength}
-                          className="text-base h-11"
+                          className="text-base h-10"
                           data-testid={`mobile-input-${field.id}`}
                         />
                         {field.maxLength && (
                           <div className="flex justify-end">
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-[10px] text-muted-foreground">
                               {getFieldValue(field.id).length}/{field.maxLength}
                             </span>
                           </div>
@@ -2748,11 +2904,8 @@ export default function Editor() {
                   </div>
                 ))
               )}
-              
-              {/* Bottom padding for safe area */}
-              <div className="h-6" />
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

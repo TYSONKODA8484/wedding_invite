@@ -143,45 +143,45 @@ export function PaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md" data-testid="modal-payment">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Complete Your Purchase</DialogTitle>
-          <DialogDescription>
-            You're about to unlock the full-quality video for {templateName}
+      <DialogContent className="w-[95vw] max-w-[380px] sm:max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-lg" data-testid="modal-payment">
+        <DialogHeader className="pb-2 sm:pb-4">
+          <DialogTitle className="text-xl sm:text-2xl">Complete Your Purchase</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
+            Unlock the full-quality video for {templateName}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          <div className="rounded-lg border bg-card p-6 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Template</span>
-              <span className="font-medium" data-testid="text-template-name">{templateName}</span>
+        <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+          <div className="rounded-xl sm:rounded-lg border bg-card p-4 sm:p-6 space-y-2 sm:space-y-3">
+            <div className="flex justify-between items-center gap-2">
+              <span className="text-xs sm:text-sm text-muted-foreground">Template</span>
+              <span className="text-sm font-medium text-right truncate max-w-[180px]" data-testid="text-template-name">{templateName}</span>
             </div>
-            <div className="flex justify-between items-center pt-3 border-t">
-              <span className="text-lg font-semibold">Total Amount</span>
-              <span className="text-2xl font-bold text-primary" data-testid="text-amount">
+            <div className="flex justify-between items-center pt-2 sm:pt-3 border-t">
+              <span className="text-base sm:text-lg font-semibold">Total</span>
+              <span className="text-xl sm:text-2xl font-bold text-primary" data-testid="text-amount">
                 {formatCurrency(amount, currency)}
               </span>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             <Button
               onClick={handlePayment}
               disabled={isProcessing}
-              className="w-full h-12 text-base"
+              className="w-full h-11 sm:h-12 text-sm sm:text-base"
               size="lg"
               data-testid="button-proceed-payment"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                   Processing...
                 </>
               ) : (
                 <>
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  Proceed to Payment
+                  <CreditCard className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                  Pay Now
                 </>
               )}
             </Button>
@@ -190,15 +190,15 @@ export function PaymentModal({
               variant="outline"
               onClick={onClose}
               disabled={isProcessing}
-              className="w-full"
+              className="w-full h-11 sm:h-9"
               data-testid="button-cancel-payment"
             >
               Cancel
             </Button>
           </div>
 
-          <div className="text-xs text-muted-foreground text-center">
-            Secure payment powered by Razorpay. Your payment information is encrypted and secure.
+          <div className="text-[10px] sm:text-xs text-muted-foreground text-center px-4">
+            Secure payment via Razorpay
           </div>
         </div>
       </DialogContent>
