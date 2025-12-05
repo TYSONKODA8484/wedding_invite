@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Check, Heart, Calendar, Users, Star, Sparkles, Globe2, Flower2 } from "lucide-react";
 import { CustomerReviews } from "@/components/CustomerReviews";
-import heroImage from "@assets/generated_images/indian_wedding_mehendi_hands_image.png";
+import heroImage from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
 
 export default function Home() {
   const [location] = useLocation();
