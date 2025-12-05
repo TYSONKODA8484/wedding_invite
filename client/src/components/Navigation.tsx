@@ -145,28 +145,27 @@ export function Navigation() {
 
           {/* Right: My Templates + Login/Avatar (Desktop) */}
           <div className="hidden md:flex items-center gap-3 flex-shrink-0">
-            {/* My Templates - Premium styled button */}
+            {/* My Templates - Primary styled button */}
             {isLoggedIn ? (
-              <Link href="/my-templates">
-                <button
-                  className="relative group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                  data-testid="button-my-templates"
-                >
+              <Button
+                asChild
+                className="gap-2 font-medium shadow-sm"
+                data-testid="button-my-templates"
+              >
+                <Link href="/my-templates">
                   <LayoutGrid className="w-4 h-4" />
-                  <span>My Templates</span>
-                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity -z-10 blur-sm" />
-                </button>
-              </Link>
+                  My Templates
+                </Link>
+              </Button>
             ) : (
-              <button
-                className="relative group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              <Button
+                className="gap-2 font-medium shadow-sm"
                 onClick={() => setAuthModalOpen(true)}
                 data-testid="button-my-templates"
               >
                 <LayoutGrid className="w-4 h-4" />
-                <span>My Templates</span>
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity -z-10 blur-sm" />
-              </button>
+                My Templates
+              </Button>
             )}
             
             {/* Login/Avatar */}
@@ -299,19 +298,19 @@ export function Navigation() {
                       </div>
 
                       {/* My Templates Button */}
-                      <Link 
-                        href="/my-templates" 
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block"
+                      <Button
+                        asChild
+                        className="w-full gap-2 font-medium"
+                        data-testid="button-my-templates-mobile"
                       >
-                        <button
-                          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md"
-                          data-testid="button-my-templates-mobile"
+                        <Link 
+                          href="/my-templates" 
+                          onClick={() => setMobileMenuOpen(false)}
                         >
                           <LayoutGrid className="w-4 h-4" />
                           My Templates
-                        </button>
-                      </Link>
+                        </Link>
+                      </Button>
 
                       {/* Logout Button */}
                       <Button
@@ -331,8 +330,8 @@ export function Navigation() {
                   ) : (
                     <>
                       {/* My Templates Button (triggers auth) */}
-                      <button
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md"
+                      <Button
+                        className="w-full gap-2 font-medium"
                         onClick={() => {
                           setMobileMenuOpen(false);
                           setAuthModalOpen(true);
@@ -341,7 +340,7 @@ export function Navigation() {
                       >
                         <LayoutGrid className="w-4 h-4" />
                         My Templates
-                      </button>
+                      </Button>
 
                       {/* Sign In Button */}
                       <Button
