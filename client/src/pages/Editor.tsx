@@ -1857,7 +1857,7 @@ export default function Editor() {
         preload="metadata"
       />
 
-      {/* Upload Music Modal - Redesigned for Mobile */}
+      {/* Upload Music Modal - Single Responsive DialogContent */}
       <Dialog open={showMusicModal} onOpenChange={(open) => {
         if (!open) {
           handleMusicModalClose();
@@ -1865,245 +1865,59 @@ export default function Editor() {
           setShowMusicModal(true);
         }
       }}>
-        {/* Mobile Music Modal */}
-        <DialogContent className="w-[95vw] max-w-lg p-0 overflow-hidden max-h-[85vh] md:hidden rounded-2xl">
+        <DialogContent className="w-[95vw] max-w-lg md:max-w-4xl p-0 overflow-hidden max-h-[85vh] md:max-h-[90vh] rounded-2xl md:rounded-lg">
           <DialogHeader className="sr-only">
             <DialogTitle>Background Music</DialogTitle>
           </DialogHeader>
           
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
-            <h2 className="text-base font-semibold">Background Music</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleMusicModalClose}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-          
-          <ScrollArea className="max-h-[calc(85vh-120px)]">
-            <div className="p-4 space-y-4">
-              {/* Compact Current Selection + Player */}
-              <div className="bg-muted/30 rounded-xl p-3">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Music className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{getCurrentMusicName()}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {hasCustomMusic ? 'Custom upload' : 'From library'}
-                    </p>
-                  </div>
-                  {hasCustomMusic && (
-                    <Badge variant="secondary" className="text-[10px] px-2">Custom</Badge>
-                  )}
-                </div>
-                
-                {/* Mini Player */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 rounded-full bg-background shadow-sm flex-shrink-0"
-                    onClick={togglePlayPause}
-                    disabled={!getCurrentMusicUrl()}
-                    data-testid="button-play-music"
-                  >
-                    {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
-                  </Button>
-                  
-                  <div className="flex-1">
-                    <Slider
-                      value={[audioProgress]}
-                      onValueChange={handleSeek}
-                      max={100}
-                      step={0.1}
-                      disabled={!getCurrentMusicUrl()}
-                      className="cursor-pointer"
-                      data-testid="slider-audio-progress"
-                    />
-                  </div>
-                  
-                  <span className="text-[10px] text-muted-foreground w-12 text-right">
-                    {formatTime(audioCurrentSeconds)}/{formatTime(getDisplayDuration())}
-                  </span>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 flex-shrink-0"
-                    onClick={toggleMute}
-                    disabled={!getCurrentMusicUrl()}
-                    data-testid="button-mute-music"
-                  >
-                    {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Music Library - Compact Grid */}
-              <div>
-                <Label className="text-xs text-muted-foreground mb-2 block">Select from library</Label>
-                {musicLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    {musicLibrary?.music?.map((track) => (
-                      <div
-                        key={track.id}
-                        onClick={() => handleSelectStockMusic(track.id)}
-                        className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                          selectedMusicId === track.id && !hasCustomMusic
-                            ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                            : 'border-border hover:border-muted-foreground/50'
-                        }`}
-                        data-testid={`music-track-${track.id}`}
-                      >
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          selectedMusicId === track.id && !hasCustomMusic
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
-                        }`}>
-                          <Music className="w-3 h-3" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate">{track.name}</p>
-                          <p className="text-[10px] text-muted-foreground capitalize">{track.duration}s</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Upload Custom */}
-              <input
-                ref={musicFileInputRef}
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                onChange={handleMusicFileChange}
-                data-testid="input-music-file"
-              />
-              <Button 
-                variant="outline"
-                className="w-full h-10 text-sm"
-                onClick={() => musicFileInputRef.current?.click()}
-                data-testid="button-upload-custom-music"
+          {/* Mobile Layout */}
+          <div className="md:hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
+              <h2 className="text-base font-semibold">Background Music</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-11 w-11"
+                onClick={handleMusicModalClose}
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Your Music
+                <X className="w-5 h-5" />
               </Button>
-              
-              {/* Tips - Collapsed */}
-              <div className="text-[10px] text-muted-foreground text-center px-4">
-                MP3, WAV, AAC, M4A supported. 30s+ recommended.
-              </div>
             </div>
-          </ScrollArea>
-          
-          {/* Footer Actions */}
-          <div className="flex gap-2 p-4 border-t bg-background">
-            <Button 
-              variant="outline" 
-              className="flex-1 h-10"
-              onClick={handleMusicModalClose}
-              data-testid="button-cancel-music"
-            >
-              Cancel
-            </Button>
-            <Button 
-              className="flex-1 h-10"
-              onClick={() => {
-                handleMusicModalClose();
-                toast({ title: "Music saved" });
-              }}
-              data-testid="button-save-music"
-            >
-              Save
-            </Button>
-          </div>
-        </DialogContent>
-        
-        {/* Desktop Music Modal - Original Layout */}
-        <DialogContent className="hidden md:block w-[95vw] max-w-4xl p-0 overflow-hidden max-h-[90vh]">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Background Music</DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[90vh]">
-            <div className="flex flex-col lg:flex-row">
-              {/* Left Section - Music Controls */}
-              <div className="flex-1 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r">
-                <h2 className="text-lg font-semibold mb-4 sm:mb-6">Background Music</h2>
-                
-                {/* Current Selection Display */}
-                <div className="mb-4 sm:mb-6">
-                  <Label className="text-sm text-muted-foreground mb-2 block">Currently Selected</Label>
-                  <div className="flex items-center gap-2 p-3 rounded-md border border-border bg-muted/30">
-                    <Music className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span className="text-sm font-medium truncate">{getCurrentMusicName()}</span>
+            
+            <ScrollArea className="max-h-[calc(85vh-120px)]">
+              <div className="p-4 space-y-4">
+                {/* Compact Current Selection + Player */}
+                <div className="bg-muted/30 rounded-xl p-3">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Music className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{getCurrentMusicName()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {hasCustomMusic ? 'Custom upload' : 'From library'}
+                      </p>
+                    </div>
                     {hasCustomMusic && (
-                      <Badge variant="secondary" className="ml-auto flex-shrink-0">Custom</Badge>
+                      <Badge variant="secondary" className="text-[10px] px-2">Custom</Badge>
                     )}
                   </div>
-                </div>
-                
-                {/* Saved Custom Music Section */}
-                {customMusicUrl && !customMusicFile && (
-                  <div className="mb-4 sm:mb-6">
-                    <Label className="text-sm text-muted-foreground mb-2 block">Your Uploaded Music</Label>
-                    <div className="flex items-center gap-3 p-3 rounded-md border border-primary bg-primary/5">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
-                        <Music className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">Custom Music</p>
-                        <p className="text-xs text-muted-foreground">Previously uploaded</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          revokeCustomMusicUrl();
-                          setCustomMusicUrl(null);
-                          setCustomMusicFile(null);
-                        }}
-                        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
-                        data-testid="button-remove-saved-music"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Audio Player */}
-                <div className="bg-muted/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                  <div className="flex items-center gap-3">
+                  
+                  {/* Mini Player */}
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-10 w-10 rounded-full bg-background shadow-sm flex-shrink-0"
+                      className="h-8 w-8 rounded-full bg-background shadow-sm flex-shrink-0"
                       onClick={togglePlayPause}
                       disabled={!getCurrentMusicUrl()}
-                      data-testid="button-play-music-desktop"
+                      data-testid="button-play-music"
                     >
-                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                      {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
                     </Button>
                     
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                        <span>{formatTime(audioCurrentSeconds)}</span>
-                        <span>/</span>
-                        <span>{formatTime(getDisplayDuration())}</span>
-                      </div>
+                    <div className="flex-1">
                       <Slider
                         value={[audioProgress]}
                         onValueChange={handleSeek}
@@ -2111,148 +1925,333 @@ export default function Editor() {
                         step={0.1}
                         disabled={!getCurrentMusicUrl()}
                         className="cursor-pointer"
-                        data-testid="slider-audio-progress-desktop"
+                        data-testid="slider-audio-progress"
                       />
                     </div>
+                    
+                    <span className="text-[10px] text-muted-foreground w-12 text-right">
+                      {formatTime(audioCurrentSeconds)}/{formatTime(getDisplayDuration())}
+                    </span>
                     
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8 flex-shrink-0"
+                      className="h-7 w-7 flex-shrink-0"
                       onClick={toggleMute}
                       disabled={!getCurrentMusicUrl()}
-                      data-testid="button-mute-music-desktop"
+                      data-testid="button-mute-music"
                     >
-                      {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
                     </Button>
                   </div>
                 </div>
                 
-                {/* Music Library */}
-                <div className="mb-4 sm:mb-6">
-                  <Label className="text-sm text-muted-foreground mb-2 block">Music Library</Label>
+                {/* Music Library - Compact Grid */}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Select from library</Label>
                   {musicLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <div className="flex items-center justify-center py-6">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-2">
                       {musicLibrary?.music?.map((track) => (
                         <div
                           key={track.id}
                           onClick={() => handleSelectStockMusic(track.id)}
-                          className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                          className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
                             selectedMusicId === track.id && !hasCustomMusic
-                              ? 'border-primary bg-primary/5'
+                              ? 'border-primary bg-primary/5 ring-1 ring-primary'
                               : 'border-border hover:border-muted-foreground/50'
                           }`}
-                          data-testid={`music-track-desktop-${track.id}`}
+                          data-testid={`music-track-${track.id}`}
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
                             selectedMusicId === track.id && !hasCustomMusic
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted'
                           }`}>
-                            <Music className="w-4 h-4" />
+                            <Music className="w-3 h-3" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{track.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{track.category} • {track.duration}s</p>
+                            <p className="text-xs font-medium truncate">{track.name}</p>
+                            <p className="text-[10px] text-muted-foreground capitalize">{track.duration}s</p>
                           </div>
-                          {selectedMusicId === track.id && !hasCustomMusic && (
-                            <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                          )}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
                 
-                {/* Upload Button */}
+                {/* Upload Custom */}
+                <input
+                  ref={musicFileInputRef}
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  onChange={handleMusicFileChange}
+                  data-testid="input-music-file"
+                />
                 <Button 
                   variant="outline"
-                  className="w-full mb-4 sm:mb-6"
+                  className="w-full h-11 text-sm"
                   onClick={() => musicFileInputRef.current?.click()}
-                  data-testid="button-upload-custom-music-desktop"
+                  data-testid="button-upload-custom-music"
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Music
+                  Upload Your Music
                 </Button>
                 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <Button 
-                    onClick={() => {
-                      handleMusicModalClose();
-                      toast({ title: "Music saved", description: "Your music selection has been saved." });
-                    }}
-                    data-testid="button-save-music-desktop"
-                  >
-                    <Check className="w-4 h-4 mr-2" />
-                    Save Selection
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={handleMusicModalClose}
-                    data-testid="button-cancel-music-desktop"
-                  >
-                    Cancel
-                  </Button>
+                {/* Tips - Collapsed */}
+                <div className="text-[10px] text-muted-foreground text-center px-4">
+                  MP3, WAV, AAC, M4A supported. 30s+ recommended.
                 </div>
               </div>
-              
-              {/* Right Section - Info Panel */}
-              <div className="w-full lg:w-80 bg-muted/20 p-4 sm:p-6">
-                <h3 className="font-medium mb-4">Music Tips</h3>
-                <div className="space-y-3 sm:space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-foreground">
-                      Choose from our curated music library or upload your own track.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-foreground">
-                      Music should be <strong>30 seconds or longer</strong> for best results.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-foreground">
-                      Supported formats: <strong>MP3, WAV, AAC, M4A</strong>
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-foreground">
-                      Preview your music before generating the video.
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Music className="w-3 h-3 text-primary-foreground" />
-                    </div>
-                    <p className="text-xs sm:text-sm text-foreground">
-                      The selected music will be added as background audio to your video invitation.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            </ScrollArea>
+            
+            {/* Footer Actions */}
+            <div className="flex gap-2 p-4 border-t bg-background">
+              <Button 
+                variant="outline" 
+                className="flex-1 h-11"
+                onClick={handleMusicModalClose}
+                data-testid="button-cancel-music"
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1 h-11"
+                onClick={() => {
+                  handleMusicModalClose();
+                  toast({ title: "Music saved" });
+                }}
+                data-testid="button-save-music"
+              >
+                Save
+              </Button>
             </div>
-          </ScrollArea>
+          </div>
+          
+          {/* Desktop Layout */}
+          <div className="hidden md:block">
+            <ScrollArea className="max-h-[90vh]">
+              <div className="flex flex-col lg:flex-row">
+                {/* Left Section - Music Controls */}
+                <div className="flex-1 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r">
+                  <h2 className="text-lg font-semibold mb-4 sm:mb-6">Background Music</h2>
+                  
+                  {/* Current Selection Display */}
+                  <div className="mb-4 sm:mb-6">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Currently Selected</Label>
+                    <div className="flex items-center gap-2 p-3 rounded-md border border-border bg-muted/30">
+                      <Music className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span className="text-sm font-medium truncate">{getCurrentMusicName()}</span>
+                      {hasCustomMusic && (
+                        <Badge variant="secondary" className="ml-auto flex-shrink-0">Custom</Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Saved Custom Music Section */}
+                  {customMusicUrl && !customMusicFile && (
+                    <div className="mb-4 sm:mb-6">
+                      <Label className="text-sm text-muted-foreground mb-2 block">Your Uploaded Music</Label>
+                      <div className="flex items-center gap-3 p-3 rounded-md border border-primary bg-primary/5">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary text-primary-foreground">
+                          <Music className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">Custom Music</p>
+                          <p className="text-xs text-muted-foreground">Previously uploaded</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            revokeCustomMusicUrl();
+                            setCustomMusicUrl(null);
+                            setCustomMusicFile(null);
+                          }}
+                          className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+                          data-testid="button-remove-saved-music"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                        <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Audio Player */}
+                  <div className="bg-muted/30 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-full bg-background shadow-sm flex-shrink-0"
+                        onClick={togglePlayPause}
+                        disabled={!getCurrentMusicUrl()}
+                        data-testid="button-play-music-desktop"
+                      >
+                        {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
+                      </Button>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                          <span>{formatTime(audioCurrentSeconds)}</span>
+                          <span>/</span>
+                          <span>{formatTime(getDisplayDuration())}</span>
+                        </div>
+                        <Slider
+                          value={[audioProgress]}
+                          onValueChange={handleSeek}
+                          max={100}
+                          step={0.1}
+                          disabled={!getCurrentMusicUrl()}
+                          className="cursor-pointer"
+                          data-testid="slider-audio-progress-desktop"
+                        />
+                      </div>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={toggleMute}
+                        disabled={!getCurrentMusicUrl()}
+                        data-testid="button-mute-music-desktop"
+                      >
+                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Music Library */}
+                  <div className="mb-4 sm:mb-6">
+                    <Label className="text-sm text-muted-foreground mb-2 block">Music Library</Label>
+                    {musicLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {musicLibrary?.music?.map((track) => (
+                          <div
+                            key={track.id}
+                            onClick={() => handleSelectStockMusic(track.id)}
+                            className={`flex items-center gap-3 p-3 rounded-md border cursor-pointer transition-colors ${
+                              selectedMusicId === track.id && !hasCustomMusic
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-muted-foreground/50'
+                            }`}
+                            data-testid={`music-track-desktop-${track.id}`}
+                          >
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              selectedMusicId === track.id && !hasCustomMusic
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted'
+                            }`}>
+                              <Music className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{track.name}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{track.category} • {track.duration}s</p>
+                            </div>
+                            {selectedMusicId === track.id && !hasCustomMusic && (
+                              <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Upload Button */}
+                  <Button 
+                    variant="outline"
+                    className="w-full mb-4 sm:mb-6"
+                    onClick={() => musicFileInputRef.current?.click()}
+                    data-testid="button-upload-custom-music-desktop"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Music
+                  </Button>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <Button 
+                      onClick={() => {
+                        handleMusicModalClose();
+                        toast({ title: "Music saved", description: "Your music selection has been saved." });
+                      }}
+                      data-testid="button-save-music-desktop"
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Save Selection
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleMusicModalClose}
+                      data-testid="button-cancel-music-desktop"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Right Section - Info Panel */}
+                <div className="w-full lg:w-80 bg-muted/20 p-4 sm:p-6">
+                  <h3 className="font-medium mb-4">Music Tips</h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <p className="text-xs sm:text-sm text-foreground">
+                        Choose from our curated music library or upload your own track.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <p className="text-xs sm:text-sm text-foreground">
+                        Music should be <strong>30 seconds or longer</strong> for best results.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <p className="text-xs sm:text-sm text-foreground">
+                        Supported formats: <strong>MP3, WAV, AAC, M4A</strong>
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <p className="text-xs sm:text-sm text-foreground">
+                        Preview your music before generating the video.
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Music className="w-3 h-3 text-primary-foreground" />
+                      </div>
+                      <p className="text-xs sm:text-sm text-foreground">
+                        The selected music will be added as background audio to your video invitation.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
 
