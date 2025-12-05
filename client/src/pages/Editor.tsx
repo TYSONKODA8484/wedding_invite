@@ -683,6 +683,20 @@ export default function Editor() {
   // Preview coming soon modal
   const [showPreviewComingSoon, setShowPreviewComingSoon] = useState(false);
   
+  // Mobile UI state
+  const [showMobileEditSheet, setShowMobileEditSheet] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768); // md breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   // Page preview state - tracks preview index per page (cycles 0-3) and rendered preview URLs
   const [pagePreviewIndices, setPagePreviewIndices] = useState<Record<string, number>>({});
   const [pagePreviewUrls, setPagePreviewUrls] = useState<Record<string, string>>({});
@@ -2082,8 +2096,8 @@ export default function Editor() {
         </DialogContent>
       </Dialog>
 
-      {/* Top Header */}
-      <header className="h-14 border-b bg-card flex items-center justify-between px-4 flex-shrink-0">
+      {/* Top Header - Desktop */}
+      <header className="hidden md:flex h-14 border-b bg-card items-center justify-between px-4 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -2165,10 +2179,82 @@ export default function Editor() {
         </div>
       </header>
 
+      {/* Top Header - Mobile: Simplified with back, undo/redo, and generate */}
+      <header className="flex md:hidden h-12 border-b bg-card items-center justify-between px-3 flex-shrink-0">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            onClick={() => fromPage === 'my-templates' ? navigate('/my-templates') : navigate(`/template/${template.slug}`)}
+            data-testid="button-back-mobile"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          
+          {/* Undo/Redo */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleUndo}
+            disabled={undoStack.length === 0}
+            data-testid="button-undo-mobile"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={handleRedo}
+            disabled={redoStack.length === 0}
+            data-testid="button-redo-mobile"
+          >
+            <Redo2 className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        {/* Music button (icon only) for video templates */}
+        <div className="flex items-center gap-2">
+          {template?.templateType === 'video' && (
+            <Button 
+              variant="outline" 
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setShowMusicModal(true)}
+              data-testid="button-music-mobile"
+            >
+              <Music className="w-4 h-4" />
+            </Button>
+          )}
+          
+          {/* Generate button */}
+          <Button 
+            size="sm" 
+            onClick={handleGenerateClick}
+            disabled={saveProjectMutation.isPending}
+            className="relative overflow-visible bg-gradient-to-r from-primary via-primary to-amber-500 hover:from-primary/90 hover:via-primary/90 hover:to-amber-500/90 text-primary-foreground px-3 shadow-lg font-semibold text-xs h-8"
+            data-testid="button-generate-mobile"
+          >
+            {saveProjectMutation.isPending ? (
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+            ) : (
+              <Sparkles className="w-3 h-3 mr-1" />
+            )}
+            Generate
+            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+          </Button>
+        </div>
+      </header>
+
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
-        {/* Left Panel - Pages/Clips */}
-        <div className="w-36 lg:w-44 border-r bg-card flex flex-col flex-shrink-0">
+        {/* Left Panel - Pages/Clips - DESKTOP ONLY */}
+        <div className="hidden md:flex w-36 lg:w-44 border-r bg-card flex-col flex-shrink-0">
           <div className="p-3 border-b">
             <Button 
               variant="default" 
@@ -2234,22 +2320,28 @@ export default function Editor() {
 
         {/* Center Panel - Preview */}
         <div className="flex-1 flex flex-col min-w-0 bg-muted/20">
-          {/* Preview Area - with pan/drag support when zoomed */}
+          {/* Preview Area - with pan/drag support when zoomed (desktop only) */}
           <div 
             ref={previewContainerRef}
-            className="flex-1 flex items-center justify-center p-4 min-h-0 overflow-hidden"
+            className="flex-1 flex items-center justify-center p-2 md:p-4 min-h-0 overflow-hidden"
             style={{
-              cursor: zoom > 100 ? (isPanning ? 'grabbing' : 'grab') : 'default',
+              cursor: !isMobileView && zoom > 100 ? (isPanning ? 'grabbing' : 'grab') : 'default',
             }}
-            onMouseDown={handlePanStart}
-            onMouseMove={handlePanMove}
-            onMouseUp={handlePanEnd}
-            onMouseLeave={handlePanEnd}
+            onMouseDown={!isMobileView ? handlePanStart : undefined}
+            onMouseMove={!isMobileView ? handlePanMove : undefined}
+            onMouseUp={!isMobileView ? handlePanEnd : undefined}
+            onMouseLeave={!isMobileView ? handlePanEnd : undefined}
           >
             <div 
               ref={previewCardRef}
               className="relative bg-white dark:bg-card rounded-lg shadow-xl overflow-hidden select-none"
-              style={{
+              style={isMobileView ? {
+                width: 'auto',
+                height: '100%',
+                maxWidth: '100%',
+                maxHeight: 'calc(100% - 10px)',
+                aspectRatio: '9/16',
+              } : {
                 width: `${280 * (zoom / 100)}px`,
                 height: `${280 * (zoom / 100) * (16 / 9)}px`,
                 maxWidth: zoom <= 100 ? '100%' : 'none',
@@ -2276,18 +2368,18 @@ export default function Editor() {
               {/* Preview Loading Overlay */}
               {isPreviewLoading && (
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                  <div className="bg-card/90 rounded-xl p-6 flex flex-col items-center gap-3 shadow-lg">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-sm font-medium text-foreground">Generating Preview...</p>
-                    <p className="text-xs text-muted-foreground">Rendering page with your customizations</p>
+                  <div className="bg-card/90 rounded-xl p-4 md:p-6 flex flex-col items-center gap-2 md:gap-3 shadow-lg">
+                    <Loader2 className="w-6 h-6 md:w-8 md:h-8 animate-spin text-primary" />
+                    <p className="text-xs md:text-sm font-medium text-foreground">Generating Preview...</p>
+                    <p className="text-xs text-muted-foreground hidden md:block">Rendering page with your customizations</p>
                   </div>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Bottom Controls */}
-          <div className="h-16 border-t bg-card flex items-center justify-between px-4 flex-shrink-0">
+          {/* Bottom Controls - DESKTOP */}
+          <div className="hidden md:flex h-16 border-t bg-card items-center justify-between px-4 flex-shrink-0">
             <Button
               variant="ghost"
               size="sm"
@@ -2352,10 +2444,131 @@ export default function Editor() {
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
+
+          {/* Mobile Bottom UI - Horizontal page strip, toolbar, and controls */}
+          <div className="flex md:hidden flex-col border-t bg-card flex-shrink-0">
+            {/* Horizontal Page Thumbnails Strip */}
+            <div className="h-20 border-b overflow-x-auto">
+              <div className="flex items-center gap-2 px-3 py-2 h-full">
+                {pages.map((page, index) => (
+                  <div
+                    key={page.id}
+                    onClick={() => setCurrentPageIndex(index)}
+                    className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all cursor-pointer ${
+                      currentPageIndex === index
+                        ? 'ring-2 ring-primary shadow-md scale-105'
+                        : 'ring-1 ring-border opacity-70'
+                    }`}
+                    data-testid={`mobile-page-${index}`}
+                  >
+                    <div className="w-10 aspect-[9/16] bg-muted">
+                      <img
+                        src={pagePreviewUrls[page.id] || page.thumbnailUrl}
+                        alt={page.pageName}
+                        className="w-full h-full object-cover"
+                        loading="eager"
+                      />
+                    </div>
+                    {/* Page number indicator */}
+                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 bg-background/90 rounded px-1">
+                      <span className="text-[8px] font-medium">{index + 1}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Toolbar - Re-order, Edit Fields, Preview */}
+            <div className="h-14 flex items-center justify-around px-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3"
+                onClick={() => setShowReorderModal(true)}
+                data-testid="button-reorder-mobile"
+              >
+                <GripVertical className="w-5 h-5" />
+                <span className="text-[10px]">Reorder</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3"
+                onClick={() => setShowMobileEditSheet(true)}
+                data-testid="button-edit-mobile"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                <span className="text-[10px]">Edit</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3"
+                onClick={handlePreviewPage}
+                disabled={isPreviewLoading}
+                data-testid="button-preview-mobile"
+              >
+                {isPreviewLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+                <span className="text-[10px]">{isPreviewLoading ? 'Loading' : 'Preview'}</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3"
+                disabled={!downloadEnabled}
+                onClick={handleDownload}
+                data-testid="button-download-mobile"
+              >
+                <Download className="w-5 h-5" />
+                <span className="text-[10px]">Download</span>
+              </Button>
+            </div>
+
+            {/* Page Navigation */}
+            <div className="h-11 border-t flex items-center justify-between px-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8"
+                onClick={goToPreviousPage}
+                disabled={currentPageIndex === 0}
+                data-testid="button-prev-mobile"
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Back
+              </Button>
+              
+              <span className="text-xs text-muted-foreground">
+                Page {currentPageIndex + 1} of {pages.length}
+              </span>
+              
+              <Button
+                variant="default"
+                size="sm"
+                className="h-8"
+                onClick={goToNextPage}
+                disabled={currentPageIndex === pages.length - 1}
+                data-testid="button-next-mobile"
+              >
+                Next
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Right Panel - Edit Fields */}
-        <div className="w-72 lg:w-80 border-l bg-card flex flex-col flex-shrink-0">
+        {/* Right Panel - Edit Fields - DESKTOP ONLY */}
+        <div className="hidden md:flex w-72 lg:w-80 border-l bg-card flex-col flex-shrink-0">
           <div className="p-4 border-b">
             <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
             <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
@@ -2429,6 +2642,108 @@ export default function Editor() {
           </ScrollArea>
         </div>
       </div>
+
+      {/* Mobile Edit Sheet - Slide up from bottom */}
+      <Dialog open={showMobileEditSheet} onOpenChange={setShowMobileEditSheet}>
+        <DialogContent className="w-full max-w-none h-[75vh] fixed bottom-0 top-auto translate-y-0 rounded-t-2xl rounded-b-none p-0 gap-0 border-t border-x border-b-0 md:hidden" style={{ maxHeight: '75vh' }}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Edit Fields</DialogTitle>
+          </DialogHeader>
+          
+          {/* Handle bar */}
+          <div className="flex justify-center py-2 border-b">
+            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+          </div>
+          
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
+            <div>
+              <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
+              <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setShowMobileEditSheet(false)}
+              data-testid="button-close-edit-sheet"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          
+          {/* Content */}
+          <ScrollArea className="flex-1 h-[calc(75vh-80px)]">
+            <div className="p-4 space-y-4">
+              {editableFields.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground text-sm">No editable fields on this page</p>
+                </div>
+              ) : (
+                editableFields.filter((field: EditableField) => field?.id).map((field: EditableField, index: number) => (
+                  <div key={index} className="space-y-2" data-testid={`mobile-field-${field.id}`}>
+                    <Label htmlFor={`mobile-${field.id}`} className="text-sm font-medium">
+                      {field.label || field.id}
+                    </Label>
+                    
+                    {field.type === 'textarea' ? (
+                      <>
+                        <Textarea
+                          id={`mobile-${field.id}`}
+                          value={getFieldValue(field.id)}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          onBlur={() => handleFieldBlur(field.id)}
+                          maxLength={field.maxLength}
+                          rows={4}
+                          className="resize-none text-base"
+                          data-testid={`mobile-input-${field.id}`}
+                        />
+                        {field.maxLength && (
+                          <div className="flex justify-end">
+                            <span className="text-xs text-muted-foreground">
+                              {getFieldValue(field.id).length}/{field.maxLength}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : field.type === 'image' ? (
+                      <ImageUploadField
+                        fieldName={field.id}
+                        preview={getImagePreview(field.id)}
+                        onSelect={(file) => handleImageSelect(field.id, file)}
+                        onRemove={() => handleImageRemove(field.id)}
+                      />
+                    ) : (
+                      <>
+                        <Input
+                          id={`mobile-${field.id}`}
+                          type="text"
+                          value={getFieldValue(field.id)}
+                          onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                          onBlur={() => handleFieldBlur(field.id)}
+                          maxLength={field.maxLength}
+                          className="text-base h-11"
+                          data-testid={`mobile-input-${field.id}`}
+                        />
+                        {field.maxLength && (
+                          <div className="flex justify-end">
+                            <span className="text-xs text-muted-foreground">
+                              {getFieldValue(field.id).length}/{field.maxLength}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+              
+              {/* Bottom padding for safe area */}
+              <div className="h-6" />
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
