@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Play, Layers } from "lucide-react";
+import { Play, Layers, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
@@ -15,6 +15,20 @@ interface TemplateCardProps {
   isPremium?: boolean;
   templateType?: "video" | "card";
   pageCount?: number;
+  price?: number;
+}
+
+function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return "0:30";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+function formatPrice(paise: number): string {
+  if (!paise || paise <= 0) return "Free";
+  const rupees = paise / 100;
+  return `₹${rupees.toLocaleString('en-IN')}`;
 }
 
 export function TemplateCard({
@@ -28,6 +42,7 @@ export function TemplateCard({
   isPremium,
   templateType = "video",
   pageCount = 1,
+  price = 0,
 }: TemplateCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -92,12 +107,6 @@ export function TemplateCard({
                 </div>
               </div>
               
-              {pageCount > 1 && (
-                <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white backdrop-blur-sm" style={{ zIndex: 10 }}>
-                  <Layers className="w-3 h-3" />
-                  <span className="text-[10px] font-medium">{pageCount} pages</span>
-                </div>
-              )}
             </>
           ) : (
             <>
@@ -139,22 +148,49 @@ export function TemplateCard({
             </>
           )}
 
-          <span 
-            className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] font-medium rounded bg-black/60 text-white backdrop-blur-sm"
+          <div 
+            className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2"
             style={{ zIndex: 10 }}
-            data-testid={`badge-type-${id}`}
           >
-            {isVideoTemplate ? "Video" : "Card"}
-          </span>
+            {isVideoTemplate && duration > 0 && (
+              <span 
+                className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-black/60 text-white backdrop-blur-sm"
+                data-testid={`badge-duration-${id}`}
+              >
+                <Clock className="w-3 h-3" />
+                {formatDuration(duration)}
+              </span>
+            )}
+            {isCardTemplate && pageCount > 1 && (
+              <span className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-black/60 text-white backdrop-blur-sm">
+                <Layers className="w-3 h-3" />
+                {pageCount} pages
+              </span>
+            )}
+            <span 
+              className="px-2 py-0.5 text-[10px] font-medium rounded bg-black/60 text-white backdrop-blur-sm ml-auto"
+              data-testid={`badge-type-${id}`}
+            >
+              {isVideoTemplate ? "Video" : "Card"}
+            </span>
+          </div>
         </div>
 
-        <div className="p-3 space-y-2">
+        <div className="p-3 space-y-1.5">
           <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <Button variant="default" size="sm" className="w-full text-sm" data-testid={`button-use-template-${id}`}>
-            Use Template
-          </Button>
+          <div className="flex items-center justify-between gap-2">
+            <span 
+              className="text-sm font-bold text-primary"
+              data-testid={`text-price-${id}`}
+            >
+              {formatPrice(price)}
+            </span>
+            <Button variant="default" size="sm" className="text-xs px-3" data-testid={`button-use-template-${id}`}>
+              Use
+            </Button>
+          </div>
         </div>
       </Link>
     </Card>

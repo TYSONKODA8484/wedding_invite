@@ -668,6 +668,7 @@ export default function Templates() {
                     templateType={template.templateType}
                     isPremium={template.isPremium}
                     pageCount={template.pageCount}
+                    price={template.price}
                   />
                 ))}
                 

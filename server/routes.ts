@@ -586,13 +586,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           id: t.id,
           title: t.templateName,
+          templateName: t.templateName,
           slug: t.slug,
           templateType: t.templateType,
           category: t.category,
           subcategory: t.subcategory,
           duration: t.durationSec,
+          durationSec: t.durationSec,
           thumbnailUrl: t.thumbnailUrl,
+          previewVideoUrl: t.previewVideoUrl,
           demoVideoUrl: t.previewVideoUrl,
+          price: Math.floor(parseFloat(t.price) * 100),
           priceInr: Math.floor(parseFloat(t.price) * 100),
           tags: t.templateTags,
           orientation: t.orientation,
@@ -600,6 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isPremium: parseFloat(t.price) >= 2000,
           popularityScore: t.popularityScore || 0,
           pageCount: pageCount,
+          templateJson: templateJson,
         };
       });
       

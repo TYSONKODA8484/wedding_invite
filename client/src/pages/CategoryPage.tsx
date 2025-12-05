@@ -65,12 +65,12 @@ export default function CategoryPage() {
   const category = categoryData[slug] || categoryData["wedding-video-invitations"];
 
   const templates = [
-    { id: "1", title: "Cinematic Love Story", slug: "cinematic-love-story", category: "wedding", duration: 45, thumbnailUrl: homepageHero, isPremium: true, templateType: "video" as const, pageCount: 1 },
-    { id: "2", title: "Golden Elegance", slug: "golden-elegance", category: "engagement", duration: 30, thumbnailUrl: luxuryHero, isPremium: false, templateType: "card" as const, pageCount: 5 },
-    { id: "3", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: indianPunjabiHero, isPremium: true, templateType: "video" as const, pageCount: 1 },
-    { id: "4", title: "Modern Romance", slug: "modern-romance", category: "engagement", duration: 40, thumbnailUrl: engagementHero, isPremium: false, templateType: "video" as const, pageCount: 1 },
-    { id: "5", title: "Royal Wedding", slug: "royal-wedding", category: "wedding", duration: 55, thumbnailUrl: luxuryHero, isPremium: true, templateType: "video" as const, pageCount: 1 },
-    { id: "6", title: "Simple Elegance", slug: "simple-elegance", category: "wedding", duration: 35, thumbnailUrl: homepageHero, isPremium: false, templateType: "card" as const, pageCount: 3 },
+    { id: "1", title: "Cinematic Love Story", slug: "cinematic-love-story", category: "wedding", duration: 45, thumbnailUrl: homepageHero, isPremium: true, templateType: "video" as const, pageCount: 1, price: 149900 },
+    { id: "2", title: "Golden Elegance", slug: "golden-elegance", category: "engagement", duration: 30, thumbnailUrl: luxuryHero, isPremium: false, templateType: "card" as const, pageCount: 5, price: 99900 },
+    { id: "3", title: "Traditional Celebration", slug: "traditional-celebration", category: "wedding", duration: 60, thumbnailUrl: indianPunjabiHero, isPremium: true, templateType: "video" as const, pageCount: 1, price: 199900 },
+    { id: "4", title: "Modern Romance", slug: "modern-romance", category: "engagement", duration: 40, thumbnailUrl: engagementHero, isPremium: false, templateType: "video" as const, pageCount: 1, price: 129900 },
+    { id: "5", title: "Royal Wedding", slug: "royal-wedding", category: "wedding", duration: 55, thumbnailUrl: luxuryHero, isPremium: true, templateType: "video" as const, pageCount: 1, price: 249900 },
+    { id: "6", title: "Simple Elegance", slug: "simple-elegance", category: "wedding", duration: 35, thumbnailUrl: homepageHero, isPremium: false, templateType: "card" as const, pageCount: 3, price: 79900 },
   ];
 
   return (
