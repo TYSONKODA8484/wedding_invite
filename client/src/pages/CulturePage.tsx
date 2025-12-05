@@ -11,7 +11,8 @@ import tamilHero from "@assets/generated_images/Tamil_wedding_culture_page_3a868
 import arabicHero from "@assets/generated_images/Arabic_UAE_wedding_culture_5fdde5ea.png";
 import nigerianHero from "@assets/generated_images/Nigerian_traditional_wedding_culture_733beed6.png";
 import quinceaneraHero from "@assets/generated_images/Quinceañera_culture_page_hero_f3e1cb71.png";
-import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
+import koreanHero from "@assets/generated_images/korean_hanbok_wedding_ceremony.png";
+import chineseHero from "@assets/generated_images/chinese_tea_ceremony_wedding.png";
 
 interface CultureInfo {
   name: string;
@@ -126,7 +127,7 @@ const cultureData: Record<string, CultureInfo> = {
     description: "Sacred Christian wedding video invitations for church ceremonies and holy matrimony celebrations.",
     traditions: ["Church Ceremony", "Exchange of Vows", "Ring Exchange", "Unity Candle", "First Dance"],
     symbols: ["Cross & Bible", "White Dove", "Wedding Bells", "Church Architecture", "White & Ivory"],
-    heroImage: homepageHero,
+    heroImage: indianPunjabiHero,
     templateCount: 35,
     region: "india",
     seoTitle: "Christian Wedding Video Invitation | Church Wedding Invites",
@@ -176,7 +177,7 @@ const cultureData: Record<string, CultureInfo> = {
     description: "Traditional Chinese wedding video invitations honoring tea ceremony customs and ancient Chinese traditions.",
     traditions: ["Tea Ceremony", "Hair Combing Ritual", "Wedding Banquet", "Door Games", "Red Packet Exchange"],
     symbols: ["Red & Gold Colors", "Dragon & Phoenix", "Double Happiness", "Peonies", "Lanterns"],
-    heroImage: homepageHero,
+    heroImage: chineseHero,
     templateCount: 36,
     seoTitle: "Chinese Wedding Video Invitation | Tea Ceremony Invites",
     seoDescription: "Create traditional Chinese wedding video invitations with tea ceremony and Double Happiness themes. Red and gold designs.",
@@ -188,7 +189,7 @@ const cultureData: Record<string, CultureInfo> = {
     description: "Elegant Korean wedding video invitations featuring traditional Hanbok attire and Pyebaek ceremony.",
     traditions: ["Pyebaek Ceremony", "Modern Ceremony", "Paebaek Bows", "Date & Nut Toss", "Reception"],
     symbols: ["Hanbok Attire", "Red & Blue Colors", "Korean Knots", "Ducks Symbolism", "Traditional Table"],
-    heroImage: tamilHero,
+    heroImage: koreanHero,
     templateCount: 30,
     seoTitle: "Korean Wedding Video Invitation | Pyebaek Ceremony Invites",
     seoDescription: "Create elegant Korean wedding video invitations with Hanbok and Pyebaek ceremony traditions. Traditional Korean designs.",
@@ -212,7 +213,7 @@ const cultureData: Record<string, CultureInfo> = {
     description: "Meaningful Jewish Bar and Bat Mitzvah video invitations celebrating coming of age with sacred traditions.",
     traditions: ["Torah Reading", "Aliyah Ceremony", "Candle Lighting", "Hora Dance", "Reception Celebration"],
     symbols: ["Star of David", "Torah Scroll", "Tallit & Kippah", "Blue & Silver", "Hamsa Hand"],
-    heroImage: homepageHero,
+    heroImage: arabicHero,
     templateCount: 34,
     seoTitle: "Bar/Bat Mitzvah Video Invitation | Jewish Celebration Invites",
     seoDescription: "Create meaningful Bar and Bat Mitzvah video invitations with Star of David and Torah themes. Jewish coming of age celebrations.",

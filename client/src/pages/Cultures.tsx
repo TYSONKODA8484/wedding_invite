@@ -6,7 +6,8 @@ import tamilHero from "@assets/generated_images/Tamil_wedding_culture_page_3a868
 import arabicHero from "@assets/generated_images/Arabic_UAE_wedding_culture_5fdde5ea.png";
 import nigerianHero from "@assets/generated_images/Nigerian_traditional_wedding_culture_733beed6.png";
 import quinceaneraHero from "@assets/generated_images/Quinceañera_culture_page_hero_f3e1cb71.png";
-import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
+import koreanHero from "@assets/generated_images/korean_hanbok_wedding_ceremony.png";
+import chineseHero from "@assets/generated_images/chinese_tea_ceremony_wedding.png";
 
 export default function Cultures() {
   const cultures = [
@@ -70,7 +71,7 @@ export default function Cultures() {
       localName: "中国婚礼",
       slug: "chinese-tea-ceremony-video",
       description: "Traditional Chinese tea ceremonies and customs",
-      heroImageUrl: homepageHero,
+      heroImageUrl: chineseHero,
       templateCount: 36,
     },
     {
@@ -79,7 +80,7 @@ export default function Cultures() {
       localName: "한국 결혼식",
       slug: "korean-pyebaek-video",
       description: "Elegant Korean Hanbok ceremonies",
-      heroImageUrl: tamilHero,
+      heroImageUrl: koreanHero,
       templateCount: 30,
     },
   ];
