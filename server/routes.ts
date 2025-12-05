@@ -1187,6 +1187,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== SITEMAP ====================
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const baseUrl = "https://weddinginvite.ai";
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Static pages with priority and change frequency
+      const staticPages = [
+        { url: "/", priority: "1.0", changefreq: "weekly" },
+        { url: "/templates", priority: "0.9", changefreq: "daily" },
+        { url: "/templates/wedding", priority: "0.9", changefreq: "daily" },
+        { url: "/templates/birthday", priority: "0.9", changefreq: "daily" },
+        { url: "/how-it-works", priority: "0.8", changefreq: "monthly" },
+        { url: "/pricing", priority: "0.8", changefreq: "monthly" },
+        { url: "/contact", priority: "0.7", changefreq: "monthly" },
+        { url: "/blog", priority: "0.8", changefreq: "weekly" },
+        { url: "/about", priority: "0.7", changefreq: "monthly" },
+        { url: "/culture", priority: "0.8", changefreq: "monthly" },
+        // Regional landing pages
+        { url: "/india", priority: "0.9", changefreq: "weekly" },
+        { url: "/uae", priority: "0.9", changefreq: "weekly" },
+        { url: "/saudi-arabia", priority: "0.9", changefreq: "weekly" },
+        // Category landing pages
+        { url: "/wedding-invitation-video", priority: "0.9", changefreq: "weekly" },
+        { url: "/birthday-invitation-video", priority: "0.9", changefreq: "weekly" },
+        { url: "/wedding-invitation-card", priority: "0.9", changefreq: "weekly" },
+        { url: "/birthday-invitation-card", priority: "0.9", changefreq: "weekly" },
+        // Regional + Category pages
+        { url: "/india/wedding-invitation-video", priority: "0.85", changefreq: "weekly" },
+        { url: "/india/birthday-invitation-video", priority: "0.85", changefreq: "weekly" },
+        { url: "/india/wedding-invitation-card", priority: "0.85", changefreq: "weekly" },
+        { url: "/india/birthday-invitation-card", priority: "0.85", changefreq: "weekly" },
+        { url: "/uae/wedding-invitation-video", priority: "0.85", changefreq: "weekly" },
+        { url: "/uae/birthday-invitation-video", priority: "0.85", changefreq: "weekly" },
+        { url: "/uae/wedding-invitation-card", priority: "0.85", changefreq: "weekly" },
+        { url: "/uae/birthday-invitation-card", priority: "0.85", changefreq: "weekly" },
+        { url: "/saudi-arabia/wedding-invitation-video", priority: "0.85", changefreq: "weekly" },
+        { url: "/saudi-arabia/birthday-invitation-video", priority: "0.85", changefreq: "weekly" },
+        { url: "/saudi-arabia/wedding-invitation-card", priority: "0.85", changefreq: "weekly" },
+        { url: "/saudi-arabia/birthday-invitation-card", priority: "0.85", changefreq: "weekly" },
+      ];
+      
+      // Culture pages
+      const culturePages = [
+        "indian-wedding-video-invitation",
+        "punjabi", "tamil", "telugu", "gujarati", "bengali",
+        "muslim-nikah", "christian",
+        "arabic-wedding-video-uae-saudi",
+        "nigerian-traditional-wedding-video",
+        "quinceanera-video-invitation",
+        "chinese-tea-ceremony-video",
+        "korean-pyebaek-video",
+        "filipino-debut-video",
+        "jewish-bar-bat-mitzvah-video-invitation"
+      ].map(slug => ({ url: `/culture/${slug}`, priority: "0.75", changefreq: "monthly" }));
+      
+      // Fetch templates
+      const templates = await storage.getTemplates();
+      const templatePages = templates.map(t => ({
+        url: `/template/${t.slug}`,
+        priority: "0.7",
+        changefreq: "weekly"
+      }));
+      
+      // Hardcoded article slugs (matching frontend)
+      const articleSlugs = [
+        "wedding-video-invitation-trends-2024",
+        "traditional-indian-wedding-planning-guide",
+        "create-cinematic-wedding-videos-budget",
+        "arabic-wedding-traditions-complete-guide",
+        "ai-revolutionizing-wedding-invitations",
+        "nigerian-wedding-customs-guide"
+      ];
+      const articlePages = articleSlugs.map(slug => ({
+        url: `/blog/${slug}`,
+        priority: "0.6",
+        changefreq: "monthly"
+      }));
+      
+      // Combine all pages
+      const allPages = [...staticPages, ...culturePages, ...templatePages, ...articlePages];
+      
+      // Generate XML
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allPages.map(page => `  <url>
+    <loc>${baseUrl}${page.url}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+      
+      res.set('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  // robots.txt
+  app.get("/robots.txt", (req, res) => {
+    const robotsTxt = `User-agent: *
+Allow: /
+
+Sitemap: https://weddinginvite.ai/sitemap.xml
+
+# Block admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /my-templates
+Disallow: /project/
+Disallow: /editor/
+`;
+    res.set('Content-Type', 'text/plain');
+    res.send(robotsTxt);
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

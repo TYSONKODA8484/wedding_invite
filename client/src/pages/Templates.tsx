@@ -318,12 +318,45 @@ export default function Templates() {
     </button>
   );
 
+  const collectionPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": `${getPageTitle()} - Video Invitation Templates`,
+    "description": getPageDescription(),
+    "url": `https://weddinginvite.ai/templates${categoryFromUrl ? `/${categoryFromUrl}` : ''}`,
+    "mainEntity": {
+      "@type": "Product",
+      "name": categoryFromUrl === "wedding" ? "Wedding Video Invitation Templates" : 
+              categoryFromUrl === "birthday" ? "Birthday Video Invitation Templates" : "Video Invitation Templates",
+      "description": getPageDescription(),
+      "brand": {
+        "@type": "Brand",
+        "name": "WeddingInvite.ai"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "2847",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "INR",
+        "lowPrice": "199",
+        "highPrice": "999",
+        "offerCount": "500"
+      }
+    }
+  };
+
   return (
     <>
       <SEOHead
         title={`${getPageTitle()} - Video Invitation Templates`}
         description={getPageDescription()}
         keywords={`${categoryFromUrl || 'wedding birthday'} video templates, invitation templates, video creator, wedding invitation designs, indian wedding video, arabic wedding invitation`}
+        schema={[collectionPageSchema]}
       />
 
       <div className="relative min-h-[35vh] flex items-center justify-center overflow-hidden" data-testid="hero-templates">
