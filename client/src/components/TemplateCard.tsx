@@ -148,6 +148,20 @@ export function TemplateCard({
             </>
           )}
 
+          {/* Price badge - top right */}
+          <div 
+            className="absolute top-2 right-2"
+            style={{ zIndex: 10 }}
+          >
+            <span 
+              className="px-2.5 py-1 text-xs font-bold rounded bg-primary text-primary-foreground shadow-lg"
+              data-testid={`text-price-${id}`}
+            >
+              {formatPrice(price)}
+            </span>
+          </div>
+
+          {/* Bottom badges - duration/pages and type */}
           <div 
             className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2"
             style={{ zIndex: 10 }}
@@ -176,21 +190,17 @@ export function TemplateCard({
           </div>
         </div>
 
-        <div className="p-3 space-y-1.5">
+        <div className="p-3 space-y-2">
           <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <div className="flex items-center justify-between gap-2">
-            <span 
-              className="text-sm font-bold text-primary"
-              data-testid={`text-price-${id}`}
-            >
-              {formatPrice(price)}
-            </span>
-            <Button variant="default" size="sm" className="text-xs px-3" data-testid={`button-use-template-${id}`}>
-              Use
-            </Button>
-          </div>
+          <Button 
+            variant="default" 
+            className="w-full" 
+            data-testid={`button-use-template-${id}`}
+          >
+            Use Template
+          </Button>
         </div>
       </Link>
     </Card>
