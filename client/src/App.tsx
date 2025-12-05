@@ -21,6 +21,7 @@ import SEOLandingPage from "@/pages/SEOLandingPage";
 import HowItWorks from "@/pages/HowItWorks";
 import Examples from "@/pages/Examples";
 import Blog from "@/pages/Blog";
+import ArticlePage from "@/pages/ArticlePage";
 import Enterprise from "@/pages/Enterprise";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
@@ -122,6 +123,7 @@ function Router() {
       <Route path="/how-it-works" component={HowItWorks} />
       <Route path="/examples" component={Examples} />
       <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={ArticlePage} />
       <Route path="/enterprise" component={Enterprise} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
