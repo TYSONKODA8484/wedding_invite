@@ -408,187 +408,378 @@ export default function Templates() {
       <section className="py-6 lg:py-8 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="flex items-start gap-3 mb-4">
-            <div className="relative flex-shrink-0">
-              <button
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card hover:bg-accent/50 border border-border text-foreground font-medium text-sm transition-all"
-                data-testid="button-open-filters"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && (
-                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </button>
+          <div className="flex flex-col gap-3 mb-4">
+            {/* First row: Filters button + designs count (mobile) or all in one row (desktop) */}
+            <div className="flex items-center justify-between sm:hidden">
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-card hover:bg-accent/50 border border-border text-foreground font-medium text-sm transition-all"
+                  data-testid="button-open-filters"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
               
-              {isFilterOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40" 
-                    onClick={() => setIsFilterOpen(false)}
-                  />
-                  <div className="absolute left-0 top-full mt-2 w-72 p-4 rounded-xl border bg-card shadow-lg z-50">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <SlidersHorizontal className="w-4 h-4" />
-                        Filters
+                {isFilterOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsFilterOpen(false)}
+                    />
+                    <div className="absolute left-0 top-full mt-2 w-72 p-4 rounded-xl border bg-card shadow-lg z-50">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <SlidersHorizontal className="w-4 h-4" />
+                          Filters
+                        </div>
+                        <button 
+                          onClick={() => setIsFilterOpen(false)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => setIsFilterOpen(false)}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Type</label>
+                          <div className="flex flex-wrap gap-2">
+                            {TEMPLATE_TYPES.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.type === option.value}
+                                onClick={() => updateFilters({ type: filters.type === option.value ? null : option.value })}
+                                testId={`filter-type-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Sort by</label>
+                          <div className="flex flex-wrap gap-2">
+                            {SORT_OPTIONS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.sort === option.value}
+                                onClick={() => updateFilters({ sort: filters.sort === option.value ? null : option.value })}
+                                testId={`filter-sort-by-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Photo</label>
+                          <div className="flex flex-wrap gap-2">
+                            {PHOTO_OPTIONS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.photo === option.value}
+                                onClick={() => updateFilters({ photo: filters.photo === option.value ? null : option.value })}
+                                testId={`filter-photo-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Card Orientation</label>
+                          <div className="flex flex-wrap gap-2">
+                            {ORIENTATION_OPTIONS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.orientation === option.value}
+                                onClick={() => updateFilters({ orientation: filters.orientation === option.value ? null : option.value })}
+                                testId={`filter-card-orientation-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Region</label>
+                          <div className="flex flex-wrap gap-2">
+                            {REGION_FILTERS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.region === option.value}
+                                onClick={() => updateFilters({ region: filters.region === option.value ? null : option.value })}
+                                testId={`filter-region-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-5 pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 rounded-full"
+                          onClick={clearAllFilters}
+                          data-testid="button-clear-all-filters"
+                        >
+                          Clear All
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-full"
+                          onClick={() => setIsFilterOpen(false)}
+                          data-testid="button-apply-filters"
+                        >
+                          Apply
+                        </Button>
+                      </div>
                     </div>
+                  </>
+                )}
+              </div>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Type</label>
-                        <div className="flex flex-wrap gap-2">
-                          {TEMPLATE_TYPES.map((option) => (
-                            <FilterOption
-                              key={option.value}
-                              label={option.label}
-                              isSelected={filters.type === option.value}
-                              onClick={() => updateFilters({ type: filters.type === option.value ? null : option.value })}
-                              testId={`filter-type-${option.value}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Sort by</label>
-                        <div className="flex flex-wrap gap-2">
-                          {SORT_OPTIONS.map((option) => (
-                            <FilterOption
-                              key={option.value}
-                              label={option.label}
-                              isSelected={filters.sort === option.value}
-                              onClick={() => updateFilters({ sort: filters.sort === option.value ? null : option.value })}
-                              testId={`filter-sort-by-${option.value}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Photo</label>
-                        <div className="flex flex-wrap gap-2">
-                          {PHOTO_OPTIONS.map((option) => (
-                            <FilterOption
-                              key={option.value}
-                              label={option.label}
-                              isSelected={filters.photo === option.value}
-                              onClick={() => updateFilters({ photo: filters.photo === option.value ? null : option.value })}
-                              testId={`filter-photo-${option.value}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Card Orientation</label>
-                        <div className="flex flex-wrap gap-2">
-                          {ORIENTATION_OPTIONS.map((option) => (
-                            <FilterOption
-                              key={option.value}
-                              label={option.label}
-                              isSelected={filters.orientation === option.value}
-                              onClick={() => updateFilters({ orientation: filters.orientation === option.value ? null : option.value })}
-                              testId={`filter-card-orientation-${option.value}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Region</label>
-                        <div className="flex flex-wrap gap-2">
-                          {REGION_FILTERS.map((option) => (
-                            <FilterOption
-                              key={option.value}
-                              label={option.label}
-                              isSelected={filters.region === option.value}
-                              onClick={() => updateFilters({ region: filters.region === option.value ? null : option.value })}
-                              testId={`filter-region-${option.value}`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 mt-5 pt-4 border-t">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 rounded-full"
-                        onClick={clearAllFilters}
-                        data-testid="button-clear-all-filters"
-                      >
-                        Clear All
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="flex-1 rounded-full"
-                        onClick={() => setIsFilterOpen(false)}
-                        data-testid="button-apply-filters"
-                      >
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {totalCount > 0 ? `${totalCount} designs` : "Loading..."}
+                </span>
+              </div>
             </div>
 
-            {isAllTemplatesPage ? (
-              <div className="flex flex-wrap gap-2 flex-1">
-                {ALL_TEMPLATES_CATEGORIES.map((cat) => (
-                  <FilterChip
-                    key={cat.value}
-                    label={cat.label}
-                    isSelected={filters.category === cat.value}
-                    onClick={() => updateFilters({ 
-                      category: filters.category === cat.value ? null : cat.value 
-                    })}
-                  />
-                ))}
-                <div className="w-px h-6 bg-border mx-1 self-center" />
-                {REGION_FILTERS.map((region) => (
-                  <FilterChip
-                    key={region.value}
-                    label={region.label}
-                    isSelected={filters.region === region.value}
-                    onClick={() => updateFilters({ 
-                      region: filters.region === region.value ? null : region.value 
-                    })}
-                  />
-                ))}
+            {/* Mobile: Horizontal scrollable filter chips */}
+            <div className="sm:hidden overflow-x-scroll scrollbar-hide -mx-4 px-4 pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="flex gap-2 flex-nowrap">
+                {isAllTemplatesPage ? (
+                  <>
+                    {ALL_TEMPLATES_CATEGORIES.map((cat) => (
+                      <FilterChip
+                        key={cat.value}
+                        label={cat.label}
+                        isSelected={filters.category === cat.value}
+                        onClick={() => updateFilters({ 
+                          category: filters.category === cat.value ? null : cat.value 
+                        })}
+                      />
+                    ))}
+                    <div className="w-px h-6 bg-border mx-1 self-center flex-shrink-0" />
+                    {REGION_FILTERS.map((region) => (
+                      <FilterChip
+                        key={region.value}
+                        label={region.label}
+                        isSelected={filters.region === region.value}
+                        onClick={() => updateFilters({ 
+                          region: filters.region === region.value ? null : region.value 
+                        })}
+                      />
+                    ))}
+                  </>
+                ) : subcategories.length > 0 ? (
+                  subcategories.map((sub) => (
+                    <FilterChip
+                      key={sub.value}
+                      label={sub.label}
+                      isSelected={filters.subcategory === sub.value}
+                      onClick={() => updateFilters({ 
+                        subcategory: filters.subcategory === sub.value ? null : sub.value 
+                      })}
+                    />
+                  ))
+                ) : null}
               </div>
-            ) : subcategories.length > 0 ? (
-              <div className="flex flex-wrap gap-2 flex-1">
-                {subcategories.map((sub) => (
-                  <FilterChip
-                    key={sub.value}
-                    label={sub.label}
-                    isSelected={filters.subcategory === sub.value}
-                    onClick={() => updateFilters({ 
-                      subcategory: filters.subcategory === sub.value ? null : sub.value 
-                    })}
-                  />
-                ))}
-              </div>
-            ) : null}
+            </div>
 
-            <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">
-                {totalCount > 0 ? `${totalCount} designs` : "Loading..."}
-              </span>
+            {/* Desktop: Original layout */}
+            <div className="hidden sm:flex sm:items-start gap-3">
+              <div className="relative flex-shrink-0">
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-card hover:bg-accent/50 border border-border text-foreground font-medium text-sm transition-all"
+                  data-testid="button-open-filters-desktop"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  <span>Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+              
+                {isFilterOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setIsFilterOpen(false)}
+                    />
+                    <div className="absolute left-0 top-full mt-2 w-72 p-4 rounded-xl border bg-card shadow-lg z-50">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <SlidersHorizontal className="w-4 h-4" />
+                          Filters
+                        </div>
+                        <button 
+                          onClick={() => setIsFilterOpen(false)}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Type</label>
+                          <div className="flex flex-wrap gap-2">
+                            {TEMPLATE_TYPES.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.type === option.value}
+                                onClick={() => updateFilters({ type: filters.type === option.value ? null : option.value })}
+                                testId={`filter-type-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Sort by</label>
+                          <div className="flex flex-wrap gap-2">
+                            {SORT_OPTIONS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.sort === option.value}
+                                onClick={() => updateFilters({ sort: filters.sort === option.value ? null : option.value })}
+                                testId={`filter-sort-by-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Photo</label>
+                          <div className="flex flex-wrap gap-2">
+                            {PHOTO_OPTIONS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.photo === option.value}
+                                onClick={() => updateFilters({ photo: filters.photo === option.value ? null : option.value })}
+                                testId={`filter-photo-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Card Orientation</label>
+                          <div className="flex flex-wrap gap-2">
+                            {ORIENTATION_OPTIONS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.orientation === option.value}
+                                onClick={() => updateFilters({ orientation: filters.orientation === option.value ? null : option.value })}
+                                testId={`filter-card-orientation-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-2 block">Region</label>
+                          <div className="flex flex-wrap gap-2">
+                            {REGION_FILTERS.map((option) => (
+                              <FilterOption
+                                key={option.value}
+                                label={option.label}
+                                isSelected={filters.region === option.value}
+                                onClick={() => updateFilters({ region: filters.region === option.value ? null : option.value })}
+                                testId={`filter-region-${option.value}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-5 pt-4 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 rounded-full"
+                          onClick={clearAllFilters}
+                          data-testid="button-clear-all-filters"
+                        >
+                          Clear All
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 rounded-full"
+                          onClick={() => setIsFilterOpen(false)}
+                          data-testid="button-apply-filters"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {isAllTemplatesPage ? (
+                <div className="flex flex-wrap gap-2 flex-1">
+                  {ALL_TEMPLATES_CATEGORIES.map((cat) => (
+                    <FilterChip
+                      key={cat.value}
+                      label={cat.label}
+                      isSelected={filters.category === cat.value}
+                      onClick={() => updateFilters({ 
+                        category: filters.category === cat.value ? null : cat.value 
+                      })}
+                    />
+                  ))}
+                  <div className="w-px h-6 bg-border mx-1 self-center" />
+                  {REGION_FILTERS.map((region) => (
+                    <FilterChip
+                      key={region.value}
+                      label={region.label}
+                      isSelected={filters.region === region.value}
+                      onClick={() => updateFilters({ 
+                        region: filters.region === region.value ? null : region.value 
+                      })}
+                    />
+                  ))}
+                </div>
+              ) : subcategories.length > 0 ? (
+                <div className="flex flex-wrap gap-2 flex-1">
+                  {subcategories.map((sub) => (
+                    <FilterChip
+                      key={sub.value}
+                      label={sub.label}
+                      isSelected={filters.subcategory === sub.value}
+                      onClick={() => updateFilters({ 
+                        subcategory: filters.subcategory === sub.value ? null : sub.value 
+                      })}
+                    />
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {totalCount > 0 ? `${totalCount} designs` : "Loading..."}
+                </span>
+              </div>
             </div>
           </div>
 
