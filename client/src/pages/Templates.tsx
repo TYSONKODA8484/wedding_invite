@@ -126,18 +126,34 @@ export default function Templates() {
     });
   }, [location]);
 
+  const urlUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  useEffect(() => {
+    return () => {
+      if (urlUpdateTimeoutRef.current) {
+        clearTimeout(urlUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
+  
   const updateFilters = (newFilters: Partial<FilterState>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
 
-    const params = new URLSearchParams();
-    Object.entries(updatedFilters).forEach(([key, value]) => {
-      if (value) params.set(key, value);
-    });
+    if (urlUpdateTimeoutRef.current) {
+      clearTimeout(urlUpdateTimeoutRef.current);
+    }
 
-    const basePath = categoryFromUrl ? `/templates/${categoryFromUrl}` : "/templates";
-    const queryString = params.toString();
-    setLocation(queryString ? `${basePath}?${queryString}` : basePath, { replace: true });
+    urlUpdateTimeoutRef.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      Object.entries(updatedFilters).forEach(([key, value]) => {
+        if (value) params.set(key, value);
+      });
+
+      const basePath = categoryFromUrl ? `/templates/${categoryFromUrl}` : "/templates";
+      const queryString = params.toString();
+      setLocation(queryString ? `${basePath}?${queryString}` : basePath, { replace: true });
+    }, 150);
   };
 
   const clearAllFilters = () => {
@@ -365,6 +381,8 @@ export default function Templates() {
             src={templatesHubHero}
             alt="Video Templates"
             className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
         </div>

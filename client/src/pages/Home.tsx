@@ -141,6 +141,8 @@ export default function Home() {
                 src={homepageHero} 
                 alt="Wedding Invitation Templates" 
                 className="w-full h-auto"
+                loading="eager"
+                decoding="async"
               />
             </div>
           </div>

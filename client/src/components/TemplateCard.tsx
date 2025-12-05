@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Layers, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -46,14 +46,40 @@ export function TemplateCard({
 }: TemplateCardProps) {
   const [isHovering, setIsHovering] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const isVideoTemplate = templateType === "video";
   const isCardTemplate = templateType === "card";
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.disconnect();
+          }
+        });
+      },
+      {
+        rootMargin: "100px",
+        threshold: 0.01,
+      }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const handleMouseEnter = () => {
     setIsHovering(true);
-    if (isVideoTemplate && demoVideoUrl && videoRef.current) {
+    if (isVideoTemplate && demoVideoUrl && videoRef.current && isInView) {
       setShowVideo(true);
       videoRef.current.play().catch(() => {});
     }
@@ -70,13 +96,18 @@ export function TemplateCard({
 
 
   return (
-    <Card className="group overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-300 bg-card" data-testid={`card-template-${id}`}>
+    <Card ref={cardRef} className="group overflow-hidden border-0 shadow-sm hover:shadow-lg transition-all duration-300 bg-card" data-testid={`card-template-${id}`}>
       <Link href={`/template/${slug}`} className="block">
         <div 
           className="relative aspect-[9/16] overflow-hidden bg-muted rounded-t-lg"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
+          {/* Loading placeholder */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-muted animate-pulse" />
+          )}
+          
           {isCardTemplate ? (
             <>
               <div className="absolute inset-0 flex items-center justify-center p-3">
@@ -97,11 +128,16 @@ export function TemplateCard({
                     className="relative w-full h-full rounded-lg overflow-hidden shadow-xl border border-border/50 transition-transform duration-300 group-hover:scale-[1.02]"
                     style={{ zIndex: 3 }}
                   >
-                    <img
-                      src={thumbnailUrl}
-                      alt={title}
-                      className="w-full h-full object-cover"
-                    />
+                    {isInView && (
+                      <img
+                        src={thumbnailUrl}
+                        alt={title}
+                        className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        loading="lazy"
+                        decoding="async"
+                        onLoad={() => setImageLoaded(true)}
+                      />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
                   </div>
                 </div>
@@ -110,15 +146,20 @@ export function TemplateCard({
             </>
           ) : (
             <>
-              <img
-                src={thumbnailUrl}
-                alt={title}
-                className={`w-full h-full object-cover transition-all duration-500 ${
-                  showVideo && demoVideoUrl ? 'opacity-0 scale-100' : 'opacity-100 group-hover:scale-105'
-                }`}
-              />
+              {isInView && (
+                <img
+                  src={thumbnailUrl}
+                  alt={title}
+                  className={`w-full h-full object-cover transition-all duration-500 ${
+                    showVideo && demoVideoUrl ? 'opacity-0 scale-100' : imageLoaded ? 'opacity-100 group-hover:scale-105' : 'opacity-0'
+                  }`}
+                  loading="lazy"
+                  decoding="async"
+                  onLoad={() => setImageLoaded(true)}
+                />
+              )}
               
-              {demoVideoUrl && (
+              {isInView && demoVideoUrl && (
                 <video
                   ref={videoRef}
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
@@ -127,7 +168,8 @@ export function TemplateCard({
                   muted
                   loop
                   playsInline
-                  preload="metadata"
+                  preload="none"
+                  poster={thumbnailUrl}
                   data-testid={`video-preview-${id}`}
                 >
                   <source src={demoVideoUrl} type="video/mp4" />

@@ -52,6 +52,8 @@ export default function HowItWorks() {
             src={homepageHero}
             alt="How It Works"
             className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
         </div>
