@@ -569,11 +569,14 @@ function ReorderPagesModal({ isOpen, onClose, pages, onConfirm, pagePreviewUrls 
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
-      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl h-[90vh] sm:h-[85vh] max-h-[90vh] p-0 overflow-hidden rounded-2xl">
+      <DialogContent className="w-[95vw] max-w-lg sm:max-w-xl md:max-w-2xl h-[90vh] sm:h-[85vh] max-h-[90vh] p-0 overflow-hidden rounded-2xl" hideCloseButton>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Re-order Pages</DialogTitle>
+        </DialogHeader>
         {/* Header - Fixed at top */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b bg-background/95 backdrop-blur-sm sticky top-0 z-10">
           <div className="flex flex-col">
-            <h2 className="text-base sm:text-lg font-semibold">Re-order Pages</h2>
+            <h2 className="text-base sm:text-lg font-semibold" aria-hidden="true">Re-order Pages</h2>
             <p className="text-xs text-muted-foreground hidden sm:block">Drag to rearrange</p>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
@@ -2645,21 +2648,24 @@ export default function Editor() {
 
       {/* Mobile Edit Sheet - Slide up from bottom */}
       <Dialog open={showMobileEditSheet} onOpenChange={setShowMobileEditSheet}>
-        <DialogContent className="w-full max-w-none h-[75vh] fixed bottom-0 top-auto translate-y-0 rounded-t-2xl rounded-b-none p-0 gap-0 border-t border-x border-b-0 md:hidden" style={{ maxHeight: '75vh' }}>
+        <DialogContent 
+          className="w-full max-w-none h-[70vh] fixed bottom-0 top-auto translate-y-0 rounded-t-2xl rounded-b-none p-0 gap-0 border-t border-x border-b-0 md:hidden" 
+          style={{ maxHeight: '70vh' }}
+          hideCloseButton
+        >
           <DialogHeader className="sr-only">
             <DialogTitle>Edit Fields</DialogTitle>
           </DialogHeader>
           
-          {/* Handle bar */}
-          <div className="flex justify-center py-2 border-b">
-            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
-          </div>
-          
-          {/* Header */}
+          {/* Header with handle bar and close */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-background">
-            <div>
-              <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
-              <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
+            <div className="flex items-center gap-3">
+              {/* Handle bar indicator */}
+              <div className="w-8 h-1 bg-muted-foreground/30 rounded-full" />
+              <div>
+                <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
+                <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
+              </div>
             </div>
             <Button
               variant="ghost"
