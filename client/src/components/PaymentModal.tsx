@@ -74,7 +74,7 @@ export function PaymentModal({
             
             const verifyData = await verifyResponse.json();
 
-            await queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+            await queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
             await queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
 
             toast({

@@ -95,8 +95,8 @@ export default function MyTemplates() {
       
       return response.json();
     },
-    staleTime: 30000,
-    refetchOnMount: false,
+    staleTime: 0,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
   });
 
