@@ -209,6 +209,9 @@ export default function Templates() {
       return undefined;
     },
     initialPageParam: 0,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes - templates don't change often
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const templates = useMemo(() => {

@@ -9,6 +9,20 @@ import { renderProject, renderPagePreview } from "./render-service";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
+// Templates cache - templates rarely change so cache for 5 minutes
+let templatesCache: { data: any[] | null; timestamp: number } = { data: null, timestamp: 0 };
+const TEMPLATES_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getCachedTemplates() {
+  const now = Date.now();
+  if (templatesCache.data && (now - templatesCache.timestamp) < TEMPLATES_CACHE_TTL) {
+    return templatesCache.data;
+  }
+  const templates = await storage.getTemplates();
+  templatesCache = { data: templates, timestamp: now };
+  return templates;
+}
+
 const authMiddleware = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   
@@ -518,7 +532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit
       } = req.query;
       
-      const allTemplates = await storage.getTemplates();
+      const allTemplates = await getCachedTemplates();
       
       // Apply filters
       let filteredTemplates = allTemplates;
