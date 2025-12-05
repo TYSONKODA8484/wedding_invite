@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Check, Heart, Calendar, Users, Star, Sparkles, Globe2, Flower2 } from "lucide-react";
 import { CustomerReviews } from "@/components/CustomerReviews";
-import heroVideo from "@assets/generated_videos/indian_wedding_mehendi_hands_scene.mp4";
-import heroPoster from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
+import heroImage from "@assets/generated_images/indian_wedding_mehendi_hands_image.png";
 
 export default function Home() {
   const [location] = useLocation();
@@ -126,18 +125,15 @@ export default function Home() {
               </Button>
             </div>
 
-            {/* Hero Video */}
+            {/* Hero Image */}
             <div className="mt-12 rounded-2xl overflow-hidden shadow-2xl border border-border">
-              <video 
-                src={heroVideo} 
-                poster={heroPoster}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
+              <img 
+                src={heroImage} 
+                alt="Indian Wedding Invitation - Beautiful mehendi hands with marigold flowers" 
                 className="w-full h-auto"
-                data-testid="video-hero"
+                loading="eager"
+                decoding="async"
+                data-testid="image-hero"
               />
             </div>
           </div>
