@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { SEOHead } from "@/components/SEOHead";
 import { HeroSection } from "@/components/HeroSection";
 import { TemplateCard } from "@/components/TemplateCard";
 import { Card } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2, SlidersHorizontal, X, Sparkles } from "lucide-react";
 import type { Template } from "@shared/schema";
 import indianPunjabiHero from "@assets/generated_images/Indian_Punjabi_wedding_culture_b8245c44.png";
 import tamilHero from "@assets/generated_images/Tamil_wedding_culture_page_3a868c20.png";
@@ -226,15 +230,57 @@ interface TemplateResponse {
   pagination: { total: number; offset: number; limit: number; hasMore: boolean };
 }
 
+const TEMPLATE_TYPES = [
+  { value: "video", label: "Video" },
+  { value: "card", label: "Card" },
+];
+
+const SORT_OPTIONS = [
+  { value: "popular", label: "Popular" },
+  { value: "newest", label: "Newest" },
+  { value: "price_low", label: "Low to High" },
+  { value: "price_high", label: "High to Low" },
+];
+
+function FilterChip({ label, isSelected, onClick }: { label: string; isSelected: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+        isSelected
+          ? "bg-primary text-primary-foreground border-primary"
+          : "bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function FilterOption({ label, isSelected, onClick }: { label: string; isSelected: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+        isSelected
+          ? "bg-primary/10 text-primary border-primary/30"
+          : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function CulturePage() {
   const [location] = useLocation();
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [sortFilter, setSortFilter] = useState<string | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Parse the culture slug from the URL path
-  // Handles: /culture/punjabi, /culture/indian-wedding-video-invitation, /culture/indian-wedding-video-invitation/punjabi
   const pathParts = location.replace("/culture/", "").split("/").filter(Boolean);
   
-  // For nested routes like /culture/indian-wedding-video-invitation/punjabi, use the last segment
-  // For direct routes like /culture/punjabi, use the single segment
   const slug = pathParts.length > 1 ? pathParts[pathParts.length - 1] : pathParts[0] || "indian-wedding-video-invitation";
   const culture = cultureData[slug] || cultureData["indian-wedding-video-invitation"];
 
@@ -243,20 +289,35 @@ export default function CulturePage() {
     ? culture.regions.join(',') 
     : culture.region || '';
 
+  // Build query params for API
+  const buildQueryParams = () => {
+    const params = new URLSearchParams();
+    if (regionQuery) params.set("region", regionQuery);
+    if (typeFilter) params.set("type", typeFilter);
+    if (sortFilter) params.set("sort", sortFilter);
+    params.set("limit", "25");
+    return params.toString();
+  };
+
   // Fetch real templates from database based on culture's region
   const { data, isLoading } = useQuery<TemplateResponse>({
-    queryKey: ["/api/templates", { region: regionQuery }],
+    queryKey: ["/api/templates", { region: regionQuery, type: typeFilter, sort: sortFilter }],
     queryFn: async () => {
-      const url = regionQuery 
-        ? `/api/templates?region=${regionQuery}&limit=20`
-        : `/api/templates?limit=20`;
-      const response = await fetch(url);
+      const queryString = buildQueryParams();
+      const response = await fetch(`/api/templates?${queryString}`);
       if (!response.ok) throw new Error("Failed to fetch templates");
       return response.json();
     },
   });
   
   const templates = data?.templates || [];
+  const totalCount = data?.pagination?.total || templates.length;
+  const hasActiveFilters = typeFilter || sortFilter;
+
+  const clearAllFilters = () => {
+    setTypeFilter(null);
+    setSortFilter(null);
+  };
 
   // SEO Schema markup
   const collectionSchema = {
@@ -374,27 +435,189 @@ export default function CulturePage() {
             </Card>
           </div>
 
-          <div className="mb-8" id="templates">
+          <div className="mb-6" id="templates">
             <h3 className="font-playfair text-3xl lg:text-4xl font-bold text-foreground mb-2 text-center">
               {culture.name} Templates
             </h3>
-            <p className="text-muted-foreground text-center text-lg">
-              {isLoading ? "Loading templates..." : `${templates.length > 0 ? templates.length : culture.templateCount} culturally authentic templates available`}
+            <p className="text-muted-foreground text-center text-lg mb-6">
+              Culturally authentic templates for your special occasion
             </p>
           </div>
 
+          <div className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b">
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-full"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                data-testid="button-filters"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                )}
+              </Button>
+
+              {isFilterOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setIsFilterOpen(false)}
+                  />
+                  <div className="absolute left-0 top-full mt-2 w-72 p-4 rounded-xl border bg-card shadow-lg z-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <SlidersHorizontal className="w-4 h-4" />
+                        Filters
+                      </div>
+                      <button 
+                        onClick={() => setIsFilterOpen(false)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Type</label>
+                        <div className="flex flex-wrap gap-2">
+                          {TEMPLATE_TYPES.map((option) => (
+                            <FilterOption
+                              key={option.value}
+                              label={option.label}
+                              isSelected={typeFilter === option.value}
+                              onClick={() => setTypeFilter(typeFilter === option.value ? null : option.value)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">Sort by</label>
+                        <div className="flex flex-wrap gap-2">
+                          {SORT_OPTIONS.map((option) => (
+                            <FilterOption
+                              key={option.value}
+                              label={option.label}
+                              isSelected={sortFilter === option.value}
+                              onClick={() => setSortFilter(sortFilter === option.value ? null : option.value)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mt-5 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 rounded-full"
+                        onClick={clearAllFilters}
+                      >
+                        Clear All
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 rounded-full"
+                        onClick={() => setIsFilterOpen(false)}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2 flex-1">
+              {TEMPLATE_TYPES.map((type) => (
+                <FilterChip
+                  key={type.value}
+                  label={type.label}
+                  isSelected={typeFilter === type.value}
+                  onClick={() => setTypeFilter(typeFilter === type.value ? null : type.value)}
+                />
+              ))}
+              <div className="w-px h-6 bg-border mx-1 self-center" />
+              {SORT_OPTIONS.slice(0, 2).map((sort) => (
+                <FilterChip
+                  key={sort.value}
+                  label={sort.label}
+                  isSelected={sortFilter === sort.value}
+                  onClick={() => setSortFilter(sortFilter === sort.value ? null : sort.value)}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 text-muted-foreground flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">
+                {isLoading ? "Loading..." : `${totalCount} designs`}
+              </span>
+            </div>
+          </div>
+
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <span className="text-xs text-muted-foreground">Active:</span>
+              {typeFilter && (
+                <Badge variant="secondary" className="gap-1 text-xs">
+                  {TEMPLATE_TYPES.find(t => t.value === typeFilter)?.label}
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                    onClick={() => setTypeFilter(null)}
+                  />
+                </Badge>
+              )}
+              {sortFilter && (
+                <Badge variant="secondary" className="gap-1 text-xs">
+                  {SORT_OPTIONS.find(s => s.value === sortFilter)?.label}
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                    onClick={() => setSortFilter(null)}
+                  />
+                </Badge>
+              )}
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-primary hover:text-primary/80 font-medium hover:underline"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
           {isLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
+              {[...Array(10)].map((_, i) => (
+                <div key={`skeleton-${i}`} className="space-y-2">
+                  <Skeleton className="aspect-[3/4] w-full rounded-lg" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))}
             </div>
           ) : templates.length === 0 ? (
-            <Card className="p-12 text-center">
-              <p className="text-muted-foreground text-lg mb-4">
-                Templates for {culture.name} are coming soon!
-              </p>
-              <p className="text-sm text-muted-foreground">
-                In the meantime, explore our general wedding templates.
-              </p>
+            <Card className="p-10 text-center">
+              <div className="max-w-md mx-auto">
+                <h3 className="font-playfair text-xl font-bold text-foreground mb-2">
+                  No Templates Found
+                </h3>
+                <p className="text-muted-foreground text-sm mb-5">
+                  {hasActiveFilters 
+                    ? "Try adjusting your filters to see more results"
+                    : `Templates for ${culture.name} are coming soon!`
+                  }
+                </p>
+                {hasActiveFilters && (
+                  <Button onClick={clearAllFilters} variant="outline">
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
             </Card>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
