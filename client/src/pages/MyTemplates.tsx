@@ -1,9 +1,9 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Edit, Eye, FileImage, Film, Music, Trash2 } from "lucide-react";
+import { Download, Edit, Eye, FileImage, Film, Music, Trash2, Plus, Sparkles, ArrowRight, CheckCircle2, Clock } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { MediaPreviewModal } from "@/components/MediaPreviewModal";
@@ -19,6 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface MusicInfo {
   id: string;
@@ -100,7 +101,6 @@ export default function MyTemplates() {
     refetchOnWindowFocus: false,
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (projectId: string) => {
       const token = localStorage.getItem("auth_token");
@@ -133,7 +133,6 @@ export default function MyTemplates() {
     navigate(`/editor/${project.id}?from=my-templates`);
   };
 
-  // Download for paid templates - uses finalUrl
   const triggerPaidDownload = (project: Project) => {
     const urlToDownload = project.finalUrl;
     if (urlToDownload) {
@@ -157,22 +156,17 @@ export default function MyTemplates() {
     }
   };
 
-  // For generated (unpaid) templates - triggers payment first
   const handleGeneratedDownload = (project: Project) => {
     setSelectedProject(project);
     setShowPaymentModal(true);
   };
 
   const handlePaymentSuccess = async () => {
-    // Invalidate cache so next render gets fresh data
     await queryClient.invalidateQueries({ queryKey: ["/api/projects/mine"] });
     
-    // After payment success, trigger download using the selected project's finalUrl
     if (selectedProject) {
-      // Short delay to allow backend to update finalUrl after payment
       setTimeout(async () => {
         try {
-          // Refetch the data to get the updated project with finalUrl
           const freshProjects = await queryClient.fetchQuery<Project[]>({ 
             queryKey: ["/api/projects/mine"] 
           });
@@ -189,10 +183,8 @@ export default function MyTemplates() {
     }
   };
 
-  // View for Paid templates - uses finalUrl with fallbacks
   const handleViewPaid = (project: Project) => {
     const mediaType = project.templateType === "card" ? "image" : "video";
-    // Fallback chain: finalUrl -> previewUrl -> template assets
     const url = project.finalUrl || project.previewUrl || 
       (mediaType === "image" ? project.previewImageUrl : project.previewVideoUrl) ||
       project.thumbnailUrl;
@@ -215,10 +207,8 @@ export default function MyTemplates() {
     setShowMediaModal(true);
   };
 
-  // View for Generated templates - uses previewUrl with fallbacks
   const handleViewGenerated = (project: Project) => {
     const mediaType = project.templateType === "card" ? "image" : "video";
-    // Fallback chain: previewUrl -> template assets
     const url = project.previewUrl || 
       (mediaType === "image" ? project.previewImageUrl : project.previewVideoUrl) ||
       project.thumbnailUrl;
@@ -241,7 +231,6 @@ export default function MyTemplates() {
     setShowMediaModal(true);
   };
 
-  // Delete handler
   const handleDeleteClick = (project: Project) => {
     setProjectToDelete(project);
     setShowDeleteDialog(true);
@@ -260,19 +249,31 @@ export default function MyTemplates() {
     return `${currency} ${parseFloat(price).toFixed(2)}`;
   };
 
+  const formatDate = (date: Date | string | null) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toLocaleDateString("en-IN", { 
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+  };
+
   // Only show full loading state on initial load (no cached data)
   if (isLoading && !projects) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8">My Templates</h1>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold">My Templates</h1>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="overflow-hidden animate-pulse">
-              <div className="aspect-[9/16] bg-muted" />
-              <div className="p-3 lg:p-4 space-y-2">
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
-                <div className="h-8 bg-muted rounded" />
+            <Card key={i} className="overflow-hidden">
+              <div className="aspect-[9/16] bg-muted animate-pulse" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+                <div className="h-3 bg-muted rounded animate-pulse w-1/2" />
+                <div className="h-10 bg-muted rounded animate-pulse" />
               </div>
             </Card>
           ))}
@@ -297,59 +298,83 @@ export default function MyTemplates() {
       return dateB - dateA;
     }) || [];
 
+  // Empty state
   if (!projects || projects.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        <h1 className="font-playfair text-2xl sm:text-3xl font-bold mb-6 lg:mb-8">My Templates</h1>
-        <div className="text-center py-12">
-          <p className="text-muted-foreground mb-4">You haven't created any video invitations yet</p>
-          <Button onClick={() => navigate("/templates")} data-testid="button-browse-templates">
-            Browse Templates
-          </Button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold">My Templates</h1>
         </div>
+        
+        <Card className="p-12 text-center max-w-lg mx-auto">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Sparkles className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="font-playfair text-2xl font-bold text-foreground mb-3">
+            No Templates Yet
+          </h2>
+          <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
+            You haven't created any invitations yet. Browse our collection and start creating your perfect invitation.
+          </p>
+          <Button size="lg" className="gap-2" asChild>
+            <Link href="/templates">
+              <Plus className="w-5 h-5" />
+              Browse Templates
+            </Link>
+          </Button>
+        </Card>
       </div>
     );
   }
 
-  // Render card for PAID templates
-  const renderPaidProjectCard = (project: Project) => (
+  const renderProjectCard = (project: Project, isPaidSection: boolean) => (
     <Card 
       key={project.id} 
-      className="group overflow-hidden transition-all duration-300"
+      className="group overflow-hidden hover:shadow-lg transition-all duration-300"
       data-testid={`card-project-${project.id}`}
     >
       <div className="relative aspect-[9/16] overflow-hidden bg-muted">
         <img
           src={project.thumbnailUrl || project.previewImageUrl}
           alt={project.templateName}
-          className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           data-testid={`img-thumbnail-${project.id}`}
         />
         
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
+        {/* Status badge - top right */}
         <div className="absolute top-3 right-3">
-          <Badge className="bg-green-600 text-white font-semibold" data-testid={`badge-paid-${project.id}`}>
-            Paid
-          </Badge>
+          {isPaidSection ? (
+            <Badge className="bg-green-500 text-white font-medium gap-1.5 shadow-md" data-testid={`badge-paid-${project.id}`}>
+              <CheckCircle2 className="w-3 h-3" />
+              Paid
+            </Badge>
+          ) : (
+            <Badge className="bg-amber-500 text-white font-medium gap-1.5 shadow-md" data-testid={`badge-preview-${project.id}`}>
+              <Clock className="w-3 h-3" />
+              Draft
+            </Badge>
+          )}
         </div>
         
-        <div className="absolute bottom-3 left-3 flex flex-col gap-1">
+        {/* Type and music badges - bottom left */}
+        <div className="absolute bottom-3 left-3 flex flex-col gap-1.5">
           <Badge 
             variant="secondary" 
-            className="bg-black/60 backdrop-blur-sm text-white border-none"
+            className="bg-black/60 backdrop-blur-sm text-white border-none w-fit"
             data-testid={`badge-type-${project.id}`}
           >
             {project.templateType === "card" ? (
-              <><FileImage className="h-3 w-3 mr-1" /> Card</>
+              <><FileImage className="h-3 w-3 mr-1.5" /> Card</>
             ) : (
-              <><Film className="h-3 w-3 mr-1" /> Video</>
+              <><Film className="h-3 w-3 mr-1.5" /> Video</>
             )}
           </Badge>
           {project.templateType === "video" && (project.selectedMusic || project.customMusicUrl) && (
             <Badge 
               variant="secondary" 
-              className="bg-black/60 backdrop-blur-sm text-white border-none text-[10px]"
+              className="bg-black/60 backdrop-blur-sm text-white border-none text-[10px] w-fit"
               data-testid={`badge-music-${project.id}`}
             >
               <Music className="h-2.5 w-2.5 mr-1" />
@@ -363,192 +388,156 @@ export default function MyTemplates() {
         </div>
       </div>
       
-      <div className="p-3 lg:p-4">
-        <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-name-${project.id}`}>
+      <div className="p-4">
+        <h3 className="font-semibold text-sm lg:text-base text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-name-${project.id}`}>
           {project.templateName}
         </h3>
-        <div className="flex items-center justify-between mb-3">
-          {project.paidAt && (
-            <p className="text-xs text-green-600">
-              {new Date(project.paidAt).toLocaleDateString()}
-            </p>
-          )}
-          <p className="text-base lg:text-lg font-semibold text-primary ml-auto" data-testid={`text-price-${project.id}`}>
+        
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs text-muted-foreground">
+            {isPaidSection && project.paidAt 
+              ? formatDate(project.paidAt)
+              : formatDate(project.updatedAt)
+            }
+          </p>
+          <p className="text-base font-bold text-primary" data-testid={`text-price-${project.id}`}>
             {formatPrice(project.price, project.currency)}
           </p>
         </div>
         
-        {/* Paid Templates: View (finalUrl), Download (finalUrl) */}
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="default"
-            className="flex-1"
-            onClick={() => handleViewPaid(project)}
-            data-testid={`button-view-${project.id}`}
-          >
-            <Eye className="h-4 w-4 mr-1" /> View
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => triggerPaidDownload(project)}
-            data-testid={`button-download-${project.id}`}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
-
-  // Render card for GENERATED (unpaid) templates
-  const renderGeneratedProjectCard = (project: Project) => (
-    <Card 
-      key={project.id} 
-      className="group overflow-hidden transition-all duration-300"
-      data-testid={`card-project-${project.id}`}
-    >
-      <div className="relative aspect-[9/16] overflow-hidden bg-muted">
-        <img
-          src={project.thumbnailUrl || project.previewImageUrl}
-          alt={project.templateName}
-          className="w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
-          data-testid={`img-thumbnail-${project.id}`}
-        />
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        <div className="absolute top-3 right-3">
-          <Badge variant="secondary" className="bg-black/60 backdrop-blur-sm text-white border-none" data-testid={`badge-preview-${project.id}`}>
-            Preview
-          </Badge>
-        </div>
-        
-        <div className="absolute bottom-3 left-3 flex flex-col gap-1">
-          <Badge 
-            variant="secondary" 
-            className="bg-black/60 backdrop-blur-sm text-white border-none"
-            data-testid={`badge-type-${project.id}`}
-          >
-            {project.templateType === "card" ? (
-              <><FileImage className="h-3 w-3 mr-1" /> Card</>
-            ) : (
-              <><Film className="h-3 w-3 mr-1" /> Video</>
-            )}
-          </Badge>
-          {project.templateType === "video" && (project.selectedMusic || project.customMusicUrl) && (
-            <Badge 
-              variant="secondary" 
-              className="bg-black/60 backdrop-blur-sm text-white border-none text-[10px]"
-              data-testid={`badge-music-${project.id}`}
+        {/* Actions */}
+        {isPaidSection ? (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="flex-1"
+              onClick={() => handleViewPaid(project)}
+              data-testid={`button-view-${project.id}`}
             >
-              <Music className="h-2.5 w-2.5 mr-1" />
-              {project.selectedMusic ? (
-                <span className="truncate max-w-[80px]">{project.selectedMusic.name}</span>
-              ) : (
-                <span>Custom Music</span>
-              )}
-            </Badge>
-          )}
-        </div>
-      </div>
-      
-      <div className="p-3 lg:p-4">
-        <h3 className="font-playfair text-sm lg:text-base font-semibold text-foreground mb-1 line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-name-${project.id}`}>
-          {project.templateName}
-        </h3>
-        <div className="flex items-center justify-end mb-3">
-          <p className="text-base lg:text-lg font-semibold text-primary" data-testid={`text-price-${project.id}`}>
-            {formatPrice(project.price, project.currency)}
-          </p>
-        </div>
-        
-        {/* Generated Templates: Edit, View (previewUrl), Download (payment), Delete */}
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="default"
-            className="flex-1"
-            onClick={() => handleEdit(project)}
-            data-testid={`button-edit-${project.id}`}
-          >
-            <Edit className="h-4 w-4 mr-1" /> Edit
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => handleViewGenerated(project)}
-            data-testid={`button-view-${project.id}`}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => handleGeneratedDownload(project)}
-            data-testid={`button-download-${project.id}`}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="outline"
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => handleDeleteClick(project)}
-            disabled={deleteMutation.isPending}
-            data-testid={`button-delete-${project.id}`}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
+              <Eye className="h-4 w-4 mr-1.5" /> View
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => triggerPaidDownload(project)}
+              data-testid={`button-download-${project.id}`}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={() => handleEdit(project)}
+              data-testid={`button-edit-${project.id}`}
+            >
+              <Edit className="h-4 w-4 mr-1.5" /> Continue Editing
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => handleViewGenerated(project)}
+                data-testid={`button-view-${project.id}`}
+              >
+                <Eye className="h-4 w-4 mr-1.5" /> Preview
+              </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => handleDeleteClick(project)}
+                disabled={deleteMutation.isPending}
+                data-testid={`button-delete-${project.id}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-      <div className="flex items-center gap-3 mb-6 lg:mb-8">
-        <h1 className="font-playfair text-2xl sm:text-3xl font-bold" data-testid="heading-my-videos">My Templates</h1>
-        {isFetching && !isLoading && (
-          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <h1 className="font-playfair text-2xl sm:text-3xl font-bold" data-testid="heading-my-videos">
+            My Templates
+          </h1>
+          {isFetching && !isLoading && (
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+        <Button variant="outline" className="gap-2" asChild>
+          <Link href="/templates">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Create New</span>
+          </Link>
+        </Button>
       </div>
-      
-      {/* Paid Templates Section */}
-      {paidProjects.length > 0 && (
-        <section className="mb-10" data-testid="section-paid-templates">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-paid-templates">
-            <span className="text-green-600">Paid Templates</span>
-            <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-              {paidProjects.length}
-            </Badge>
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
-            {paidProjects.map(renderPaidProjectCard)}
-          </div>
-        </section>
-      )}
-      
-      {/* Separator */}
-      {paidProjects.length > 0 && generatedProjects.length > 0 && (
-        <hr className="border-t border-border mb-10" />
-      )}
-      
-      {/* Generated Templates Section */}
-      {generatedProjects.length > 0 && (
-        <section data-testid="section-generated-templates">
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2" data-testid="heading-generated-templates">
-            <span className="text-[#16a34a]">Generated Templates</span>
-            <Badge variant="secondary" className="text-[#15803d] bg-[#dcfce7]">
-              {generatedProjects.length}
-            </Badge>
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 lg:gap-5">
-            {generatedProjects.map(renderGeneratedProjectCard)}
-          </div>
-        </section>
-      )}
+
+      {/* Tabs for paid/draft */}
+      <Tabs defaultValue={paidProjects.length > 0 ? "paid" : "drafts"} className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="paid" className="gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            Completed
+            {paidProjects.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {paidProjects.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="drafts" className="gap-2">
+            <Clock className="w-4 h-4" />
+            Drafts
+            {generatedProjects.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                {generatedProjects.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="paid">
+          {paidProjects.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+              {paidProjects.map(project => renderProjectCard(project, true))}
+            </div>
+          ) : (
+            <Card className="p-10 text-center">
+              <p className="text-muted-foreground mb-4">No completed templates yet</p>
+              <p className="text-sm text-muted-foreground">
+                Complete a template purchase to see it here
+              </p>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="drafts">
+          {generatedProjects.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4 lg:gap-6">
+              {generatedProjects.map(project => renderProjectCard(project, false))}
+            </div>
+          ) : (
+            <Card className="p-10 text-center">
+              <p className="text-muted-foreground mb-4">No draft templates</p>
+              <Button variant="outline" asChild>
+                <Link href="/templates">
+                  Start Creating
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Media Preview Modal */}
       <MediaPreviewModal
@@ -580,9 +569,9 @@ export default function MyTemplates() {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Template?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this template?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{projectToDelete?.templateName}"? This action cannot be undone.
+              This will permanently delete "{projectToDelete?.templateName}" and all your customizations. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

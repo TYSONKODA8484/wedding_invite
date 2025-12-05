@@ -1,4 +1,4 @@
-import { useRoute, useLocation } from "wouter";
+import { useRoute, useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { SEOHead } from "@/components/SEOHead";
@@ -23,23 +23,21 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
-  Layers
+  Layers,
+  ChevronDown,
+  Play,
+  Share2,
+  Clock,
+  ArrowRight
 } from "lucide-react";
 import type { Template } from "@shared/schema";
 
-// Helper function to extract YouTube video ID from various URL formats
 function getYouTubeVideoId(url: string): string | null {
   if (!url) return null;
   
-  // Handle different YouTube URL formats:
-  // - https://www.youtube.com/watch?v=VIDEO_ID
-  // - https://youtu.be/VIDEO_ID
-  // - https://www.youtube.com/embed/VIDEO_ID
-  // - https://youtube.com/shorts/VIDEO_ID
-  
   const patterns = [
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-    /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+    /^([a-zA-Z0-9_-]{11})$/
   ];
   
   for (const pattern of patterns) {
@@ -119,8 +117,6 @@ export default function TemplateDetail() {
   };
 
   const templateType = template.templateType || template.category || "wedding";
-  
-  // Extract YouTube video ID from previewVideoUrl if it's a YouTube link
   const youtubeVideoId = getYouTubeVideoId(template.previewVideoUrl || "");
   const priceInRupees = parseFloat(template.price || "0");
   const displayPrice = formatPrice(Math.round(priceInRupees * 100));
@@ -172,14 +168,6 @@ export default function TemplateDetail() {
     {
       question: "How to download my video invitation?",
       answer: "After making the payment, your video will be instantly available for download. You can also access it anytime from the \"My Templates\" section in your account."
-    },
-    {
-      question: "Can I get a copy of the Video File?",
-      answer: "Yes, once you complete the payment, you'll receive a high-quality MP4 video file that you can download and share via WhatsApp, email, or any other platform."
-    },
-    {
-      question: "Is WeddingInvite.ai secure?",
-      answer: "Yes, we use industry-standard encryption and secure payment gateways (Razorpay) to protect your data. Your personal information and payment details are always safe with us."
     }
   ];
 
@@ -193,42 +181,82 @@ export default function TemplateDetail() {
         ogImage={template.thumbnailUrl}
       />
 
-      <section className="py-4 lg:py-6 bg-background border-b">
+      {/* Breadcrumb */}
+      <nav className="bg-muted/30 border-b" aria-label="Breadcrumb">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <ol className="flex items-center gap-2 text-sm" data-testid="breadcrumb">
+            <li>
+              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                Home
+              </Link>
+            </li>
+            <li className="text-muted-foreground">/</li>
+            <li>
+              <Link href="/templates" className="text-muted-foreground hover:text-foreground transition-colors">
+                Templates
+              </Link>
+            </li>
+            <li className="text-muted-foreground">/</li>
+            <li className="text-foreground font-medium truncate max-w-[200px]">
+              {template.templateName}
+            </li>
+          </ol>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <section className="py-6 lg:py-10 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Preview Section - Takes 2/3 of the width on desktop */}
-            <div 
-              className="lg:col-span-2"
-              data-testid="template-preview"
-            >
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+            {/* Preview Section - Takes 3/5 of the width on desktop */}
+            <div className="lg:col-span-3" data-testid="template-preview">
               {template.templateType === "video" ? (
-                <div className="aspect-[16/9] rounded-xl overflow-hidden shadow-xl bg-black border border-border/50">
-                  <iframe
-                    className="w-full h-full"
-                    src={youtubeVideoId 
-                      ? `https://www.youtube.com/embed/${youtubeVideoId}?rel=0`
-                      : "https://www.youtube.com/embed/WvfNvhFcjK8?rel=0"
-                    }
-                    title={template.templateName}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    data-testid="youtube-video"
-                  />
+                <div className="space-y-4">
+                  <div className="aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl bg-black border border-border/30">
+                    <iframe
+                      className="w-full h-full"
+                      src={youtubeVideoId 
+                        ? `https://www.youtube.com/embed/${youtubeVideoId}?rel=0`
+                        : "https://www.youtube.com/embed/WvfNvhFcjK8?rel=0"
+                      }
+                      title={template.templateName}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      data-testid="youtube-video"
+                    />
+                  </div>
+                  
+                  {/* Video info bar */}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {template.durationSec && (
+                        <Badge variant="secondary" className="gap-1.5">
+                          <Clock className="w-3 h-3" />
+                          {Math.floor(template.durationSec / 60)}:{String(template.durationSec % 60).padStart(2, '0')}
+                        </Badge>
+                      )}
+                      <Badge variant="secondary">HD Quality</Badge>
+                    </div>
+                    <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6">
                   {/* Main Card Preview */}
-                  <div className="relative w-full max-w-[320px] lg:max-w-[360px]">
-                    <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4">
+                  <div className="relative w-full max-w-[340px] lg:max-w-[380px]">
+                    <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4">
                       <div className="relative w-full h-full">
                         {pages.length > 1 && (
                           <>
-                            <div className="absolute inset-0 rounded-lg shadow-lg transform rotate-2 translate-x-2 -translate-y-1 opacity-40 bg-card border border-border" />
-                            <div className="absolute inset-0 rounded-lg shadow-lg transform -rotate-1 -translate-x-1 translate-y-1 opacity-60 bg-card border border-border" />
+                            <div className="absolute inset-0 rounded-xl shadow-lg transform rotate-2 translate-x-2 -translate-y-1 opacity-40 bg-card border border-border" />
+                            <div className="absolute inset-0 rounded-xl shadow-lg transform -rotate-1 -translate-x-1 translate-y-1 opacity-60 bg-card border border-border" />
                           </>
                         )}
-                        <div className="relative w-full h-full rounded-lg overflow-hidden shadow-xl border border-border/50 bg-white dark:bg-card">
+                        <div className="relative w-full h-full rounded-xl overflow-hidden shadow-xl border border-border/50 bg-white dark:bg-card">
                           <img
                             src={pages[selectedPageIndex]?.thumbnailUrl || template.thumbnailUrl}
                             alt={`${template.templateName} - Page ${selectedPageIndex + 1}`}
@@ -241,22 +269,22 @@ export default function TemplateDetail() {
                     </div>
                     
                     {pages.length > 1 && (
-                      <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 text-white backdrop-blur-sm">
+                      <div className="absolute top-6 left-6 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 text-white backdrop-blur-sm">
                         <Layers className="w-3.5 h-3.5" />
                         <span className="text-xs font-medium">{pages.length} pages</span>
                       </div>
                     )}
                   </div>
                   
-                  {/* Page Thumbnails - Vertical on desktop */}
+                  {/* Page Thumbnails */}
                   {pages.length > 1 && (
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="flex flex-col items-center gap-4">
                       <div className="flex lg:flex-col gap-2">
                         {pages.map((page: any, index: number) => (
                           <button
                             key={index}
                             onClick={() => setSelectedPageIndex(index)}
-                            className={`flex-shrink-0 w-12 h-16 lg:w-14 lg:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 shadow-sm ${
+                            className={`flex-shrink-0 w-14 h-20 lg:w-16 lg:h-24 rounded-xl overflow-hidden border-2 transition-all duration-200 shadow-sm ${
                               selectedPageIndex === index 
                                 ? 'border-primary ring-2 ring-primary/20 scale-105' 
                                 : 'border-border hover:border-primary/50'
@@ -272,23 +300,23 @@ export default function TemplateDetail() {
                         ))}
                       </div>
                       
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 rounded-full"
+                          className="h-9 w-9 rounded-full"
                           onClick={() => setSelectedPageIndex(prev => prev > 0 ? prev - 1 : pages.length - 1)}
                           data-testid="button-prev-page"
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
-                        <span className="text-xs text-muted-foreground min-w-[40px] text-center">
+                        <span className="text-sm text-muted-foreground font-medium min-w-[50px] text-center">
                           {selectedPageIndex + 1} / {pages.length}
                         </span>
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 rounded-full"
+                          className="h-9 w-9 rounded-full"
                           onClick={() => setSelectedPageIndex(prev => prev < pages.length - 1 ? prev + 1 : 0)}
                           data-testid="button-next-page"
                         >
@@ -299,156 +327,150 @@ export default function TemplateDetail() {
                   )}
                 </div>
               )}
-              
-              <div className="mt-4">
-                <p className="text-sm text-muted-foreground">
-                  {template.templateType === "video" 
-                    ? `This ${template.templateName} video will best fit & visible on every screen. Easy to share, Try this new, elegant, and unique style of invitation.`
-                    : `This beautiful ${template.templateName} card invitation features ${pages.length} elegantly designed pages. Perfect for sharing via WhatsApp or print.`
-                  }
-                </p>
-                <button 
-                  onClick={() => setShowFullDescription(!showFullDescription)}
-                  className="text-primary text-sm font-medium mt-2 hover:underline"
-                  data-testid="button-show-more"
-                >
-                  {showFullDescription ? 'Show Less' : 'Show More'}
-                </button>
-                {showFullDescription && (
-                  <p className="text-sm text-muted-foreground mt-2">{description}</p>
-                )}
-              </div>
             </div>
 
-            {/* Info Section - Takes 1/3 of the width on desktop */}
-            <div className="lg:col-span-1">
-              <h1 className="text-xl lg:text-2xl font-bold text-foreground mb-2" data-testid="text-template-title">
-                {template.templateName}
-              </h1>
-              
-              <div className="flex items-center gap-4 mb-4">
-                <span className="text-sm text-muted-foreground capitalize">{templateType}</span>
-                <span className="text-xl font-bold text-primary" data-testid="text-template-price">
-                  {displayPrice}
-                </span>
-              </div>
+            {/* Info Section - Takes 2/5 of the width on desktop */}
+            <div className="lg:col-span-2">
+              <div className="lg:sticky lg:top-24 space-y-6">
+                {/* Title and Price */}
+                <div>
+                  <Badge variant="secondary" className="mb-3">
+                    {template.templateType === "video" ? "Video Invitation" : "Card Invitation"}
+                  </Badge>
+                  <h1 className="font-playfair text-2xl lg:text-3xl font-bold text-foreground mb-3" data-testid="text-template-title">
+                    {template.templateName}
+                  </h1>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-3xl font-bold text-primary" data-testid="text-template-price">
+                      {displayPrice}
+                    </span>
+                    <span className="text-sm text-muted-foreground line-through">₹2,499</span>
+                  </div>
+                </div>
 
-              <Button
-                size="lg"
-                className="w-full mb-5 h-11 text-sm font-semibold rounded-full"
-                onClick={() => navigate(`/editor/${template.slug}?from=template`)}
-                data-testid="button-customize-template"
-              >
-                <Heart className="w-4 h-4 mr-2 fill-current" />
-                Start Free Customization
-              </Button>
-
-              <div className="space-y-3 mb-5">
-                <div className="flex items-start gap-3">
-                  <Globe className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">
-                    Create In : <span className="text-muted-foreground">English , हिन्दी , मराठी , ગુજરાતી , தமிழ் , తెలుగు</span>
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Palette className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">Change your card's text, style, envelope, backdrop and more</span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Download className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-foreground">
-                    {template.templateType === "video" 
-                      ? "Download high quality video."
-                      : "Download high quality digital cards."}
-                  </span>
-                </div>
-              </div>
-
-              <Card className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-foreground text-sm italic">Prefer to let the experts handle it?</span>
-                  <span className="text-primary font-bold">{expertPrice}</span>
-                </div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Our expert graphic design team is ready to help! Contact us, and we'll craft it perfectly for you.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full rounded-full border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                  data-testid="button-expert-create"
+                {/* Main CTA */}
+                <Button
+                  size="lg"
+                  className="w-full h-14 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
+                  onClick={() => navigate(`/editor/${template.slug}?from=template`)}
+                  data-testid="button-customize-template"
                 >
-                  <Phone className="w-4 h-4 mr-2" />
-                  Expert Create
+                  <Heart className="w-5 h-5 mr-2 fill-current" />
+                  Start Free Customization
                 </Button>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="py-6 lg:py-8 bg-background">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">What to do next ?</h2>
-          <div className="space-y-3">
-            {template.templateType === "video" ? (
-              <>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
+                {/* Features */}
+                <div className="space-y-4 py-4 border-y">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Globe className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Multiple Languages</p>
+                      <p className="text-xs text-muted-foreground">English, Hindi, Marathi, Gujarati, Tamil, Telugu</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground">Click on "Start Free Customization" to edit video yourself.</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Palette className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Fully Customizable</p>
+                      <p className="text-xs text-muted-foreground">Edit text, photos, colors, music & more</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground">Upload your event details, photos and music and click on "Generate Preview" to create video.</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Download className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Instant Download</p>
+                      <p className="text-xs text-muted-foreground">
+                        {template.templateType === "video" 
+                          ? "HD quality video file"
+                          : "High resolution images"}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm text-foreground">System will create the video in minutes and provide an instant preview.</p>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
+
+                {/* Expert Create Card */}
+                <Card className="p-5 bg-muted/30 border-dashed">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-foreground">Need help customizing?</span>
+                    <span className="text-primary font-bold">{expertPrice}</span>
                   </div>
-                  <p className="text-sm text-foreground">Click on "Start Free Customization" to personalize your card invitation.</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                  <p className="text-sm text-foreground">Edit each page with your event details, names, dates, and photos.</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-3 h-3 text-white" />
-                  </div>
-                  <p className="text-sm text-foreground">Preview your complete {pages.length}-page card and download high-quality images.</p>
-                </div>
-              </>
-            )}
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-white" />
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Our design team will create a personalized invitation just for you.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    data-testid="button-expert-create"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Expert Create
+                  </Button>
+                </Card>
               </div>
-              <p className="text-sm text-foreground">Click on "Expert create" to request our team to create it for you with additional customization.</p>
             </div>
           </div>
         </div>
       </section>
 
+      {/* What to do next */}
+      <section className="py-10 lg:py-14 bg-muted/30 border-y">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-playfair text-xl lg:text-2xl font-bold text-foreground text-center mb-8">
+            How to Create Your Invitation
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto text-lg font-bold">
+                1
+              </div>
+              <h3 className="font-semibold text-foreground">Customize</h3>
+              <p className="text-sm text-muted-foreground">
+                Click "Start Free Customization" and add your details, photos & music
+              </p>
+            </div>
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto text-lg font-bold">
+                2
+              </div>
+              <h3 className="font-semibold text-foreground">Preview</h3>
+              <p className="text-sm text-muted-foreground">
+                Generate a free preview to check everything looks perfect
+              </p>
+            </div>
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto text-lg font-bold">
+                3
+              </div>
+              <h3 className="font-semibold text-foreground">Download</h3>
+              <p className="text-sm text-muted-foreground">
+                Pay once and download your HD invitation to share anywhere
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Related Templates */}
       {relatedTemplates && relatedTemplates.length > 0 && (
-        <section className="py-8 lg:py-12 bg-background border-t">
+        <section className="py-12 lg:py-16 bg-background">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-xl font-bold text-foreground text-center mb-8 uppercase tracking-wide">
-              You Might Also Like
-            </h2>
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="font-playfair text-xl lg:text-2xl font-bold text-foreground">
+                You Might Also Like
+              </h2>
+              <Button variant="ghost" className="gap-2" asChild>
+                <Link href="/templates">
+                  View All
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
               {relatedTemplates.map((t: any) => {
                 const relatedPrice = formatPrice(t.priceInr || 0);
@@ -460,21 +482,21 @@ export default function TemplateDetail() {
                     onClick={() => navigate(`/template/${t.slug}`)}
                     data-testid={`related-template-${t.id}`}
                   >
-                    <div className="relative aspect-[9/16] rounded-xl overflow-hidden bg-muted mb-3">
+                    <div className="relative aspect-[9/16] rounded-xl overflow-hidden bg-muted mb-3 shadow-md group-hover:shadow-xl transition-shadow">
                       <img
                         src={t.thumbnailUrl}
                         alt={title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
-                    </div>
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-primary" />
-                        <span className="text-xs text-primary font-medium">Premium invite</span>
+                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                        <Badge className="text-xs bg-black/60 text-white border-0">
+                          {relatedPrice}
+                        </Badge>
                       </div>
-                      <span className="text-sm font-semibold text-foreground">{relatedPrice}</span>
                     </div>
-                    <p className="text-sm text-foreground line-clamp-2">{title}</p>
+                    <p className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                      {title}
+                    </p>
                   </div>
                 );
               })}
@@ -483,30 +505,33 @@ export default function TemplateDetail() {
         </section>
       )}
 
-      <section className="py-8 lg:py-12 bg-background border-t">
+      {/* FAQ Section */}
+      <section className="py-12 lg:py-16 bg-muted/30 border-t">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl font-bold text-foreground text-center mb-2 uppercase tracking-wide">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-muted-foreground text-center text-sm mb-8">
-            Everything you need to know about creating digital invitations
-          </p>
+          <div className="text-center mb-10">
+            <h2 className="font-playfair text-xl lg:text-2xl font-bold text-foreground mb-2">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Everything you need to know about creating digital invitations
+            </p>
+          </div>
           
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
             {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`} data-testid={`faq-item-${index}`}>
-                <AccordionTrigger className="text-left text-foreground hover:no-underline">
+              <AccordionItem key={index} value={`item-${index}`} className="border-b" data-testid={`faq-item-${index}`}>
+                <AccordionTrigger className="text-left text-foreground hover:no-underline py-5">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
+                <AccordionContent className="text-muted-foreground pb-5">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
 
-          <div className="text-center mt-8">
-            <p className="text-muted-foreground mb-3">Didn't find your answer?</p>
+          <div className="text-center mt-10">
+            <p className="text-muted-foreground mb-4 text-sm">Still have questions?</p>
             <Button 
               variant="outline" 
               onClick={() => navigate('/contact')}
@@ -518,14 +543,15 @@ export default function TemplateDetail() {
         </div>
       </section>
 
-      <section className="py-6 lg:py-8 bg-background border-t">
+      {/* Tags */}
+      <section className="py-8 bg-background border-t">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h3 className="text-sm font-medium text-foreground mb-3">Tags</h3>
+          <h3 className="text-sm font-medium text-foreground mb-3">Related Tags</h3>
           <div className="flex flex-wrap gap-2" data-testid="seo-tags">
             {tags.map((tag) => (
               <span 
                 key={tag} 
-                className="text-sm text-muted-foreground px-3 py-1 bg-muted rounded-full"
+                className="text-sm text-muted-foreground px-3 py-1.5 bg-muted rounded-full hover:bg-muted/80 transition-colors cursor-pointer"
               >
                 {tag}
               </span>
@@ -533,6 +559,27 @@ export default function TemplateDetail() {
           </div>
         </div>
       </section>
+
+      {/* Mobile Sticky CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t shadow-lg lg:hidden z-50">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground">Starting at</p>
+            <p className="text-lg font-bold text-primary">{displayPrice}</p>
+          </div>
+          <Button
+            size="lg"
+            className="flex-1 h-12 font-semibold"
+            onClick={() => navigate(`/editor/${template.slug}?from=template`)}
+            data-testid="button-mobile-customize"
+          >
+            Customize Now
+          </Button>
+        </div>
+      </div>
+      
+      {/* Spacer for mobile sticky CTA */}
+      <div className="h-24 lg:hidden" />
     </>
   );
 }

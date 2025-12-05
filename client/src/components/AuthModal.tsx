@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Mail, Phone } from "lucide-react";
+import { Loader2, ArrowLeft, Mail, Phone, Eye, EyeOff, Sparkles, Check } from "lucide-react";
 import { signInWithRedirect } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import {
@@ -34,6 +34,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [viewState, setViewState] = useState<ViewState>("auth");
   const { toast } = useToast();
+
+  // Password visibility
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Sign In form state
   const [signInEmail, setSignInEmail] = useState("");
@@ -218,7 +223,6 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
       return;
     }
 
-    // UI-only: Show success and go back to sign in
     toast({
       title: "OTP Verified",
       description: "Your identity has been verified successfully.",
@@ -253,34 +257,49 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     }
   };
 
+  // Password strength indicator
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return null;
+    if (password.length < 6) return { text: "Too short", color: "text-destructive" };
+    if (password.length < 8) return { text: "Weak", color: "text-orange-500" };
+    if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) {
+      return { text: "Strong", color: "text-green-500" };
+    }
+    return { text: "Medium", color: "text-yellow-500" };
+  };
+
+  const passwordStrength = getPasswordStrength(signUpPassword);
+
   // Forgot Password - Enter Email/Phone
   if (viewState === "forgot-input") {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[480px]" data-testid="modal-forgot-password">
-          <DialogHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBackToAuth}
-                className="h-8 w-8"
-                data-testid="button-back-to-auth"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <DialogTitle className="text-2xl font-playfair">
-                Forgot Password
-              </DialogTitle>
-            </div>
-            <DialogDescription>
-              Enter your email address or phone number to receive a verification code.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden" data-testid="modal-forgot-password">
+          <div className="p-6 pb-4">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBackToAuth}
+                  className="h-8 w-8 rounded-full"
+                  data-testid="button-back-to-auth"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <DialogTitle className="text-xl font-semibold">
+                  Reset Password
+                </DialogTitle>
+              </div>
+              <DialogDescription className="text-sm">
+                Enter your email or phone number to receive a verification code.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-          <form onSubmit={handleForgotPasswordSubmit} className="space-y-4 mt-4">
+          <form onSubmit={handleForgotPasswordSubmit} className="p-6 pt-2 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="forgot-input">Email or Phone Number</Label>
+              <Label htmlFor="forgot-input" className="text-sm font-medium">Email or Phone</Label>
               <Input
                 id="forgot-input"
                 type="text"
@@ -288,16 +307,14 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 value={forgotInput}
                 onChange={(e) => setForgotInput(e.target.value)}
                 required
+                className="h-11"
                 data-testid="input-forgot-email-phone"
               />
-              <p className="text-xs text-muted-foreground">
-                We'll send a 6-digit verification code.
-              </p>
             </div>
             
             <Button 
               type="submit" 
-              className="w-full"
+              className="w-full h-11"
               data-testid="button-send-otp"
             >
               Send Verification Code
@@ -312,34 +329,38 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   if (viewState === "forgot-otp") {
     return (
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[480px]" data-testid="modal-otp-verify">
-          <DialogHeader>
-            <div className="flex items-center gap-2 mb-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setViewState("forgot-input")}
-                className="h-8 w-8"
-                data-testid="button-back-to-forgot"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <DialogTitle className="text-2xl font-playfair">
-                Verify OTP
-              </DialogTitle>
-            </div>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden" data-testid="modal-otp-verify">
+          <div className="p-6 pb-4">
+            <DialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setViewState("forgot-input")}
+                  className="h-8 w-8 rounded-full"
+                  data-testid="button-back-to-forgot"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <DialogTitle className="text-xl font-semibold">
+                  Verify Code
+                </DialogTitle>
+              </div>
+            </DialogHeader>
+          </div>
 
           {/* OTP Sent Notification */}
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-accent/10 border border-accent/20">
-            {forgotInputType === "email" ? (
-              <Mail className="h-5 w-5 text-primary flex-shrink-0" />
-            ) : (
-              <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-            )}
+          <div className="mx-6 flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              {forgotInputType === "email" ? (
+                <Mail className="h-5 w-5 text-primary" />
+              ) : (
+                <Phone className="h-5 w-5 text-primary" />
+              )}
+            </div>
             <div>
-              <p className="text-sm font-medium">
-                OTP sent to {forgotInputType === "email" ? "email" : "phone"}
+              <p className="text-sm font-medium text-foreground">
+                Code sent to {forgotInputType === "email" ? "email" : "phone"}
               </p>
               <p className="text-xs text-muted-foreground">
                 {getMaskedContact()}
@@ -347,10 +368,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             </div>
           </div>
 
-          <form onSubmit={handleOtpVerify} className="space-y-5 mt-2">
-            {/* 6-digit OTP Input */}
+          <form onSubmit={handleOtpVerify} className="p-6 space-y-5">
             <div className="space-y-3">
-              <Label>Enter 6-digit verification code</Label>
+              <Label className="text-sm font-medium">Enter 6-digit code</Label>
               <div className="flex justify-center">
                 <InputOTP
                   maxLength={6}
@@ -372,10 +392,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                 Didn't receive the code?{" "}
                 <button
                   type="button"
-                  className="text-primary hover:underline"
+                  className="text-primary font-medium hover:underline"
                   onClick={() => {
                     toast({
-                      title: "OTP Resent",
+                      title: "Code Resent",
                       description: `A new code has been sent to your ${forgotInputType}.`,
                     });
                   }}
@@ -388,11 +408,11 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             
             <Button 
               type="submit" 
-              className="w-full"
+              className="w-full h-11"
               disabled={otpValue.length !== 6}
               data-testid="button-verify-otp"
             >
-              Verify
+              Verify Code
             </Button>
           </form>
         </DialogContent>
@@ -403,32 +423,38 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   // Main Auth View (Sign In / Sign Up)
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[480px]" data-testid="modal-auth">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-playfair text-center">
+      <DialogContent className="sm:max-w-[420px] p-0 gap-0 overflow-hidden" data-testid="modal-auth">
+        {/* Header with branding */}
+        <div className="p-6 pb-4 text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
+            <Sparkles className="w-6 h-6 text-primary" />
+          </div>
+          <DialogTitle className="text-2xl font-playfair font-bold">
             {activeTab === "signin" ? "Welcome Back" : "Create Account"}
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="mt-2">
             {activeTab === "signin" 
-              ? "Sign in to continue creating your wedding invitation" 
-              : "Join WeddingInvite.ai and create stunning video invitations"}
+              ? "Sign in to continue creating your invitation" 
+              : "Join us and create stunning video invitations"}
           </DialogDescription>
-        </DialogHeader>
+        </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2" data-testid="tabs-auth">
-            <TabsTrigger value="signin" data-testid="tab-signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup" data-testid="tab-signup">Sign Up</TabsTrigger>
-          </TabsList>
+          <div className="px-6">
+            <TabsList className="grid w-full grid-cols-2 h-11" data-testid="tabs-auth">
+              <TabsTrigger value="signin" className="text-sm font-medium" data-testid="tab-signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="text-sm font-medium" data-testid="tab-signup">Sign Up</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Sign In Tab */}
-          <TabsContent value="signin">
-            <div className="space-y-4 mt-4">
+          <TabsContent value="signin" className="mt-0">
+            <div className="p-6 pt-4 space-y-4">
               {/* Google Sign-In Button */}
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-11 font-medium"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
                 data-testid="button-google-signin"
@@ -447,76 +473,88 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   <Separator className="w-full" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with email
+                  <span className="bg-background px-3 text-muted-foreground">
+                    or
                   </span>
                 </div>
               </div>
-            </div>
 
-            <form onSubmit={handleSignIn} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={signInEmail}
-                  onChange={(e) => setSignInEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  data-testid="input-signin-email"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="signin-password">Password</Label>
-                  <button
-                    type="button"
-                    onClick={() => setViewState("forgot-input")}
-                    className="text-xs text-primary hover:underline"
-                    data-testid="link-forgot-password"
-                  >
-                    Forgot Password?
-                  </button>
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email" className="text-sm font-medium">Email</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={signInEmail}
+                    onChange={(e) => setSignInEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                    data-testid="input-signin-email"
+                  />
                 </div>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={signInPassword}
-                  onChange={(e) => setSignInPassword(e.target.value)}
-                  required
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="signin-password" className="text-sm font-medium">Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => setViewState("forgot-input")}
+                      className="text-xs text-primary font-medium hover:underline"
+                      data-testid="link-forgot-password"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="signin-password"
+                      type={showSignInPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={signInPassword}
+                      onChange={(e) => setSignInPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      className="h-11 pr-10"
+                      data-testid="input-signin-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignInPassword(!showSignInPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showSignInPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 font-medium" 
                   disabled={isLoading}
-                  data-testid="input-signin-password"
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-                data-testid="button-signin-submit"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </form>
+                  data-testid="button-signin-submit"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign In"
+                  )}
+                </Button>
+              </form>
+            </div>
           </TabsContent>
 
           {/* Sign Up Tab */}
-          <TabsContent value="signup">
-            <div className="space-y-4 mt-4">
+          <TabsContent value="signup" className="mt-0">
+            <div className="p-6 pt-4 space-y-4">
               {/* Google Sign-In Button */}
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full h-11 font-medium"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
                 data-testid="button-google-signup"
@@ -535,94 +573,131 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
                   <Separator className="w-full" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or sign up with email
+                  <span className="bg-background px-3 text-muted-foreground">
+                    or
                   </span>
                 </div>
               </div>
-            </div>
 
-            <form onSubmit={handleSignUp} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-name">Full Name</Label>
-                <Input
-                  id="signup-name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={signUpName}
-                  onChange={(e) => setSignUpName(e.target.value)}
-                  required
+              <form onSubmit={handleSignUp} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name" className="text-sm font-medium">Full Name</Label>
+                  <Input
+                    id="signup-name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={signUpName}
+                    onChange={(e) => setSignUpName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                    data-testid="input-signup-name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email" className="text-sm font-medium">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={signUpEmail}
+                    onChange={(e) => setSignUpEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11"
+                    data-testid="input-signup-email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone" className="text-sm font-medium">
+                    Phone <span className="text-muted-foreground font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="+91 98765 43210"
+                    value={signUpPhone}
+                    onChange={(e) => setSignUpPhone(e.target.value)}
+                    disabled={isLoading}
+                    className="h-11"
+                    data-testid="input-signup-phone"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password" className="text-sm font-medium">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showSignUpPassword ? "text" : "password"}
+                      placeholder="Create a password"
+                      value={signUpPassword}
+                      onChange={(e) => setSignUpPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      className="h-11 pr-10"
+                      data-testid="input-signup-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showSignUpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {passwordStrength && (
+                    <p className={`text-xs ${passwordStrength.color}`}>
+                      {passwordStrength.text}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-confirm-password" className="text-sm font-medium">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-confirm-password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={signUpConfirmPassword}
+                      onChange={(e) => setSignUpConfirmPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      className="h-11 pr-10"
+                      data-testid="input-signup-confirm-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {signUpConfirmPassword && signUpPassword === signUpConfirmPassword && (
+                    <p className="text-xs text-green-500 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Passwords match
+                    </p>
+                  )}
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 font-medium" 
                   disabled={isLoading}
-                  data-testid="input-signup-name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={signUpEmail}
-                  onChange={(e) => setSignUpEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  data-testid="input-signup-email"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-phone">Phone Number (Optional)</Label>
-                <Input
-                  id="signup-phone"
-                  type="tel"
-                  placeholder="+91 98765 43210"
-                  value={signUpPhone}
-                  onChange={(e) => setSignUpPhone(e.target.value)}
-                  disabled={isLoading}
-                  data-testid="input-signup-phone"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={signUpPassword}
-                  onChange={(e) => setSignUpPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  data-testid="input-signup-password"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                <Input
-                  id="signup-confirm-password"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={signUpConfirmPassword}
-                  onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  data-testid="input-signup-confirm-password"
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full" 
-                disabled={isLoading}
-                data-testid="button-signup-submit"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
-            </form>
+                  data-testid="button-signup-submit"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create Account"
+                  )}
+                </Button>
+              </form>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
