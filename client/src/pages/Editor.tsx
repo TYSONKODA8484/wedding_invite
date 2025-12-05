@@ -892,20 +892,43 @@ export default function Editor() {
     }
   };
   
-  // Audio event handlers
+  // Get current music URL - memoized
+  const currentMusicUrl = getCurrentMusicUrl();
+  
+  // Audio event handlers - use currentMusicUrl as dependency to re-attach when source changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     
     const handleTimeUpdate = () => {
-      if (audio.duration) {
-        setAudioCurrentSeconds(audio.currentTime);
-        setAudioProgress((audio.currentTime / audio.duration) * 100);
+      const currentTime = audio.currentTime;
+      setAudioCurrentSeconds(currentTime);
+      
+      // Use the display duration (from library or audio metadata) for progress calculation
+      const duration = audioDurationSeconds > 0 ? audioDurationSeconds : (audio.duration || 0);
+      if (duration > 0) {
+        setAudioProgress((currentTime / duration) * 100);
       }
     };
     
     const handleLoadedMetadata = () => {
-      setAudioDurationSeconds(audio.duration);
+      // Only update duration if we don't already have it from the library
+      if (audio.duration && Number.isFinite(audio.duration)) {
+        setAudioDurationSeconds(audio.duration);
+      }
+    };
+    
+    const handleDurationChange = () => {
+      if (audio.duration && Number.isFinite(audio.duration)) {
+        setAudioDurationSeconds(audio.duration);
+      }
+    };
+    
+    const handleCanPlay = () => {
+      // Ensure duration is set when audio can play
+      if (audio.duration && Number.isFinite(audio.duration) && audioDurationSeconds === 0) {
+        setAudioDurationSeconds(audio.duration);
+      }
     };
     
     const handlePlay = () => setIsPlaying(true);
@@ -923,6 +946,8 @@ export default function Editor() {
     
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('durationchange', handleDurationChange);
+    audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
@@ -931,15 +956,16 @@ export default function Editor() {
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('durationchange', handleDurationChange);
+      audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [currentMusicUrl, audioDurationSeconds]);
   
   // Reload audio when source changes
-  const currentMusicUrl = getCurrentMusicUrl();
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
