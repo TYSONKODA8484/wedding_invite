@@ -695,6 +695,11 @@ export default function Editor() {
   const [showMobileEditSheet, setShowMobileEditSheet] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   
+  // Mobile inline editing state (tap-to-edit)
+  const [mobileActiveFieldIndex, setMobileActiveFieldIndex] = useState<number | null>(null);
+  const [showMobileTapHint, setShowMobileTapHint] = useState(true);
+  const mobileInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  
   // Detect mobile viewport
   useEffect(() => {
     const checkMobile = () => {
@@ -1115,6 +1120,11 @@ export default function Editor() {
   useEffect(() => {
     setPanPosition({ x: 0, y: 0 });
   }, [zoom, currentPageIndex]);
+  
+  // Reset mobile inline editor when page changes
+  useEffect(() => {
+    setMobileActiveFieldIndex(null);
+  }, [currentPageIndex]);
 
   // Window-level listeners to ensure panning ends even if mouse leaves container or window loses focus
   useEffect(() => {
@@ -2358,6 +2368,13 @@ export default function Editor() {
                 transition: isPanning ? 'none' : 'transform 0.1s ease-out',
               }}
               data-testid="preview-container"
+              onClick={() => {
+                // Mobile tap-to-edit: open inline editor on first field
+                if (isMobileView && editableFields.length > 0 && mobileActiveFieldIndex === null) {
+                  setMobileActiveFieldIndex(0);
+                  setShowMobileTapHint(false);
+                }
+              }}
             >
               {backgroundImage ? (
                 <img
@@ -2370,6 +2387,128 @@ export default function Editor() {
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center">
                   <p className="text-muted-foreground text-sm">No preview</p>
+                </div>
+              )}
+              
+              {/* Mobile: Tap to Edit Hint - only show when no field is active */}
+              {isMobileView && showMobileTapHint && editableFields.length > 0 && mobileActiveFieldIndex === null && !isPreviewLoading && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+                  data-testid="tap-to-edit-hint"
+                >
+                  <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-2 animate-pulse">
+                    <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                    <span className="text-white text-sm font-medium">Tap to edit</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Mobile: Inline Field Editor */}
+              {isMobileView && mobileActiveFieldIndex !== null && editableFields.length > 0 && (
+                <div 
+                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/80 to-transparent pt-12 pb-3 px-3 z-20"
+                  onClick={(e) => e.stopPropagation()}
+                  data-testid="mobile-inline-editor"
+                >
+                  {/* Field Navigation */}
+                  <div className="flex items-center justify-between mb-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-white hover:bg-white/20"
+                      onClick={() => setMobileActiveFieldIndex(Math.max(0, (mobileActiveFieldIndex || 0) - 1))}
+                      disabled={mobileActiveFieldIndex === 0}
+                      data-testid="button-prev-field"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    
+                    <div className="flex-1 text-center">
+                      <span className="text-white/90 text-xs font-medium">
+                        {editableFields[mobileActiveFieldIndex]?.label || editableFields[mobileActiveFieldIndex]?.id}
+                      </span>
+                      <span className="text-white/50 text-xs ml-2">
+                        ({mobileActiveFieldIndex + 1}/{editableFields.length})
+                      </span>
+                    </div>
+                    
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-white hover:bg-white/20"
+                      onClick={() => setMobileActiveFieldIndex(Math.min(editableFields.length - 1, (mobileActiveFieldIndex || 0) + 1))}
+                      disabled={mobileActiveFieldIndex === editableFields.length - 1}
+                      data-testid="button-next-field"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+                  </div>
+                  
+                  {/* Input Field */}
+                  <div className="flex items-center gap-2">
+                    {editableFields[mobileActiveFieldIndex]?.type === 'image' ? (
+                      <div className="flex-1 flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                          onClick={() => {
+                            const field = editableFields[mobileActiveFieldIndex];
+                            if (field) {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = (e) => {
+                                const file = (e.target as HTMLInputElement).files?.[0];
+                                if (file) handleImageSelect(field.id, file);
+                              };
+                              input.click();
+                            }
+                          }}
+                          data-testid="button-upload-image-inline"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {getImagePreview(editableFields[mobileActiveFieldIndex]?.id) ? 'Change Photo' : 'Upload Photo'}
+                        </Button>
+                      </div>
+                    ) : editableFields[mobileActiveFieldIndex]?.type === 'textarea' ? (
+                      <Textarea
+                        ref={mobileInputRef as React.RefObject<HTMLTextAreaElement>}
+                        value={getFieldValue(editableFields[mobileActiveFieldIndex]?.id)}
+                        onChange={(e) => handleFieldChange(editableFields[mobileActiveFieldIndex]?.id, e.target.value)}
+                        onBlur={() => handleFieldBlur(editableFields[mobileActiveFieldIndex]?.id)}
+                        placeholder={editableFields[mobileActiveFieldIndex]?.label}
+                        className="flex-1 bg-white/10 border-white/30 text-white placeholder:text-white/50 text-base resize-none"
+                        rows={2}
+                        autoFocus
+                        data-testid="input-inline-textarea"
+                      />
+                    ) : (
+                      <Input
+                        ref={mobileInputRef as React.RefObject<HTMLInputElement>}
+                        value={getFieldValue(editableFields[mobileActiveFieldIndex]?.id)}
+                        onChange={(e) => handleFieldChange(editableFields[mobileActiveFieldIndex]?.id, e.target.value)}
+                        onBlur={() => handleFieldBlur(editableFields[mobileActiveFieldIndex]?.id)}
+                        placeholder={editableFields[mobileActiveFieldIndex]?.label}
+                        className="flex-1 bg-white/10 border-white/30 text-white placeholder:text-white/50 text-base"
+                        autoFocus
+                        data-testid="input-inline-text"
+                      />
+                    )}
+                    
+                    {/* Done button */}
+                    <Button
+                      variant="default"
+                      size="icon"
+                      className="h-10 w-10 bg-primary hover:bg-primary/90"
+                      onClick={() => setMobileActiveFieldIndex(null)}
+                      data-testid="button-done-inline-edit"
+                    >
+                      <Check className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
               )}
               
@@ -2503,7 +2642,13 @@ export default function Editor() {
                 variant="ghost"
                 size="sm"
                 className="flex flex-col items-center gap-0.5 h-auto py-1.5 px-3"
-                onClick={() => setShowMobileEditSheet(true)}
+                onClick={() => {
+                  // Open inline editor on first field
+                  if (editableFields.length > 0) {
+                    setMobileActiveFieldIndex(0);
+                    setShowMobileTapHint(false);
+                  }
+                }}
                 data-testid="button-edit-mobile"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
