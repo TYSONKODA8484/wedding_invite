@@ -395,6 +395,61 @@ function PreviewLoadingScreen({ progress, onClose }: PreviewLoadingScreenProps) 
   );
 }
 
+interface PagePreviewLoadingProps {
+  onCancel?: () => void;
+}
+
+function PagePreviewLoading({ onCancel }: PagePreviewLoadingProps) {
+  const [elapsed, setElapsed] = useState(0);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsed(prev => prev + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+  
+  const messages = [
+    "Applying your customizations...",
+    "Rendering page elements...",
+    "Processing images...",
+    "Generating preview...",
+    "Almost there...",
+  ];
+  
+  const messageIndex = Math.min(Math.floor(elapsed / 2), messages.length - 1);
+  
+  return (
+    <div className="fixed inset-0 bg-background/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="page-preview-loading">
+      <Card className="w-full max-w-sm p-6">
+        <div className="text-center space-y-4">
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 rounded-full border-4 border-muted" />
+            <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          </div>
+          
+          <div>
+            <h3 className="font-semibold text-foreground mb-1">Generating Preview</h3>
+            <p className="text-sm text-muted-foreground">{messages[messageIndex]}</p>
+          </div>
+          
+          <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+            <span>Time: {elapsed}s</span>
+            <span className="text-muted-foreground/50">|</span>
+            <span>Usually takes 5-10 seconds</span>
+          </div>
+          
+          {elapsed > 15 && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Taking longer than usual. Please wait...
+            </p>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 interface PreviewModalProps {
   previewUrl: string;
   onClose: () => void;
@@ -1710,6 +1765,10 @@ export default function Editor() {
         <PreviewLoadingScreen progress={previewProgress} onClose={() => setShowPreviewLoading(false)} />
       )}
 
+      {isPreviewLoading && (
+        <PagePreviewLoading />
+      )}
+
       {showPreviewModal && (
         <PreviewModal
           previewUrl={previewUrl}
@@ -2247,16 +2306,6 @@ export default function Editor() {
                 </div>
               )}
               
-              {/* Preview Loading Overlay */}
-              {isPreviewLoading && (
-                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center z-10">
-                  <div className="bg-card/90 rounded-xl p-6 flex flex-col items-center gap-3 shadow-lg">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-sm font-medium text-foreground">Generating Preview...</p>
-                    <p className="text-xs text-muted-foreground">Rendering page with your customizations</p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
