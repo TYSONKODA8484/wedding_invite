@@ -3,9 +3,10 @@ import { Link, useLocation } from "wouter";
 import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Play, Check, Heart, Calendar, Users, Star, Sparkles, Globe2, Flower2 } from "lucide-react";
+import { ArrowRight, Check, Heart, Calendar, Users, Star, Sparkles, Globe2, Flower2 } from "lucide-react";
 import { CustomerReviews } from "@/components/CustomerReviews";
-import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
+import heroVideo from "@assets/generated_videos/indian_wedding_mehendi_hands_scene.mp4";
+import heroPoster from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
 
 export default function Home() {
   const [location] = useLocation();
@@ -123,26 +124,20 @@ export default function Home() {
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-lg px-8 py-6"
-                data-testid="button-watch-demo"
-              >
-                <Play className="mr-2 w-5 h-5" />
-                Watch Demo
-              </Button>
             </div>
 
-            {/* Hero Image */}
+            {/* Hero Video */}
             <div className="mt-12 rounded-2xl overflow-hidden shadow-2xl border border-border">
-              <img 
-                src={homepageHero} 
-                alt="Wedding Invitation Templates" 
+              <video 
+                src={heroVideo} 
+                poster={heroPoster}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
                 className="w-full h-auto"
-                loading="eager"
-                decoding="async"
+                data-testid="video-hero"
               />
             </div>
           </div>
