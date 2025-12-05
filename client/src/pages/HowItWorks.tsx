@@ -2,6 +2,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { ProcessStep } from "@/components/ProcessStep";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { FAQSection, howItWorksFAQs } from "@/components/FAQSection";
 import { Sparkles, Wand2, Zap, Image as ImageIcon, Music, Type, Download, Share2 } from "lucide-react";
 import { Link } from "wouter";
 import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
@@ -155,6 +156,12 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
+
+      <FAQSection 
+        faqs={howItWorksFAQs}
+        title="Common Questions"
+        subtitle="Get answers to frequently asked questions about creating video invitations"
+      />
     </>
   );
 }

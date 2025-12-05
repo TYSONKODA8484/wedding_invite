@@ -4,6 +4,7 @@ import { SEOHead } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Play, Check, Heart, Calendar, Users, Star, Sparkles, Globe2, Flower2 } from "lucide-react";
+import { CustomerReviews } from "@/components/CustomerReviews";
 import homepageHero from "@assets/generated_images/Homepage_cinematic_wedding_hero_efb94fa0.png";
 
 export default function Home() {
@@ -388,6 +389,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Customer Reviews */}
+      <CustomerReviews />
 
       {/* CTA Section */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-primary/10 via-accent/10 to-primary/5">
