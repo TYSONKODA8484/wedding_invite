@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, Sparkles, User, LogOut, Heart, Cake } from "lucide-react";
+import { Menu, Sparkles, User, LogOut, Heart, Cake, LayoutGrid, ChevronRight } from "lucide-react";
 import { AuthModal } from "@/components/AuthModal";
 
 export function Navigation() {
@@ -107,103 +107,122 @@ export function Navigation() {
           {/* Left: Logo + Company Name */}
           <Link 
             href="/" 
-            className="flex items-center gap-2 hover-elevate active-elevate-2 rounded-md px-3 py-2 -ml-3 transition-all flex-shrink-0"
+            className="flex items-center gap-2.5 hover-elevate active-elevate-2 rounded-lg px-3 py-2 -ml-3 transition-all flex-shrink-0 group"
             data-testid="link-home"
           >
-            <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary" />
-            <span className="font-playfair text-xl md:text-2xl font-bold text-foreground">
-              WeddingInvite.ai
+            <div className="relative">
+              <Sparkles className="w-6 h-6 md:w-7 md:h-7 text-primary transition-transform group-hover:scale-110" />
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <span className="font-playfair text-xl md:text-2xl font-bold text-foreground tracking-tight">
+              WeddingInvite<span className="text-primary">.ai</span>
             </span>
           </Link>
 
           {/* Middle: Navigation Links (Desktop) */}
           <nav className="hidden lg:flex items-center gap-1" data-testid="nav-desktop">
-            {centerNavLinks.map((link) => (
-              <Link 
-                key={link.href} 
-                href={link.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-1.5 ${
-                  location === link.href || location.startsWith(link.href.split('?')[0])
-                    ? "bg-accent/10 text-accent-foreground"
-                    : "text-foreground/80 hover:text-foreground"
-                }`}
-                data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
-              >
-                {link.icon && <link.icon className="w-4 h-4" />}
-                {link.label}
-              </Link>
-            ))}
+            {centerNavLinks.map((link) => {
+              const isActive = location === link.href || location.startsWith(link.href.split('?')[0]);
+              return (
+                <Link 
+                  key={link.href} 
+                  href={link.href}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-2 ${
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground/70 hover:text-foreground"
+                  }`}
+                  data-testid={`link-nav-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  {link.icon && (
+                    <link.icon className={`w-4 h-4 ${isActive ? 'text-primary' : ''}`} />
+                  )}
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Right: My Templates + Login/Avatar (Desktop) */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            {/* My Templates - always visible, primary style */}
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+            {/* My Templates - Premium styled button */}
             {isLoggedIn ? (
-              <Button
-                variant="default"
-                size="default"
-                asChild
-                data-testid="button-my-templates"
-              >
-                <Link href="/my-templates" className="font-medium">
-                  My Templates
-                </Link>
-              </Button>
+              <Link href="/my-templates">
+                <button
+                  className="relative group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                  data-testid="button-my-templates"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  <span>My Templates</span>
+                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity -z-10 blur-sm" />
+                </button>
+              </Link>
             ) : (
-              <Button
-                variant="default"
-                size="default"
+              <button
+                className="relative group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => setAuthModalOpen(true)}
                 data-testid="button-my-templates"
               >
-                My Templates
-              </Button>
+                <LayoutGrid className="w-4 h-4" />
+                <span>My Templates</span>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-400 opacity-0 group-hover:opacity-100 transition-opacity -z-10 blur-sm" />
+              </button>
             )}
             
-            {/* Login/Avatar - always on the right */}
+            {/* Login/Avatar */}
             {isLoggedIn && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="rounded-full"
+                    className="rounded-full p-0 w-10 h-10 ring-2 ring-border hover:ring-primary/50 transition-all"
                     data-testid="button-user-menu"
                   >
                     <Avatar className="w-9 h-9">
-                      <AvatarFallback className="text-sm font-semibold">
+                      <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-primary/20 to-accent/20 text-foreground">
                         {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
+                <DropdownMenuContent align="end" className="w-60 p-2">
+                  <DropdownMenuLabel className="p-3 bg-muted/50 rounded-lg mb-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10">
+                        <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-primary/30 to-accent/30">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-semibold leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground mt-1">
+                          {user.email}
+                        </p>
+                      </div>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="my-1" />
                   <DropdownMenuItem 
                     onClick={handleLogout}
+                    className="cursor-pointer rounded-md text-destructive focus:text-destructive focus:bg-destructive/10"
                     data-testid="menu-item-logout"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="default"
                 onClick={() => setAuthModalOpen(true)}
+                className="font-medium"
                 data-testid="button-login"
               >
-                Login
+                <User className="w-4 h-4 mr-2" />
+                Sign In
               </Button>
             )}
           </div>
@@ -214,93 +233,134 @@ export function Navigation() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="rounded-lg"
                 data-testid="button-mobile-menu"
               >
                 <Menu className="w-6 h-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <nav className="flex flex-col gap-2 mt-8" data-testid="nav-mobile">
-                {/* Category Links */}
-                {centerNavLinks.map((link) => (
+            <SheetContent side="right" className="w-80 p-0">
+              <div className="flex flex-col h-full">
+                {/* Mobile Header */}
+                <div className="p-6 border-b border-border">
                   <Link 
-                    key={link.href} 
-                    href={link.href}
+                    href="/" 
+                    className="flex items-center gap-2"
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`px-4 py-3 rounded-md text-base font-medium transition-all hover-elevate active-elevate-2 flex items-center gap-2 ${
-                      location === link.href || location.startsWith(link.href.split('?')[0])
-                        ? "bg-accent/10 text-accent-foreground"
-                        : "text-foreground/80"
-                    }`}
-                    data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
-                    {link.icon && <link.icon className="w-4 h-4" />}
-                    {link.label}
+                    <Sparkles className="w-6 h-6 text-primary" />
+                    <span className="font-playfair text-xl font-bold">
+                      WeddingInvite<span className="text-primary">.ai</span>
+                    </span>
                   </Link>
-                ))}
-                
-                <div className="border-t border-border my-4" />
-                
-                {isLoggedIn && user ? (
-                  <>
-                    <div className="px-4 py-3 bg-accent/10 rounded-md">
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                    <Button
-                      variant="default"
-                      size="default"
-                      className="w-full"
-                      asChild
-                      data-testid="button-my-templates-mobile"
-                    >
-                      <Link href="/my-templates" onClick={() => setMobileMenuOpen(false)}>
-                        My Templates
+                </div>
+
+                {/* Navigation Links */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto" data-testid="nav-mobile">
+                  {centerNavLinks.map((link) => {
+                    const isActive = location === link.href || location.startsWith(link.href.split('?')[0]);
+                    return (
+                      <Link 
+                        key={link.href} 
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-base font-medium transition-all ${
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-foreground/80 hover:bg-muted"
+                        }`}
+                        data-testid={`link-mobile-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {link.icon && <link.icon className="w-5 h-5" />}
+                          {link.label}
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="default"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      data-testid="button-logout-mobile"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="default"
-                      size="default"
-                      className="w-full"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setAuthModalOpen(true);
-                      }}
-                      data-testid="button-my-templates-mobile"
-                    >
-                      My Templates
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="default"
-                      className="w-full"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        setAuthModalOpen(true);
-                      }}
-                      data-testid="button-login-mobile"
-                    >
-                      Login
-                    </Button>
-                  </>
-                )}
-              </nav>
+                    );
+                  })}
+                </nav>
+
+                {/* Bottom Section */}
+                <div className="p-4 border-t border-border space-y-3 bg-muted/30">
+                  {isLoggedIn && user ? (
+                    <>
+                      {/* User Info Card */}
+                      <div className="flex items-center gap-3 p-3 bg-background rounded-xl">
+                        <Avatar className="w-11 h-11">
+                          <AvatarFallback className="text-sm font-semibold bg-gradient-to-br from-primary/20 to-accent/20">
+                            {getUserInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate">{user.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                      </div>
+
+                      {/* My Templates Button */}
+                      <Link 
+                        href="/my-templates" 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block"
+                      >
+                        <button
+                          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md"
+                          data-testid="button-my-templates-mobile"
+                        >
+                          <LayoutGrid className="w-4 h-4" />
+                          My Templates
+                        </button>
+                      </Link>
+
+                      {/* Logout Button */}
+                      <Button
+                        variant="ghost"
+                        size="default"
+                        className="w-full justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          handleLogout();
+                        }}
+                        data-testid="button-logout-mobile"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {/* My Templates Button (triggers auth) */}
+                      <button
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 text-white shadow-md"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          setAuthModalOpen(true);
+                        }}
+                        data-testid="button-my-templates-mobile"
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                        My Templates
+                      </button>
+
+                      {/* Sign In Button */}
+                      <Button
+                        variant="outline"
+                        size="default"
+                        className="w-full justify-center"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          setAuthModalOpen(true);
+                        }}
+                        data-testid="button-login-mobile"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Sign In
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
