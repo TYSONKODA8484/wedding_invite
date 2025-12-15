@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import type { Template, Music as MusicType } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { uploadFileToS3, saveMediaUrlToProject } from "@/lib/uploadToS3";
 import { 
   Loader2, X, Download, Eye, ArrowLeft, ChevronLeft, ChevronRight, 
   Upload, Image as ImageIcon, Crop, ZoomIn, ZoomOut, Check, 
@@ -244,104 +245,100 @@ interface ImageUploadFieldProps {
 
 function ImageUploadField({ fieldName, preview, onSelect, onRemove }: ImageUploadFieldProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [showCropModal, setShowCropModal] = useState(false);
-  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
-  const [tempFile, setTempFile] = useState<File | null>(null);
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setTempImageUrl(reader.result as string);
-        setTempFile(file);
-        setShowCropModal(true);
-      };
-      reader.readAsDataURL(file);
+      // Directly select the file without crop modal
+      onSelect(file);
     }
   };
 
-  const handleCropConfirm = (croppedDataUrl: string) => {
-    fetch(croppedDataUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const croppedFile = new File([blob], tempFile?.name || 'cropped-image.png', { type: 'image/png' });
-        onSelect(croppedFile);
-        setShowCropModal(false);
-        setTempImageUrl(null);
-        setTempFile(null);
-      });
-  };
 
-  const handleCropCancel = () => {
-    setShowCropModal(false);
-    setTempImageUrl(null);
-    setTempFile(null);
-  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
   return (
-    <>
-      {showCropModal && tempImageUrl && (
-        <CropModal
-          imageUrl={tempImageUrl}
-          onConfirm={handleCropConfirm}
-          onCancel={handleCropCancel}
-        />
-      )}
-      <div className="space-y-2">
-        {preview ? (
-          <div className="relative aspect-[9/16] rounded-md overflow-hidden bg-muted border border-border">
-            <img 
-              src={preview} 
-              alt={`Preview for ${fieldName}`}
-              className="w-full h-full object-cover"
-              data-testid={`img-preview-${fieldName}`}
-            />
-            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleUploadClick}
-                data-testid={`button-replace-${fieldName}`}
-              >
-                <Upload className="w-3 h-3 mr-1" />
-                Replace
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={onRemove}
-                data-testid={`button-remove-${fieldName}`}
-              >
-                <X className="w-3 h-3 mr-1" />
-                Remove
-              </Button>
+    <div className="w-full space-y-3">
+      
+      {/* Hidden Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+        data-testid={`input-image-${fieldName}`}
+      />
+
+      <div className="flex items-start gap-4">
+        {/* Image Preview / Placeholder Box */}
+        <div 
+          onClick={handleUploadClick}
+          className={`
+            relative group flex-shrink-0 w-24 h-24 rounded-lg cursor-pointer overflow-hidden
+            border-2 border-dashed transition-all duration-200
+            ${preview 
+              ? 'border-border bg-background' 
+              : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50 bg-muted/20'
+            }
+          `}
+        >
+          {preview ? (
+            <>
+              <img 
+                src={preview} 
+                alt="Preview" 
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+              />
+              {/* Overlay with Remove Button */}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove();
+                  }}
+                  className="bg-white/90 text-destructive p-1.5 rounded-full hover:bg-white hover:scale-110 transition-all shadow-sm"
+                  title="Remove image"
+                >
+                  <X className="w-4 h-4" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-1">
+              <ImageIcon className="w-8 h-8 opacity-50" />
+              <span className="text-[10px] uppercase font-semibold tracking-wider opacity-70">Add Photo</span>
             </div>
+          )}
+        </div>
+
+        {/* Right Side Actions */}
+        <div className="flex flex-col justify-center h-24 space-y-2">
+          <div className="space-y-1">
+            <h4 className="text-sm font-medium leading-none text-foreground">
+              {preview ? "Change Image" : "Upload Image"}
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Supported: JPG, PNG
+            </p>
           </div>
-        ) : (
-          <div
-            className="aspect-[9/16] bg-muted rounded-md flex flex-col items-center justify-center border-2 border-dashed border-border cursor-pointer hover-elevate active-elevate-2 transition-colors"
+          
+          <Button
+            variant={preview ? "outline" : "default"}
+            size="sm"
             onClick={handleUploadClick}
-            data-testid={`dropzone-${fieldName}`}
+            className="w-fit"
+            data-testid={`button-upload-${fieldName}`}
           >
-            <ImageIcon className="w-6 h-6 text-muted-foreground mb-2" />
-            <p className="text-xs text-muted-foreground font-medium">Click to upload</p>
-          </div>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
-          data-testid={`input-file-${fieldName}`}
-        />
+            <Upload className="w-3.5 h-3.5 mr-2" />
+            {preview ? "Replace" : "Browse"}
+          </Button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -749,7 +746,14 @@ export default function Editor() {
     if (customMusicUrl) return customMusicUrl;
     if (selectedMusicId && musicLibrary?.music) {
       const track = musicLibrary.music.find(m => m.id === selectedMusicId);
-      if (track) return `/api/media/${track.url}`;
+      if (track) {
+        // If URL is already a full URL (AWS S3), return as-is
+        // Otherwise, prepend /api/media/ for local files
+        if (track.url.startsWith('http://') || track.url.startsWith('https://')) {
+          return track.url;
+        }
+        return `/api/media/${track.url}`;
+      }
     }
     return null;
   }, [selectedMusicId, musicLibrary, customMusicUrl]);
@@ -774,7 +778,14 @@ export default function Editor() {
       const track = musicLibrary.music.find(m => m.id === selectedMusicId);
       if (track) return track.duration;
     }
-    // For custom uploads or when audio metadata is available
+    // For custom uploads, try audio metadata first
+    if (audioDurationSeconds > 0) {
+      return audioDurationSeconds;
+    }
+    // Fallback to audio element's duration if metadata has loaded
+    if (audioRef.current?.duration && Number.isFinite(audioRef.current.duration)) {
+      return audioRef.current.duration;
+    }
     return audioDurationSeconds;
   }, [selectedMusicId, musicLibrary, customMusicFile, audioDurationSeconds]);
   
@@ -788,34 +799,18 @@ export default function Editor() {
   
   // Upload custom music to object storage
   const uploadCustomMusicToStorage = async (projId: string, file: File): Promise<string> => {
-    // Read file as base64
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const base64Data = (reader.result as string).split(',')[1]; // Remove data:audio/... prefix
-          
-          const response = await apiRequest("POST", `/api/projects/${projId}/music/upload`, {
-            audioData: base64Data,
-            filename: file.name,
-            mimeType: file.type,
-          });
-          
-          if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || "Failed to upload music");
-          }
-          
-          const data = await response.json();
-          resolve(data.musicUrl);
-        } catch (error) {
-          console.error("Error uploading music:", error);
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error("Failed to read file"));
-      reader.readAsDataURL(file);
-    });
+    try {
+      // Upload to S3 and get the public URL
+      const s3Url = await uploadFileToS3(file, `upload/music/${user?.id || 'guest'}`);
+      
+      // Save the S3 URL to the project in the database
+      await saveMediaUrlToProject(projId, "music", s3Url);
+      
+      return s3Url;
+    } catch (error) {
+      console.error("Error uploading music:", error);
+      throw error;
+    }
   };
   
   const handleMusicFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -888,13 +883,23 @@ export default function Editor() {
       return;
     }
     
+    const audio = audioRef.current;
+    
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
+      setIsPlaying(false);
     } else {
-      audioRef.current.play().catch((error) => {
+      // When playing, ensure duration is captured from audio element
+      if (audio.duration && Number.isFinite(audio.duration) && audioDurationSeconds === 0) {
+        console.log('Setting duration from audio element:', audio.duration);
+        setAudioDurationSeconds(audio.duration);
+      }
+      
+      audio.play().catch((error) => {
         console.warn('Audio playback error:', error);
         setIsPlaying(false);
       });
+      setIsPlaying(true);
     }
   };
   
@@ -906,9 +911,18 @@ export default function Editor() {
   };
   
   const handleSeek = (value: number[]) => {
-    const duration = getDisplayDuration();
+    const displayDuration = getDisplayDuration();
+    // Use the actual audio duration as fallback if display duration is 0
+    const duration = displayDuration > 0 ? displayDuration : (audioRef.current?.duration || 0);
+    
     if (audioRef.current && duration > 0) {
       const newTime = (value[0] / 100) * duration;
+      audioRef.current.currentTime = newTime;
+      setAudioCurrentSeconds(newTime);
+      setAudioProgress(value[0]);
+    } else if (audioRef.current) {
+      // Even if duration is unknown, allow seeking by percentage
+      const newTime = (value[0] / 100) * (audioRef.current.duration || 0);
       audioRef.current.currentTime = newTime;
       setAudioCurrentSeconds(newTime);
       setAudioProgress(value[0]);
@@ -935,21 +949,24 @@ export default function Editor() {
     };
     
     const handleLoadedMetadata = () => {
-      // Only update duration if we don't already have it from the library
+      console.log('loadedmetadata event fired, duration:', audio.duration);
+      // Update duration whenever metadata loads
       if (audio.duration && Number.isFinite(audio.duration)) {
         setAudioDurationSeconds(audio.duration);
       }
     };
     
     const handleDurationChange = () => {
+      console.log('durationchange event fired, duration:', audio.duration);
       if (audio.duration && Number.isFinite(audio.duration)) {
         setAudioDurationSeconds(audio.duration);
       }
     };
     
     const handleCanPlay = () => {
+      console.log('canplay event fired, duration:', audio.duration);
       // Ensure duration is set when audio can play
-      if (audio.duration && Number.isFinite(audio.duration) && audioDurationSeconds === 0) {
+      if (audio.duration && Number.isFinite(audio.duration)) {
         setAudioDurationSeconds(audio.duration);
       }
     };
@@ -997,15 +1014,23 @@ export default function Editor() {
     setAudioProgress(0);
     setAudioCurrentSeconds(0);
     setIsPlaying(false);
-    // Note: Don't reset duration here - handleSelectStockMusic sets it from library
-    // Only reset if we don't have a selected track
-    if (!selectedMusicId && !customMusicFile) {
-      setAudioDurationSeconds(0);
-    }
+    
+    // Always reset duration when source changes so it can be reloaded from metadata
+    setAudioDurationSeconds(0);
     
     if (currentMusicUrl) {
       // Force reload the audio with the new source
       audio.load();
+      
+      // For S3 URLs, we need to wait for metadata to load
+      // Set a timeout to ensure metadata is loaded from the server
+      const timeoutId = setTimeout(() => {
+        if (audio.duration && Number.isFinite(audio.duration)) {
+          setAudioDurationSeconds(audio.duration);
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [currentMusicUrl, selectedMusicId, customMusicFile]);
   
@@ -1412,20 +1437,35 @@ export default function Editor() {
         customizationData.pagePreviewUrls = pagePreviewUrls;
       }
 
+      // Upload all images and music files to S3 first
+      for (const [key, file] of Object.entries(imageFiles)) {
+        try {
+          const s3Url = await uploadFileToS3(file, `upload/photo/${user?.id || 'guest'}`);
+          // Update imagePreviews with S3 URL
+          imagePreviews[key] = s3Url;
+          console.log(`Uploaded image ${key} to S3: ${s3Url}`);
+        } catch (error) {
+          console.error(`Failed to upload image ${key}:`, error);
+          // Continue with generation even if image upload fails
+        }
+      }
+
       // Prepare music data
-      // If custom music file is selected (not yet uploaded), we'll upload after project creation
-      // If stock music is selected, include selectedMusicId
-      // If custom music URL is already on server (editing), preserve it
-      // If no music changed, the backend will use template's default music
       let musicPayload: { selectedMusicId?: string | null; customMusicUrl?: string | null } = {};
       
       if (customMusicFile) {
-        // Custom music will be uploaded after project creation
-        // Don't send selectedMusicId since we're using custom
-        musicPayload.selectedMusicId = null;
+        // Upload custom music to S3 during generation
+        try {
+          const musicUrl = await uploadFileToS3(customMusicFile, `upload/music/${user?.id || 'guest'}`);
+          musicPayload.customMusicUrl = musicUrl;
+          musicPayload.selectedMusicId = null;
+          console.log(`Uploaded music to S3: ${musicUrl}`);
+        } catch (error) {
+          console.error("Failed to upload music:", error);
+          // Use stock track if upload fails
+        }
       } else if (customMusicUrl && !customMusicUrl.startsWith('blob:')) {
         // Custom music is already on server (from previous save) - preserve it
-        // Check it's not a blob URL (local preview) - server URLs can be /api/media/*, absolute URLs, etc.
         musicPayload.customMusicUrl = customMusicUrl;
         musicPayload.selectedMusicId = null;
       } else if (selectedMusicId) {
@@ -1440,11 +1480,6 @@ export default function Editor() {
           ...musicPayload,
         });
         
-        // If custom music file exists, upload it now
-        if (customMusicFile) {
-          await uploadCustomMusicToStorage(projectId, customMusicFile);
-        }
-        
         return response.json();
       } else {
         // Create new project
@@ -1456,11 +1491,6 @@ export default function Editor() {
         });
         const newProject = await response.json();
         setProjectId(newProject.id);
-        
-        // If custom music file exists, upload it now using the new project ID
-        if (customMusicFile) {
-          await uploadCustomMusicToStorage(newProject.id, customMusicFile);
-        }
         
         return newProject;
       }
@@ -1594,23 +1624,58 @@ export default function Editor() {
     saveProjectMutation.mutate();
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setShowPreviewModal(false);
     
-    // If download is already enabled (payment complete), trigger actual download
+    // If download is already enabled (payment complete), prefer server endpoint to enforce attachment
     if (downloadEnabled && downloadUrl) {
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `${template?.templateName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Video'}_WeddingInvite.mp4`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Download Started",
-        description: "Your video is being downloaded.",
-      });
+      const filename = `${template?.templateName?.replace(/[^a-zA-Z0-9]/g, '_') || 'Video'}_WeddingInvite.mp4`;
+      const token = localStorage.getItem('auth_token');
+      if (token && projectId) {
+        try {
+          const response = await fetch(`/api/download/${projectId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!response.ok) throw new Error('Failed to download');
+          const blob = await response.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = objectUrl;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(objectUrl);
+          toast({ title: "Download Started", description: "Your video is downloading." });
+          return;
+        } catch (err) {
+          console.error('Server download error:', err);
+          // fallback continues below
+        }
+      }
+      // Fallback: client-side blob download
+      const appendDisposition = (url: string, name: string) => {
+        const param = `response-content-disposition=${encodeURIComponent(`attachment; filename=\"${name}\"`)}`;
+        return url.includes('?') ? `${url}&${param}` : `${url}?${param}`;
+      };
+      const urlWithDisposition = appendDisposition(downloadUrl, filename);
+      try {
+        const response = await fetch(urlWithDisposition);
+        if (!response.ok) throw new Error('Failed to fetch video file');
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(objectUrl);
+        toast({ title: "Download Started", description: "Your video file is downloading." });
+      } catch (error) {
+        console.error('Download error:', error);
+        toast({ title: "Download Failed", description: "Could not download the video.", variant: "destructive" });
+      }
       return;
     }
     
@@ -1707,16 +1772,16 @@ export default function Editor() {
       previousUrl: previousUrl,
     });
     
+    // Store the file for later upload during generation
     setImageFiles((prev) => ({ ...prev, [key]: file }));
     
+    // Show preview immediately (base64) - no upload yet
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreviews((prev) => ({ ...prev, [key]: reader.result as string }));
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleImageRemove = (fieldId: string) => {
+  };  const handleImageRemove = (fieldId: string) => {
     const key = `${currentPage.id}_${fieldId}`;
     setImageFiles((prev) => {
       const newFiles = { ...prev };
@@ -1855,6 +1920,7 @@ export default function Editor() {
         ref={audioRef} 
         src={getCurrentMusicUrl() || undefined}
         preload="metadata"
+        crossOrigin="anonymous"
       />
 
       {/* Upload Music Modal - Single Responsive DialogContent */}
@@ -2610,27 +2676,43 @@ export default function Editor() {
             <div className="h-20 border-b overflow-x-auto">
               <div className="flex items-center gap-2 px-3 py-2 h-full">
                 {pages.map((page, index) => (
-                  <div
-                    key={page.id}
-                    onClick={() => setCurrentPageIndex(index)}
-                    className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all cursor-pointer ${
-                      currentPageIndex === index
-                        ? 'ring-2 ring-primary shadow-md scale-105'
-                        : 'ring-1 ring-border opacity-70'
-                    }`}
-                    data-testid={`mobile-page-${index}`}
-                  >
-                    <div className="w-10 aspect-[9/16] bg-muted">
-                      <img
-                        src={pagePreviewUrls[page.id] || page.thumbnailUrl}
-                        alt={page.pageName}
-                        className="w-full h-full object-cover"
-                        loading="eager"
-                      />
-                    </div>
-                    {/* Page number indicator - simple circle */}
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-background/95 flex items-center justify-center shadow-sm">
-                      <span className="text-[9px] font-semibold">{index + 1}</span>
+                  <div key={page.id} className="relative flex-shrink-0">
+                    {/* Delete button for mobile - only show if more than 1 page */}
+                    {pages.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePageClick(page.id, index);
+                        }}
+                        className="absolute -top-1 -right-1 z-10 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-md hover:bg-destructive/80 transition-colors"
+                        data-testid={`button-delete-page-mobile-${index}`}
+                        title="Delete page"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                      </button>
+                    )}
+                    
+                    <div
+                      onClick={() => setCurrentPageIndex(index)}
+                      className={`relative rounded-lg overflow-hidden transition-all cursor-pointer ${
+                        currentPageIndex === index
+                          ? 'ring-2 ring-primary shadow-md scale-105'
+                          : 'ring-1 ring-border opacity-70'
+                      }`}
+                      data-testid={`mobile-page-${index}`}
+                    >
+                      <div className="w-10 aspect-[9/16] bg-muted">
+                        <img
+                          src={pagePreviewUrls[page.id] || page.thumbnailUrl}
+                          alt={page.pageName}
+                          className="w-full h-full object-cover"
+                          loading="eager"
+                        />
+                      </div>
+                      {/* Page number indicator - simple circle */}
+                      <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-background/95 flex items-center justify-center shadow-sm">
+                        <span className="text-[9px] font-semibold">{index + 1}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2726,15 +2808,15 @@ export default function Editor() {
           </div>
         </div>
 
-        {/* Right Panel - Edit Fields - DESKTOP ONLY */}
-        <div className="hidden md:flex w-72 lg:w-80 border-l bg-card flex-col flex-shrink-0">
-          <div className="p-4 border-b">
-            <h2 className="font-semibold text-foreground text-sm">Edit Fields</h2>
-            <p className="text-xs text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
+        {/* Right Panel - Edit Fields - DESKTOP ONLY (Simplified) */}
+        <div className="hidden md:flex w-72 border-l bg-card flex-col flex-shrink-0">
+          <div className="p-3 border-b sticky top-0 bg-card z-10">
+            <h2 className="font-semibold text-foreground text-sm">Edit</h2>
+            <p className="text-[11px] text-muted-foreground">Page {currentPageIndex + 1} of {pages.length}</p>
           </div>
           
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-4">
+            <div className="p-3 space-y-2">
               {editableFields.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground text-sm">No editable fields on this page</p>
@@ -2742,9 +2824,6 @@ export default function Editor() {
               ) : (
                 editableFields.filter((field: EditableField) => field?.id).map((field: EditableField, index: number) => (
                   <div key={index} className="space-y-2" data-testid={`field-${field.id}`}>
-                    <Label htmlFor={field.id} className="text-xs font-medium">
-                      {field.label || field.id}
-                    </Label>
                     
                     {field.type === 'textarea' ? (
                       <>
@@ -2782,7 +2861,7 @@ export default function Editor() {
                           onChange={(e) => handleFieldChange(field.id, e.target.value)}
                           onBlur={() => handleFieldBlur(field.id)}
                           maxLength={field.maxLength}
-                          className="text-sm"
+                          className="text-sm h-9"
                           data-testid={`input-${field.id}`}
                         />
                         {field.maxLength && (

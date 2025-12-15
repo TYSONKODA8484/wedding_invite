@@ -1,3 +1,7 @@
+// server/index.ts
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -5,18 +9,21 @@ import { storage } from "./storage";
 
 const app = express();
 
-declare module 'http' {
+declare module "http" {
   interface IncomingMessage {
-    rawBody: unknown
+    rawBody: unknown;
   }
 }
-app.use(express.json({
-  limit: '15mb', // Allow up to 10MB files (base64 encoded adds ~33%)
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
-  }
-}));
-app.use(express.urlencoded({ extended: false, limit: '15mb' }));
+
+app.use(
+  express.json({
+    limit: "15mb", // Allow up to 15MB files (base64 encoded adds ~33%)
+    verify: (req, _res, buf) => {
+      (req as any).rawBody = buf;
+    },
+  })
+);
+app.use(express.urlencoded({ extended: false, limit: "15mb" }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -24,8 +31,11 @@ app.use((req, res, next) => {
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
+    // @ts-ignore
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 
@@ -59,9 +69,7 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // setup vite only in development and after setting up routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
@@ -69,22 +77,24 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
+  const port = parseInt(process.env.PORT || "5000", 10);
+  const host = "0.0.0.0";
+
+  // Build listen options conditionally (avoid reusePort on Windows)
+  const listenOptions: any = { port, host };
+  if (process.platform !== "win32") {
+    // reusePort is POSIX-only (Linux, macOS). Avoid on Windows.
+    listenOptions.reusePort = true;
+  }
+
+  // Start server
+  server.listen(listenOptions, () => {
     log(`serving on port ${port}`);
-    
+
     // Start scheduled cleanup job for old unpaid templates
-    // Runs every 24 hours to delete unpaid projects older than 30 days
     const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
     const DAYS_TO_KEEP = 30;
-    
+
     const runCleanup = async () => {
       try {
         const deletedCount = await storage.deleteOldUnpaidProjects(DAYS_TO_KEEP);
@@ -95,13 +105,13 @@ app.use((req, res, next) => {
         console.error("[Cleanup] Error during scheduled cleanup:", error);
       }
     };
-    
+
     // Run cleanup once on startup (after a short delay)
     setTimeout(runCleanup, 5000);
-    
+
     // Then run every 24 hours
     setInterval(runCleanup, CLEANUP_INTERVAL_MS);
-    
+
     log(`[Cleanup] Scheduled job: delete unpaid projects older than ${DAYS_TO_KEEP} days (runs daily)`);
   });
 })();

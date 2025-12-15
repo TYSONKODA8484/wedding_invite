@@ -1,26 +1,23 @@
+// src/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: "weddinginvite-18669.firebaseapp.com",
-  projectId: "weddinginvite-18669",
-  storageBucket: "weddinginvite-18669.firebasestorage.app",
-  messagingSenderId: "411118688172",
-  appId: "1:411118688172:web:ee8a29bdd7fe1c8ee4cc09",
-  measurementId: "G-28EVPZ0L29"
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
+// debug: temporarily log to ensure env injected (remove after verification)
+console.debug("VITE_FIREBASE_API_KEY:", import.meta.env.VITE_FIREBASE_API_KEY?.slice?.(0, 8) || "undefined");
+
 const app = initializeApp(firebaseConfig);
-
-// Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
-
-// Initialize Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
 
-// Configure Google provider to always show account selection
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
+export default app;

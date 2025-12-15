@@ -133,21 +133,87 @@ export default function MyTemplates() {
     navigate(`/editor/${project.id}?from=my-templates`);
   };
 
+  // Fetch and force-download a file (handles auth + CORS-safe blob download)
+  const downloadFile = async (url: string, filename: string) => {
+    const token = localStorage.getItem("auth_token");
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const appendDisposition = (rawUrl: string, name: string) => {
+      const param = `response-content-disposition=${encodeURIComponent(`attachment; filename="${name}"`)}`;
+      return rawUrl.includes('?') ? `${rawUrl}&${param}` : `${rawUrl}?${param}`;
+    };
+    const urlWithDisposition = appendDisposition(url, filename);
+
+    try {
+      const response = await fetch(urlWithDisposition, {
+        headers,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch file");
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+
+      toast({
+        title: "Download Started",
+        description: "Your file is downloading...",
+      });
+    } catch (error) {
+      console.error("Download error:", error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Download for paid templates - uses finalUrl
   const triggerPaidDownload = (project: Project) => {
     const urlToDownload = project.finalUrl;
     if (urlToDownload) {
-      const link = document.createElement("a");
-      link.href = urlToDownload;
+      // Prefer server-side download with auth headers and blob save (no new tab)
+      const token = localStorage.getItem("auth_token");
       const extension = project.templateType === "card" ? "png" : "mp4";
-      link.download = `${project.templateName}.${extension}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast({
-        title: "Download Started",
-        description: `Your ${project.templateType === "card" ? "card" : "video"} is downloading...`,
-      });
+      const filename = `${project.templateName}.${extension}`;
+      if (token) {
+        (async () => {
+          try {
+            const response = await fetch(`/api/download/${project.id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.ok) throw new Error("Failed to download");
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = objectUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(objectUrl);
+            toast({ title: "Download Started", description: "Your file is downloading..." });
+          } catch (err) {
+            console.error("Download error:", err);
+            // Fallback to direct blob from finalUrl
+            downloadFile(urlToDownload, filename);
+          }
+        })();
+      } else {
+        // Fallback to direct blob download if not authenticated
+        downloadFile(urlToDownload, filename);
+      }
     } else {
       toast({
         title: "File not ready",

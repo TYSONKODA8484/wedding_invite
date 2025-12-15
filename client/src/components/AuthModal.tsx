@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Mail, Phone } from "lucide-react";
-import { signInWithRedirect } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import {
   InputOTP,
@@ -176,16 +176,56 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("[Google Auth] Button clicked - initiating redirect to Google...");
-      await signInWithRedirect(auth, googleProvider);
-      console.log("[Google Auth] Redirect initiated successfully");
+      console.log("[Google Auth] Button clicked - initiating popup sign-in...");
+      setIsLoading(true);
+      
+      // Use popup instead of redirect for better modal integration
+      const result = await signInWithPopup(auth, googleProvider);
+      console.log("[Google Auth] Popup result:", result.user.email);
+      
+      const user = result.user;
+      
+      // Get Firebase ID token
+      const idToken = await user.getIdToken();
+      console.log("[Google Auth] Got Firebase ID token, sending to backend...");
+      
+      // Send ID token to backend for verification
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+      
+      const data = await response.json();
+      console.log("[Google Auth] Backend response:", { ok: response.ok, data });
+      
+      if (!response.ok) {
+        throw new Error(data.error || "Google sign-in failed");
+      }
+      
+      // Store JWT token and user data
+      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      window.dispatchEvent(new Event('authStateChanged'));
+      
+      console.log("[Google Auth] Successfully authenticated");
+      
+      toast({
+        title: "Signed in with Google!",
+        description: `Welcome, ${data.user.name}`,
+      });
+      
+      onSuccess?.();
+      onClose();
     } catch (error: any) {
-      console.error("[Google Auth] Failed to initiate redirect:", error);
+      console.error("[Google Auth] Failed:", error);
       toast({
         title: "Google sign-in failed",
         description: error.message || "Please try again",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -31,10 +31,12 @@ export function PageViewer({ page, className = "" }: PageViewerProps) {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get background image URL from page media (prefer 'background' position, fallback to first image)
+  // Get background media URL from page media (prefer 'background' position, fallback to image/video)
   const backgroundImage = 
-    page.media.find(m => m.position === 'background')?.url || 
+    page.media.find(m => m.position === 'background' && m.type === 'image')?.url ||
     page.media.find(m => m.type === 'image')?.url || 
+    page.media.find(m => m.position === 'background' && m.type === 'video')?.url ||
+    page.media.find(m => m.type === 'video')?.url ||
     page.thumbnailUrl || 
     '';
 

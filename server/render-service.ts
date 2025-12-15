@@ -4,19 +4,22 @@
  * This simulates the After Effects rendering pipeline by mapping
  * placeholder files to project previewUrl and finalUrl based on template type.
  * 
- * Storage files (in Ind/generated/):
+ * Storage files on AWS S3:
  * - card_preview.png - for card template previews
  * - card_final.png - for card template final files
  * - video_preview.mp4 - for video template previews
  * - video_final.mp4 - for video template final files
  * 
- * Editor Page Preview files (in Ind/preview/):
+ * Editor Page Preview files on AWS S3:
  * - ed_p1.png, ed_p2.png, ed_p3.png, ed_p4.png - cycling preview images for editor
  */
 
-// Base URL for the generated files in object storage
-const GENERATED_BASE_PATH = "/api/media/Ind/generated";
-const PREVIEW_BASE_PATH = "/api/media/Ind/preview";
+// AWS S3 Configuration
+const AWS_S3_BASE_URL = process.env.AWS_S3_BASE_URL || "https://wedding-invite-bucket-1.s3.ap-south-1.amazonaws.com";
+
+// Use AWS S3 URLs for all media files
+const GENERATED_BASE_PATH = `${AWS_S3_BASE_URL}/generated`;
+const PREVIEW_BASE_PATH = `${AWS_S3_BASE_URL}/preview`;
 
 // Number of preview images available for cycling
 const PREVIEW_IMAGE_COUNT = 4;
@@ -34,14 +37,14 @@ export interface RenderResult {
 export function getPlaceholderUrls(templateType: string): RenderResult {
   if (templateType === 'card') {
     return {
-      previewUrl: `${GENERATED_BASE_PATH}/card_preview.png`,
-      finalUrl: `${GENERATED_BASE_PATH}/card_final.png`,
+      previewUrl: `${GENERATED_BASE_PATH}/card/card_preview.png`,
+      finalUrl: `${GENERATED_BASE_PATH}/card/card_final.png`,
     };
   } else {
     // Default to video for any non-card type
     return {
-      previewUrl: `${GENERATED_BASE_PATH}/video_preview.mp4`,
-      finalUrl: `${GENERATED_BASE_PATH}/video_final.mp4`,
+      previewUrl: `${GENERATED_BASE_PATH}/video/video_preview.mp4`,
+      finalUrl: `${GENERATED_BASE_PATH}/video/video_final.mp4`,
     };
   }
 }

@@ -1,22 +1,25 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-// Initialize Razorpay instance
-const keyId = process.env.RAZORPAY_KEY_ID;
-const keySecret = process.env.RAZORPAY_KEY_SECRET;
+// Lazily initialize Razorpay client using env at call-time.
+function getRazorpayClient() {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-console.log("Razorpay Key ID exists:", !!keyId);
-console.log("Razorpay Key ID starts with:", keyId?.substring(0, 8));
-console.log("Razorpay Key Secret exists:", !!keySecret);
+  if (!keyId || !keySecret) {
+    console.warn(
+      "Razorpay credentials not configured. Falling back to development mock. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env to enable real Razorpay."
+    );
+    return null;
+  }
 
-if (!keyId || !keySecret) {
-  throw new Error("Razorpay credentials not configured. Please set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Replit Secrets.");
+  try {
+    return new Razorpay({ key_id: keyId, key_secret: keySecret });
+  } catch (err) {
+    console.error("Failed to initialize Razorpay client:", err);
+    return null;
+  }
 }
-
-const razorpay = new Razorpay({
-  key_id: keyId,
-  key_secret: keySecret,
-});
 
 /**
  * Create a Razorpay order
@@ -30,16 +33,29 @@ export async function createRazorpayOrder(
   currency: string = "INR",
   receipt: string
 ) {
-  try {
-    // Razorpay expects amount in smallest currency unit (paise for INR)
-    const amountInPaise = Math.round(amount * 100);
+  // Razorpay expects amount in smallest currency unit (paise for INR)
+  const amountInPaise = Math.round(amount * 100);
 
-    const order = await razorpay.orders.create({
+  const client = getRazorpayClient();
+  if (!client) {
+    // Development fallback: return a mock order object so UI can continue.
+    const mockOrder = {
+      id: `mock_order_${Date.now()}`,
+      amount: amountInPaise,
+      currency,
+      receipt,
+      status: "created",
+    } as any;
+    console.info("Razorpay not configured — returning mock order for local development", mockOrder.id);
+    return mockOrder;
+  }
+
+  try {
+    const order = await client.orders.create({
       amount: amountInPaise,
       currency: currency,
       receipt: receipt,
     });
-
     return order;
   } catch (error) {
     console.error("Error creating Razorpay order:", error);
@@ -61,14 +77,15 @@ export function verifyRazorpaySignature(
   razorpaySignature: string
 ): boolean {
   try {
-    // Create expected signature
+    // If secret not set, accept signature in non-production (development) to allow testing.
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
     const text = `${razorpayOrderId}|${razorpayPaymentId}`;
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
-      .update(text)
-      .digest("hex");
+    if (!keySecret) {
+      console.warn("RAZORPAY_KEY_SECRET not set — skipping strict signature verification in dev");
+      return process.env.NODE_ENV !== "production";
+    }
 
-    // Compare signatures
+    const expectedSignature = crypto.createHmac("sha256", keySecret).update(text).digest("hex");
     return expectedSignature === razorpaySignature;
   } catch (error) {
     console.error("Error verifying Razorpay signature:", error);
@@ -83,7 +100,13 @@ export function verifyRazorpaySignature(
  */
 export async function fetchPaymentDetails(paymentId: string) {
   try {
-    const payment = await razorpay.payments.fetch(paymentId);
+    const client = getRazorpayClient();
+    if (!client) {
+      console.info("Razorpay client not configured — returning mock payment details for local development");
+      return { id: paymentId, status: "captured" } as any;
+    }
+
+    const payment = await client.payments.fetch(paymentId);
     return payment;
   } catch (error) {
     console.error("Error fetching payment details:", error);
@@ -91,4 +114,5 @@ export async function fetchPaymentDetails(paymentId: string) {
   }
 }
 
-export default razorpay;
+// Export the lazy initializer as default for compatibility
+export default getRazorpayClient;

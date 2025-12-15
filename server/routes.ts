@@ -6,6 +6,9 @@ import jwt from "jsonwebtoken";
 import { Client } from "@replit/object-storage";
 import { adminAuth } from "./firebase-admin";
 import { renderProject, renderPagePreview } from "./render-service";
+import path from "path";
+import fs from "fs";
+import { createPresignedPut } from "./s3";
 
 const JWT_SECRET = process.env.SESSION_SECRET || "your-secret-key-change-in-production";
 
@@ -253,6 +256,210 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== S3 UPLOAD ROUTES ====================
+
+  /**
+   * Generate presigned URL for browser direct upload to S3
+   * POST /api/upload-url
+   * Body: { folder: "upload/music/<userId>" | "upload/photo/<userId>", filename: "...", contentType: "audio/mpeg" | "image/png" }
+   */
+  app.post("/api/upload-url", authMiddleware, async (req: any, res) => {
+    try {
+      const { folder, filename, contentType } = req.body;
+
+      if (!folder || !contentType) {
+        return res.status(400).json({ error: "folder and contentType are required" });
+      }
+
+      // Validate folder to prevent abuse
+      if (!folder.startsWith("upload/music") && !folder.startsWith("upload/photo")) {
+        return res.status(400).json({ error: "Invalid folder. Must start with 'upload/music' or 'upload/photo'" });
+      }
+
+      // Validate content type
+      if (!contentType.startsWith("image/") && !contentType.startsWith("audio/")) {
+        return res.status(400).json({ error: "Invalid content type. Must be image/* or audio/*" });
+      }
+
+      console.log("Creating presigned URL for:", { folder, contentType, filename });
+      const { uploadUrl, fileUrl, key } = await createPresignedPut({
+        folder,
+        filename,
+        contentType,
+      });
+
+      res.json({ uploadUrl, fileUrl, key });
+    } catch (error) {
+      console.error("Error creating presigned URL:", error);
+      res.status(500).json({ error: "Failed to create upload URL" });
+    }
+  });
+
+  /**
+   * Save uploaded media URL to project customization
+   * POST /api/projects/:projectId/media
+   * Body: { type: "music" | "photo", url: "https://...", fieldId?: "...", pageId?: "..." }
+   */
+  app.post("/api/projects/:projectId/media", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.userId;
+      const { projectId } = req.params;
+      const { type, url, fieldId, pageId } = req.body;
+
+      if (!type || !url) {
+        return res.status(400).json({ error: "type and url are required" });
+      }
+
+      // Verify project belongs to user
+      const project = await storage.getProjectById(projectId);
+      if (!project) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+      if (project.userId !== userId) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
+
+      console.log(`Saving ${type} URL to project ${projectId}:`, url);
+
+      if (type === "music") {
+        // Save custom music URL to project
+        await storage.updateProject(projectId, {
+          customMusicUrl: url,
+          selectedMusicId: null, // Clear stock music when custom is uploaded
+        });
+      } else if (type === "photo") {
+        // Save photo URL to customization.images
+        const customization = (project.customization as any) || { pages: {}, images: {} };
+        if (!customization.images) {
+          customization.images = {};
+        }
+
+        const key = `${pageId}_${fieldId}`;
+        customization.images[key] = url;
+
+        await storage.updateProject(projectId, {
+          customization,
+        });
+      } else {
+        return res.status(400).json({ error: "Invalid type. Must be 'music' or 'photo'" });
+      }
+
+      res.json({ success: true, url });
+    } catch (error) {
+      console.error("Error saving media URL:", error);
+      res.status(500).json({ error: "Failed to save media URL" });
+    }
+  });
+
+  // ==================== DOWNLOAD ROUTE ====================
+  // Streams the project's final file with Content-Disposition: attachment
+  app.get("/api/download/:projectId", authMiddleware, async (req: any, res) => {
+    const projectId = req.params.projectId;
+    console.log("\n===== DOWNLOAD REQUEST =====");
+    console.log("Project ID:", projectId);
+    console.log("User:", req.user?.userId);
+
+    try {
+      // Fetch project from DB
+      const project = await storage.getProjectById(projectId);
+      console.log("Project DB record:", {
+        id: project?.id,
+        name: project?.templateName,
+        type: project?.templateType,
+        isPaid: project?.isPaid,
+        finalUrl: project?.finalUrl,
+        previewUrl: project?.previewUrl,
+      });
+
+      if (!project) {
+        console.log("❌ Project not found");
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      // Prefer finalUrl, but fall back to previewUrl
+      const fileUrl = project.finalUrl || project.previewUrl;
+      console.log("File URL being fetched:", fileUrl);
+
+      if (!fileUrl) {
+        console.log("❌ No file URL on project");
+        return res.status(400).json({ error: "No downloadable file" });
+      }
+
+      // Fetch from source (S3 or CDN)
+      console.log("Fetching from:", fileUrl);
+      const fetchFn: typeof fetch = (globalThis.fetch as any);
+      const upstream = await fetchFn(fileUrl);
+
+      console.log("Upstream status:", upstream.status, upstream.statusText);
+      console.log("Upstream headers:", {
+        contentType: upstream.headers.get("content-type"),
+        contentLength: upstream.headers.get("content-length"),
+        contentDisposition: upstream.headers.get("content-disposition"),
+        cacheControl: upstream.headers.get("cache-control"),
+      });
+
+      if (!upstream.ok) {
+        console.log("❌ Upstream fetch failed with status:", upstream.status);
+        const responseText = await upstream.text();
+        console.log("Response body:", responseText.substring(0, 500));
+        return res.status(upstream.status).json({ 
+          error: `Upstream fetch failed with status ${upstream.status}`,
+          upstream: responseText.substring(0, 200)
+        });
+      }
+
+      // Buffer the file into memory
+      console.log("Reading file buffer...");
+      const arrayBuffer = await upstream.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      console.log("Buffer size:", buffer.length, "bytes");
+
+      // Derive filename and extension reliably
+      const contentTypeHdr = upstream.headers.get("content-type") || "application/octet-stream";
+      const urlExtMatch = (fileUrl.split("?")[0].match(/\.([a-zA-Z0-9]+)$/) || [])[1]?.toLowerCase();
+      const typeToExt = (ct: string): string => {
+        if (ct.includes("mp4")) return "mp4";
+        if (ct.includes("quicktime")) return "mov";
+        if (ct.includes("webm")) return "webm";
+        if (ct.includes("png")) return "png";
+        if (ct.includes("jpeg") || ct.includes("jpg")) return "jpg";
+        if (ct.includes("gif")) return "gif";
+        return urlExtMatch || "bin";
+      };
+      const extension = typeToExt(contentTypeHdr);
+      const baseName = (project.templateName || (project.templateType === "video" ? "Video" : "Invitation") || "File").toString();
+      const safeName = baseName.replace(/[^a-zA-Z0-9_\-]/g, "_");
+      const filename = `${safeName}.${extension}`;
+
+      // Set headers to force download
+      const contentType = contentTypeHdr;
+      console.log("Setting response headers:");
+      console.log("  Content-Type:", contentType);
+      console.log("  Content-Disposition:", `attachment; filename="${filename}"`);
+      console.log("  Content-Length:", buffer.length);
+
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      res.setHeader("Content-Length", buffer.length);
+      
+      // Send the buffered file
+      console.log("✅ Sending file to client...");
+      res.end(buffer);
+      console.log("✅ Download complete");
+    } catch (error: any) {
+      console.log("\n❌ ERROR IN DOWNLOAD ROUTE");
+      console.log("Error type:", error?.constructor?.name);
+      console.log("Error message:", error?.message);
+      console.log("Error stack:", error?.stack);
+      if (error?.cause) console.log("Error cause:", error.cause);
+      
+      res.status(500).json({ 
+        error: "Failed to download file",
+        message: error?.message,
+      });
+    }
+  });
+
   // ==================== PROJECT ROUTES ====================
   
   app.get("/api/projects/mine", authMiddleware, async (req: any, res) => {
@@ -469,6 +676,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Render the page preview (cycles through dummy images for now)
       const currentIndex = previewIndex || 0;
       const result = await renderPagePreview(projectId || templateId, pageId, currentIndex);
+      
+      console.log("[Route] Preview URL being returned:", result.previewUrl);
       
       // Return preview URL - client will store in state and save to project only on Generate
       res.json({
@@ -1066,6 +1275,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/media/Ind/generated/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
+      
+      // Determine subfolder based on file extension
+      const isVideo = filename.match(/\.(mp4|webm|mov)$/i);
+      const subfolder = isVideo ? "video" : "card";
+      const filePath = path.join(process.cwd(), "public", "media", "generated", subfolder, filename);
+      
+      // Check if file exists in local filesystem
+      if (fs.existsSync(filePath)) {
+        const contentType = getContentType(filename);
+        res.set({
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000',
+        });
+        return res.sendFile(filePath);
+      }
+      
+      // Fallback to Replit Object Storage if not found locally
       const client = new Client();
       const fileKey = `Ind/generated/${filename}`;
       
@@ -1100,6 +1326,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/media/Ind/preview/:filename", async (req, res) => {
     try {
       const { filename } = req.params;
+      const filePath = path.join(process.cwd(), "public", "media", "preview", filename);
+      
+      // Check if file exists in local filesystem
+      if (fs.existsSync(filePath)) {
+        const contentType = getContentType(filename);
+        res.set({
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000',
+        });
+        return res.sendFile(filePath);
+      }
+      
+      // Fallback to Replit Object Storage if not found locally
       const client = new Client();
       const fileKey = `Ind/preview/${filename}`;
       
